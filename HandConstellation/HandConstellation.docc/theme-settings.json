@@ -1,0 +1,83 @@
+{
+  "theme": {
+    "typography": {
+      "html": {
+        "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Apple SD Gothic Neo\", sans-serif"
+      },
+      "html-font-mono": "ui-monospace, \"SFMono-Regular\", Menlo, Monaco, Consolas, monospace"
+    },
+    "tutorial": {
+      "step": {
+        "border": {
+          "radius": "24px"
+        }
+      }
+    },
+    "color": {
+      "step": {
+        "focused": {
+          "light": "#0071e3",
+          "dark": "#79bfff"
+        },
+        "background": {
+          "light": "#f2f2f4",
+          "dark": "#343438"
+        },
+        "text": {
+          "light": "#1d1d1f",
+          "dark": "#f5f5f7"
+        },
+        "caption": {
+          "light": "#515154",
+          "dark": "#d2d2d7"
+        }
+      },
+      "code": {
+        "background": {
+          "light": "#f1f1f3",
+          "dark": "#303034"
+        },
+        "plain": {
+          "light": "#1d1d1f",
+          "dark": "#f5f5f7"
+        },
+        "line-highlight": {
+          "light": "rgba(0, 113, 227, 0.10)",
+          "dark": "rgba(121, 191, 255, 0.12)"
+        },
+        "line-highlight-border": {
+          "light": "#0071e3",
+          "dark": "#79bfff"
+        }
+      },
+      "runtime-preview": {
+        "background": {
+          "light": "#e8e8ed",
+          "dark": "#303034"
+        },
+        "disabled-text": {
+          "light": "rgba(81, 81, 84, 0.72)",
+          "dark": "rgba(210, 210, 215, 0.58)"
+        }
+      },
+      "syntax": {
+        "keywords": {
+          "light": "#9b2393",
+          "dark": "#ff7ab2"
+        },
+        "strings": {
+          "light": "#c41a16",
+          "dark": "#ff8170"
+        },
+        "other-type-names": {
+          "light": "#703daa",
+          "dark": "#dabaff"
+        },
+        "comments": {
+          "light": "#5d6c79",
+          "dark": "#8f9aa7"
+        }
+      }
+    }
+  }
+}

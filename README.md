@@ -48,6 +48,7 @@ HandConstellation/
 ├── ConstellationRenderer.swift       RealityKit 점·선·커서
 ├── ImmersiveCoordinator.swift        전체 데이터 흐름 연결
 └── HandConstellation.docc/           DocC 튜토리얼과 참조 문서
+DocumentationTheme/                   확대된 단계·코드 패널용 DocC 렌더 테마
 ```
 
 설계 근거와 조사 결과는 [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md), 완성 튜토리얼은 [DocC 카탈로그](HandConstellation/HandConstellation.docc/HandConstellation.md)에서 확인할 수 있습니다.
@@ -99,7 +100,7 @@ xcodebuild \
   docbuild
 ```
 
-문서에는 50분 분량의 단계별 튜토리얼과 아키텍처, 체류 판정, 문제 해결, GitHub Pages 배포 문서가 포함되어 있습니다.
+문서에는 약 150분 분량의 세분화된 튜토리얼과 아키텍처, 체류 판정, 문제 해결, GitHub Pages 배포 문서가 포함되어 있습니다. 튜토리얼은 Xcode의 초기 코드에서 시작해 78개 단계로 진행하며, 각 코드 단계에서 새로 추가된 줄을 강조합니다. 프로젝트의 `DOCC_TEMPLATE_PATH`가 `DocumentationTheme`을 가리키므로 Xcode와 명령줄 빌드 모두 확대된 단계 카드, 파란 현재 단계 표시, 큰 코드 패널 스타일을 동일하게 적용합니다.
 
 ## GitHub Pages 배포
 

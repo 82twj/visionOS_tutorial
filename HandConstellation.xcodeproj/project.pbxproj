@@ -303,6 +303,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DOCC_TEMPLATE_PATH = "$(SRCROOT)/DocumentationTheme";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HandConstellation/Info.plist;
@@ -327,6 +328,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DOCC_TEMPLATE_PATH = "$(SRCROOT)/DocumentationTheme";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HandConstellation/Info.plist;

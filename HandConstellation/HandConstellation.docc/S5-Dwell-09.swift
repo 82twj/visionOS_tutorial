@@ -1,0 +1,88 @@
+import Foundation
+import simd
+
+struct DwellDetector {
+  enum Phase: Equatable { case idle, dwelling, coolingDown }
+  struct Snapshot: Equatable {
+    let phase: Phase
+    let candidatePosition: SIMD3<Float>?
+    let progress: Float
+    let committedPosition: SIMD3<Float>?
+  }
+  private enum State: Equatable {
+    case idle
+    case dwelling(center: SIMD3<Float>, startedAt: TimeInterval)
+    case coolingDown(committedPosition: SIMD3<Float>)
+  }
+
+  let dwellDuration: TimeInterval
+  let stabilityRadius: Float
+  let rearmDistance: Float
+  private var state: State = .idle
+
+  init(
+    dwellDuration: TimeInterval = 0.8, stabilityRadius: Float = 0.015, rearmDistance: Float = 0.030
+  ) {
+    self.dwellDuration = dwellDuration
+    self.stabilityRadius = stabilityRadius
+    self.rearmDistance = rearmDistance
+  }
+
+  mutating func update(position: SIMD3<Float>, at timestamp: TimeInterval) -> Snapshot {
+    guard position.hasFiniteComponents, timestamp.isFinite else {
+      state = .idle
+      return idleSnapshot
+    }
+
+    switch state {
+    case .idle:
+      state = .dwelling(center: position, startedAt: timestamp)
+      return Snapshot(
+        phase: .dwelling, candidatePosition: position, progress: 0, committedPosition: nil)
+
+    case .dwelling(let center, let startedAt):
+      guard simd_distance(center, position) <= stabilityRadius else {
+        state = .dwelling(center: position, startedAt: timestamp)
+        return Snapshot(
+          phase: .dwelling, candidatePosition: position, progress: 0, committedPosition: nil)
+      }
+
+      let elapsed = max(0, timestamp - startedAt)
+      let progress = Float(min(1, elapsed / dwellDuration))
+      guard elapsed >= dwellDuration else {
+        return Snapshot(
+          phase: .dwelling, candidatePosition: center, progress: progress, committedPosition: nil)
+      }
+
+      state = .coolingDown(committedPosition: center)
+      return Snapshot(
+        phase: .coolingDown, candidatePosition: center, progress: 1, committedPosition: center)
+
+    case .coolingDown(let committedPosition):
+      guard simd_distance(committedPosition, position) >= rearmDistance else {
+        return Snapshot(
+          phase: .coolingDown, candidatePosition: committedPosition, progress: 0,
+          committedPosition: nil)
+      }
+      state = .dwelling(center: position, startedAt: timestamp)
+      return Snapshot(
+        phase: .dwelling, candidatePosition: position, progress: 0, committedPosition: nil)
+    }
+  }
+
+  mutating func trackingLost() {
+    state = .idle
+  }
+
+  mutating func reset() {
+    state = .idle
+  }
+
+  private var idleSnapshot: Snapshot {
+    Snapshot(phase: .idle, candidatePosition: nil, progress: 0, committedPosition: nil)
+  }
+}
+
+extension SIMD3 where Scalar == Float {
+  var hasFiniteComponents: Bool { x.isFinite && y.isFinite && z.isFinite }
+}

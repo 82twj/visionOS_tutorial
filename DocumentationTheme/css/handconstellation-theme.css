@@ -1,0 +1,87 @@
+/* Hand Constellation tutorial refinements for the Swift-DocC renderer. */
+
+body .router-content .steps {
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+body .router-content .step {
+  border-radius: var(--tutorial-step-border-radius, 24px);
+  padding: 1.65rem 2rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+body .router-content .steps .step::before {
+  border: 0;
+  height: 100%;
+  width: 8px;
+}
+
+body .router-content .step-label {
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 1rem;
+}
+
+body .router-content .step .content {
+  color: var(--color-step-text);
+  font-size: 1.12rem;
+  line-height: 1.55;
+}
+
+body .router-content .step .content p {
+  line-height: inherit;
+}
+
+body .router-content .step-container:not(:last-child) {
+  margin-bottom: 112px;
+}
+
+body .router-content .code-preview,
+body .router-content .code-preview .code-listing,
+body .router-content .code-preview pre {
+  background-color: var(--color-code-background);
+}
+
+body .router-content .code-preview .filename {
+  color: var(--color-step-caption);
+  font-size: 1.18rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+body .router-content .code-preview pre {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+body .router-content .code-preview .code-line-container {
+  padding-right: 1.2rem;
+}
+
+body .router-content .code-preview .code-number {
+  color: var(--color-step-caption);
+  min-width: 2.6rem;
+  opacity: 0.62;
+}
+
+body .router-content .code-preview .runtime-preview {
+  border-radius: 10px;
+  margin: 1rem;
+}
+
+@media only screen and (max-width: 735px) {
+  body .router-content .step {
+    border-radius: 18px;
+    padding: 1.35rem 1.55rem;
+  }
+
+  body .router-content .steps .step::before {
+    width: 6px;
+  }
+
+  body .router-content .step-container:not(:last-child) {
+    margin-bottom: 80px;
+  }
+}

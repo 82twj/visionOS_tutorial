@@ -1,0 +1,4 @@
+<dict>
+    <key>NSHandsTrackingUsageDescription</key>
+    <string>검지 끝의 움직임을 감지해 공중에 별자리 점과 선을 그리기 위해 손 추적을 사용합니다.</string>
+</dict>
