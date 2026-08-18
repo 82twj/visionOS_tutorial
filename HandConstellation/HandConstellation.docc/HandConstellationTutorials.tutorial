@@ -1,0 +1,13 @@
+@Tutorials(name: "visionOS 손 추적으로 별자리 그리기") {
+    @Intro(title: "검지로 점을 찍고 선을 연결하세요") {
+        ARKit의 손 관절 좌표를 RealityKit 장면으로 전달하고, 체류 제스처를 직접 판정하는 기초 프로젝트를 만듭니다.
+    }
+
+    @Chapter(name: "Hand Constellation 앱 만들기") {
+        창과 몰입형 공간을 구성한 뒤 손 추적, 체류 판정, 점과 선 렌더링을 단계별로 연결합니다.
+
+        @Image(source: constellation-hero.svg, alt: "검지 끝의 주황색 커서와 공중에 연결된 노란 점, 파란 선으로 이루어진 별자리")
+
+        @TutorialReference(tutorial: "doc:BuildingHandConstellation")
+    }
+}

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title description">
+  <title id="title">Hand Constellation</title>
+  <desc id="description">A glowing constellation drawn by an index fingertip in a dark spatial scene.</desc>
+  <defs>
+    <radialGradient id="background" cx="50%" cy="42%" r="75%">
+      <stop offset="0%" stop-color="#182a48"/>
+      <stop offset="100%" stop-color="#060a16"/>
+    </radialGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1600" height="900" rx="56" fill="url(#background)"/>
+  <g fill="#7ed7ff" opacity="0.5">
+    <circle cx="180" cy="175" r="3"/><circle cx="340" cy="110" r="2"/><circle cx="490" cy="220" r="3"/>
+    <circle cx="1130" cy="125" r="3"/><circle cx="1370" cy="235" r="2"/><circle cx="1250" cy="700" r="3"/>
+    <circle cx="270" cy="690" r="2"/><circle cx="1480" cy="520" r="3"/><circle cx="910" cy="120" r="2"/>
+  </g>
+  <polyline points="330,610 515,390 760,520 940,285 1180,440 1315,245" fill="none" stroke="#42c8ff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <g fill="#ffd14a" stroke="#fff1a8" stroke-width="8" filter="url(#glow)">
+    <circle cx="330" cy="610" r="23"/><circle cx="515" cy="390" r="23"/><circle cx="760" cy="520" r="23"/>
+    <circle cx="940" cy="285" r="23"/><circle cx="1180" cy="440" r="23"/><circle cx="1315" cy="245" r="23"/>
+  </g>
+  <g transform="translate(1070 605) rotate(-18)">
+    <path d="M0 125 C55 70 96 37 128 44 C153 49 156 71 145 89 L99 155 C87 174 55 185 25 177 Z" fill="#f3b69b" opacity="0.9"/>
+    <rect x="115" y="-40" width="52" height="156" rx="26" fill="#f7c2a8"/>
+    <circle cx="141" cy="-58" r="30" fill="#ff6a3d" stroke="#ffb199" stroke-width="9" filter="url(#glow)"/>
+  </g>
+  <text x="120" y="790" fill="#f5f8ff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="70" font-weight="700">Hand Constellation</text>
+  <text x="124" y="842" fill="#9dc7df" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="29">ARKit Hand Tracking · SwiftUI · RealityKit</text>
+</svg>
