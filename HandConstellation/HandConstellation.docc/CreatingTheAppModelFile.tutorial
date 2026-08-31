@@ -1,0 +1,53 @@
+@Tutorial(time: 5) {
+    @Intro(title: "새 파일 준비하기: 앱 상태") {
+        **이번 단계에서 만들 것**: 비어 있는 `AppModel.swift` 파일 하나입니다. 이 페이지에서는 기존 파일을 전혀 건드리지 않습니다.
+
+        제어 창과 몰입형 공간은 서로 다른 씬이지만 같은 값을 보아야 합니다. 그 값을 담을 타입을 다음 페이지에서 만들고, 여기서는 파일만 준비합니다.
+
+        @Image(source: xcode-new-file.png, alt: "새 파일 만들기 창에서 visionOS 그룹과 Swift File 템플릿이 파란색으로 강조된 화면")
+    }
+
+    @Section(title: "Swift 파일 만들기") {
+        @ContentAndMedia {
+            Xcode의 파일 템플릿 중 **Swift File**은 화면 코드가 아닌 순수한 타입을 담기에 알맞습니다. SwiftUI View 템플릿을 고르면 필요 없는 코드가 함께 들어옵니다.
+
+            @Image(source: xcode-new-file.png, alt: "새 파일 만들기 창에서 visionOS 그룹과 Swift File 템플릿이 파란색으로 강조된 화면")
+        }
+
+        @Steps {
+            @Step {
+                Project navigator에서 `HandConstellation` 폴더를 보조 클릭하고 **New File from Template**을 선택하세요.
+            }
+
+            @Step {
+                왼쪽 목록에서 **visionOS** 그룹을 고르고, 템플릿 중 **Swift File**을 선택한 뒤 **Next**를 누르세요.
+            }
+
+            @Step {
+                파일 이름에 `AppModel.swift`를 입력하세요. 확장자를 빼고 `AppModel`만 입력해도 Xcode가 `.swift`를 붙여 줍니다.
+
+                @Image(source: xcode-file-options.png, alt: "파일 이름을 AppModel.swift로 입력하고 HandConstellation 타깃에 체크한 저장 화면")
+            }
+
+            @Step {
+                Targets 목록에서 **HandConstellation**에 체크가 되어 있는지 확인하고 **Create**를 누르세요. 이 체크가 빠지면 파일이 앱에 포함되지 않아 빌드에서 타입을 찾을 수 없다는 오류가 납니다.
+
+                @Image(source: xcode-file-options.png, alt: "파일 이름을 AppModel.swift로 입력하고 HandConstellation 타깃에 체크한 저장 화면")
+            }
+
+            @Step {
+                새 파일이 열립니다. Xcode의 Swift File 템플릿은 `import Foundation` 한 줄만 넣어 줍니다. 다음 페이지에서 이 줄부터 고칩니다.
+
+                @Code(name: "AppModel.swift", file: C02-T01-AppModel-00.swift, reset: true)
+            }
+
+            @Step {
+                **결과 확인**: Project navigator에 `AppModel.swift`가 보이고 파일 내용이 `import Foundation` 한 줄이면 성공입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: 파일이 프로젝트 바깥 폴더에 만들어졌다면 Project navigator에서 파일을 골라 File inspector의 Target Membership을 확인하세요. 체크가 없다면 지금 켜 두면 됩니다.
+            }
+        }
+    }
+}

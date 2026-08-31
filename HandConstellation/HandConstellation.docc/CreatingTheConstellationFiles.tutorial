@@ -1,0 +1,41 @@
+@Tutorial(time: 5) {
+    @Intro(title: "새 파일 준비하기: 별자리 데이터와 화면") {
+        **이번 단계에서 만들 것**: 비어 있는 Swift 파일 두 개입니다. 기존 파일은 건드리지 않습니다.
+
+        점을 **어떻게 저장할지**와 **어떻게 보여 줄지**는 서로 다른 문제입니다. 두 문제를 한 파일에 담으면 규칙을 고칠 때마다 화면 코드를 함께 읽어야 합니다.
+
+        @Image(source: file-responsibilities.png, alt: "ConstellationModel과 ConstellationRenderer가 각각 맡는 일을 나란히 비교한 표")
+    }
+
+    @Section(title: "두 파일의 책임 비교하기") {
+        @ContentAndMedia {
+            `ConstellationModel`은 RealityKit을 import하지 않습니다. 덕분에 macOS에서 `swift test`로 그대로 검증할 수 있습니다.
+
+            `ConstellationRenderer`는 규칙을 판단하지 않습니다. 모델이 허락한 점만 받아서 화면에 올립니다.
+
+            @Image(source: file-responsibilities.png, alt: "데이터 책임과 화면 책임을 비교한 표")
+        }
+
+        @Steps {
+            @Step {
+                `HandConstellation` 폴더를 보조 클릭하고 **New File from Template**에서 **Swift File**을 골라 `ConstellationModel.swift`를 만드세요. Targets의 **HandConstellation** 체크를 확인합니다.
+
+                @Code(name: "ConstellationModel.swift", file: C05-T01-ConstellationModel-00.swift, reset: true)
+            }
+
+            @Step {
+                같은 방법으로 `ConstellationRenderer.swift`를 만드세요.
+
+                @Code(name: "ConstellationRenderer.swift", file: C05-T01-ConstellationRenderer-00.swift, reset: true)
+            }
+
+            @Step {
+                **결과 확인**: 두 파일이 Project navigator에 보이고 각각 `import Foundation` 한 줄이면 성공입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: 파일이 이미 있다는 경고가 나오면 앞에서 같은 이름의 파일을 만든 적이 있는지 확인하세요. Finder에는 있는데 Xcode에 없다면, Project navigator로 파일을 끌어다 놓으면 됩니다.
+            }
+        }
+    }
+}

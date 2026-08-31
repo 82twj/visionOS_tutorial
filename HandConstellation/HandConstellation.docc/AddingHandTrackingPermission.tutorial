@@ -1,0 +1,119 @@
+@Tutorial(time: 7) {
+    @Intro(title: "손 추적 권한 설명 추가하기") {
+        **이번 단계에서 만들 것**: 앱이 손 추적을 요청할 때 시스템이 사용자에게 보여 줄 설명 문장입니다.
+
+        `<key>`를 외워서 입력하지 않습니다. Xcode의 Info 화면에서 사람이 읽는 항목을 고르고, 마지막에만 그 설정이 `Info.plist`에 어떻게 저장되는지 확인합니다.
+
+        @Image(source: xcode-info-tab.png, alt: "Target Info 탭에서 Privacy - Hand Tracking Usage Description 항목이 파란색으로 강조된 표")
+    }
+
+    @Section(title: "Info 화면에서 항목 추가하기") {
+        @ContentAndMedia {
+            visionOS는 손 관절 데이터를 민감한 정보로 다룹니다. 앱이 이 데이터를 쓰려면 사용 목적을 미리 등록해야 하고, 등록하지 않으면 권한 요청 자체가 실패합니다.
+
+            @Image(source: xcode-info-tab.png, alt: "Target Info 탭에서 Privacy - Hand Tracking Usage Description 항목이 파란색으로 강조된 표")
+        }
+
+        @Steps {
+            @Step {
+                Project navigator 맨 위의 파란 프로젝트 아이콘을 선택하고 TARGETS에서 **HandConstellation**을 고르세요.
+            }
+
+            @Step {
+                **Info** 탭을 여세요. **Custom visionOS Target Properties** 표가 나타납니다.
+            }
+
+            @Step {
+                표의 아무 줄에 마우스를 올리고 `+` 를 누르세요. 새 줄이 생기고 키 이름을 고를 수 있는 목록이 열립니다.
+            }
+
+            @Step {
+                목록에서 **Privacy - Hand Tracking Usage Description**을 선택하세요. 목록이 길면 `Hand`를 입력해 검색할 수 있습니다.
+            }
+
+            @Step {
+                Value 칸에 `검지 끝의 움직임을 감지해 공중에 별자리 점과 선을 그리기 위해 손 추적을 사용합니다.`를 입력하세요.
+
+                이 문장은 권한 창에 그대로 나타납니다. 기능과 목적을 사용자가 이해할 수 있게 쓰는 것이 중요합니다.
+            }
+        }
+    }
+
+    @Section(title: "저장된 형태 확인하기") {
+        @ContentAndMedia {
+            Xcode의 Info 화면은 `Info.plist`를 사람이 읽기 쉽게 보여 주는 편집기입니다. 실제 저장 형태를 한 번 보고 넘어가면 다른 프로젝트의 설정 파일도 읽을 수 있습니다.
+        }
+
+        @Steps {
+            @Step {
+                Project navigator에서 `Info.plist`를 보조 클릭하고 **Open As > Source Code**를 선택하세요. 아래 코드는 항목을 추가하기 전의 상태입니다.
+
+                @Code(name: "Info.plist", file: C01-T04-Info-00.plist, reset: true)
+            }
+
+            @Step {
+                방금 Info 화면에서 한 설정이 두 줄로 저장되어 있습니다. `<key>`는 시스템이 찾는 이름이고, `<string>`은 사용자에게 보여 줄 문장입니다.
+
+                @Code(name: "Info.plist", file: C01-T04-Info-01.plist, previousFile: C01-T04-Info-00.plist)
+            }
+
+            @Step {
+                **결과 확인**: Info 탭의 표에 Privacy - Hand Tracking Usage Description 줄이 보이고, Source Code 보기에 `NSHandsTrackingUsageDescription` 키가 있으면 성공입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: 목록에서 항목을 찾을 수 없다면 왼쪽에서 프로젝트가 아니라 **TARGETS**의 HandConstellation을 선택했는지 확인하세요. 프로젝트 수준의 Info 탭에는 이 항목이 없습니다.
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            손 추적 권한 설명을 추가하는 첫 번째 행동은 무엇인가요?
+
+            @Choice(isCorrect: true) {
+                Target의 Info 탭에서 Privacy - Hand Tracking Usage Description 항목을 추가합니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    Xcode 화면에서 사람이 읽는 항목을 먼저 추가하고, 필요할 때만 XML 저장 형태를 확인합니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                의미를 모른 채 `<key>`부터 Swift 파일에 입력합니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `<key>`는 Swift 코드가 아니라 `Info.plist`의 Source Code 표현입니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                `ARKitSession`을 만들면 Xcode가 항목을 자동으로 추가합니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    사용 목적 문장은 개발자가 직접 써야 하며, 없으면 권한 요청이 실패합니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            Chapter 1까지 진행한 앱을 Simulator에서 실행하면 무엇을 확인할 수 있나요?
+
+            @Choice(isCorrect: true) {
+                기본 창이 뜨는 것까지 확인할 수 있고, 손 추적은 확인할 수 없습니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    ARKit 손 추적은 Apple Vision Pro에서만 동작합니다. 최종 검증은 Chapter 7에서 합니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                권한 문장을 입력했으므로 Simulator에서도 손 추적이 동작합니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    권한 설명은 요청의 전제 조건일 뿐이고, 손 추적 자체는 실기기 기능입니다.
+                }
+            }
+        }
+    }
+}

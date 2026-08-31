@@ -41,7 +41,8 @@ HandConstellation/
 ├── HandConstellationApp.swift        SwiftUI Scene 진입점
 ├── ControlView.swift                 시작·종료·그리기 전환·초기화 창
 ├── ImmersiveView.swift               RealityView와 추적 task
-├── HandTrackingService.swift         권한·ARKitSession·검지 좌표
+├── HandTrackingService.swift         권한·ARKitSession·검지 좌표·주먹 판정
+├── ConstellationConfiguration.swift  체류·거리·크기 조절 값
 ├── DwellDetector.swift               체류 상태 머신
 ├── FistHoldDetector.swift            주먹 유지와 1회 전환 판정
 ├── ConstellationModel.swift          점과 선분 규칙
@@ -49,6 +50,7 @@ HandConstellation/
 ├── ImmersiveCoordinator.swift        전체 데이터 흐름 연결
 └── HandConstellation.docc/           DocC 튜토리얼과 참조 문서
 DocumentationTheme/                   확대된 단계·코드 패널용 DocC 렌더 테마
+Scripts/                              코드 스냅샷·튜토리얼 이미지 생성과 검증
 ```
 
 설계 근거와 조사 결과는 [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md), 완성 튜토리얼은 [DocC 카탈로그](HandConstellation/HandConstellation.docc/HandConstellation.md)에서 확인할 수 있습니다.
@@ -100,7 +102,9 @@ xcodebuild \
   docbuild
 ```
 
-문서에는 약 150분 분량의 세분화된 튜토리얼과 아키텍처, 체류 판정, 문제 해결, GitHub Pages 배포 문서가 포함되어 있습니다. 튜토리얼은 Xcode의 초기 코드에서 시작해 78개 단계로 진행하며, 각 코드 단계에서 새로 추가된 줄을 강조합니다. 프로젝트의 `DOCC_TEMPLATE_PATH`가 `DocumentationTheme`을 가리키므로 Xcode와 명령줄 빌드 모두 확대된 단계 카드, 파란 현재 단계 표시, 큰 코드 패널 스타일을 동일하게 적용합니다.
+튜토리얼은 7개 Chapter와 26개의 짧은 페이지로 나뉘어 있고 전체 예상 학습 시간은 약 210분입니다. Chapter 1~6은 Xcode의 초기 코드에서 시작해 앱을 완성하고, Chapter 7은 Apple Vision Pro에서 권한 허용과 완성 동작을 확인합니다. 새 파일을 만드는 페이지와 기존 파일을 고치는 페이지가 분리되어 있으며, 각 코드 단계에서 새로 추가된 줄만 강조합니다. 아키텍처, 체류 판정, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
+
+프로젝트의 `DOCC_TEMPLATE_PATH`가 `DocumentationTheme`을 가리키므로 Xcode와 명령줄 빌드 모두 확대된 단계 카드, 파란 현재 단계 표시, 큰 코드 패널 스타일을 동일하게 적용합니다. 테마의 `js/handconstellation-step-sync.js`는 현재 단계가 바뀔 때 오른쪽 코드 패널만 스크롤해 강조된 줄이 보이도록 맞춥니다. 페이지 자체의 스크롤 위치는 건드리지 않고, 좁은 화면에서는 동작하지 않습니다.
 
 ## GitHub Pages 배포
 
@@ -113,9 +117,25 @@ xcodebuild \
 
 workflow는 저장소 이름을 `DOCC_HOSTING_BASE_PATH`로 자동 설정합니다. 사용자/조직 Pages처럼 도메인 루트에 배포할 때는 이 값을 빈 문자열로 바꾸세요.
 
+## 튜토리얼 자료 다시 만들기
+
+튜토리얼의 코드 스냅샷과 그림은 스크립트로 생성합니다. 앱 소스를 고친 뒤에는 다음을 실행해 스냅샷을 다시 만들고 참조를 검사하세요.
+
+```shell
+./Scripts/verify-snapshots.sh
+```
+
+각 파일의 마지막 스냅샷은 실제 앱 소스와 바이트 단위로 같아야 하며, 스크립트가 이를 검사합니다. 그림을 다시 만들려면 다음을 실행합니다.
+
+```shell
+python3 Scripts/generate_images.py
+```
+
 ## 현재 검증 범위
 
 - visionOS SDK 대상 앱과 테스트 번들 컴파일 성공
 - `swift test`: 15개 테스트 통과
 - DocC 아카이브 경고 없이 빌드 성공
-- 실제 기기 손 추적 동작은 Apple Vision Pro에서 최종 확인 필요
+- 튜토리얼 코드 스냅샷 133개가 모두 Swift 문법 검사를 통과
+- 각 파일의 마지막 스냅샷이 실제 앱 소스와 일치
+- 실제 기기 손 추적 동작과 Chapter 7의 캡처는 Apple Vision Pro에서 최종 확인 필요

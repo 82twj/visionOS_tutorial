@@ -1,0 +1,109 @@
+@Tutorial(time: 8) {
+    @Intro(title: "RealityView와 앱 진입점 연결하기") {
+        **이번 단계에서 만들 것**: 코디네이터를 SwiftUI 화면의 생명주기에 묶는 `ImmersiveView`와, 몰입형 공간 씬을 추가한 앱 진입점입니다.
+
+        Chapter 6이 끝나면 전체 앱이 빌드되고, Chapter 7에서 실기기 검증만 남습니다.
+
+        @Image(source: scene-structure.png, alt: "SwiftUI 제어 창에서 혼합 몰입형 공간의 RealityKit 장면을 여는 구조")
+    }
+
+    @Section(title: "몰입형 화면 만들기") {
+        @ContentAndMedia {
+            `RealityView`는 RealityKit 장면을 SwiftUI 안에 놓는 뷰입니다. 첫 클로저는 장면을 처음 만들 때 한 번 실행됩니다.
+
+            `.task`는 화면이 나타날 때 비동기 작업을 시작하고, 화면이 사라지면 그 작업을 자동으로 취소합니다. 추적 루프의 수명을 화면 수명에 묶는 가장 간단한 방법입니다.
+        }
+
+        @Steps {
+            @Step {
+                RealityKit과 SwiftUI를 import하고 뷰를 선언한 뒤, 렌더러의 루트 엔티티를 장면에 추가하세요. Chapter 5에서 트리를 하나로 모아 둔 덕분에 이 한 줄이면 충분합니다.
+
+                @Code(name: "ImmersiveView.swift", file: C06-T04-ImmersiveView-01.swift, previousFile: C06-T01-ImmersiveView-00.swift)
+            }
+
+            @Step {
+                `.task`에서 코디네이터를 실행하세요. 화면이 사라지면 이 task가 취소되고, Chapter 6에서 넣은 `Task.isCancelled` 검사가 추적 루프를 끝냅니다.
+
+                @Code(name: "ImmersiveView.swift", file: C06-T04-ImmersiveView-02.swift, previousFile: C06-T04-ImmersiveView-01.swift)
+            }
+
+            @Step {
+                두 개의 `.onChange`를 추가하세요. 초기화 요청 번호가 바뀌면 장면을 지우고, 그리기 상태가 바뀌면 코디네이터에 알립니다. 창의 버튼으로 상태를 바꿔도 몰입형 공간이 곧바로 반응합니다.
+
+                @Code(name: "ImmersiveView.swift", file: C06-T04-ImmersiveView-03.swift, previousFile: C06-T04-ImmersiveView-02.swift)
+            }
+
+            @Step {
+                `.onDisappear`에서 코디네이터를 정리하고 공간 상태를 닫힘으로 되돌리세요. 사용자가 시스템 제스처로 공간을 닫아도 창의 버튼이 실제 상태와 어긋나지 않습니다.
+
+                @Code(name: "ImmersiveView.swift", file: C06-T04-ImmersiveView-04.swift, previousFile: C06-T04-ImmersiveView-03.swift)
+            }
+        }
+    }
+
+    @Section(title: "몰입형 공간 씬 추가하기") {
+        @ContentAndMedia {
+            Chapter 1에서 앱의 `body`가 화면 하나가 아니라 **씬 목록**을 반환한다고 확인했습니다. 이제 그 목록에 두 번째 씬을 추가합니다.
+
+            `.mixed` 스타일은 현실 공간을 그대로 보면서 가상 물체를 함께 두는 방식입니다. 공중에 별자리를 그리려면 주변이 보여야 하므로 이 스타일을 씁니다.
+        }
+
+        @Steps {
+            @Step {
+                `WindowGroup` 아래에 `ImmersiveSpace`를 추가하고 같은 `appModel`을 전달하세요. Chapter 2에서 정한 `immersiveSpaceID`를 `ControlView`와 여기서 함께 사용하므로 두 곳의 문자열이 어긋날 수 없습니다.
+
+                @Code(name: "HandConstellationApp.swift", file: C06-T04-HandConstellationApp-03.swift, previousFile: C02-T03-HandConstellationApp-02.swift)
+            }
+
+            @Step {
+                **결과 확인**: 전체 프로젝트가 오류 없이 빌드되면 성공입니다. Simulator에서 창의 **별자리 그리기 시작**을 누르면 몰입형 공간이 열리고, 창의 상태가 "이 실행 환경에서는 ARKit 손 추적을 사용할 수 없습니다"로 바뀝니다. Simulator에서는 이것이 정상입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: 공간이 열리지 않는다면 `ImmersiveSpace`의 `id`와 `ControlView`가 여는 ID가 같은 `AppModel.immersiveSpaceID`를 쓰는지 확인하세요. 문자열을 직접 적었다면 오타가 있을 수 있습니다.
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            주먹을 쥐는 순간 별자리 점이 생기지 않는 이유는 무엇인가요?
+
+            @Choice(isCorrect: true) {
+                주먹을 처리하는 갈래에서 진행 중인 체류를 먼저 취소하고 즉시 반환하기 때문입니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    제어 손짓과 그리기 입력의 우선순위를 순서로 분리했습니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                주먹을 쥐면 ARKit 세션이 자동으로 멈추기 때문입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    세션은 계속 실행되고 그리기 상태와 체류 판정만 바뀝니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            몰입형 공간을 닫으면 추적 루프는 어떻게 끝나나요?
+
+            @Choice(isCorrect: false) {
+                `ImmersiveCoordinator`가 타이머로 일정 시간 뒤에 스스로 종료합니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    타이머는 사용하지 않습니다.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                화면이 사라지면서 `.task`가 취소되고, 반복문의 취소 검사가 루프를 끝냅니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    작업의 수명을 화면의 수명에 묶어 두었기 때문입니다.
+                }
+            }
+        }
+    }
+}

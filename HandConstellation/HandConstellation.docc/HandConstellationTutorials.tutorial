@@ -1,15 +1,84 @@
 @Tutorials(name: "visionOS 손 추적으로 별자리 그리기") {
     @Intro(title: "검지로 점을 찍고 선을 연결하세요") {
-        ARKit의 손 관절 좌표를 RealityKit 장면으로 전달하고, 체류 제스처를 직접 판정하는 기초 프로젝트를 만듭니다.
+        ARKit의 손 관절 좌표를 RealityKit 장면으로 전달하고, 체류 제스처를 직접 판정하는 visionOS 앱을 처음부터 만듭니다. 7개 Chapter를 순서대로 따라가면 Xcode의 시작 코드가 두 개의 별자리를 그리는 몰입형 앱이 됩니다.
+
+        중급 이상 난이도입니다. Swift와 SwiftUI를 이미 알고 있다고 가정하고, ARKit·RealityKit·좌표 변환·상태 머신은 사용하기 전에 설명합니다.
 
         @Image(source: constellation-hero.png, alt: "오른손 검지로 두 개의 빛나는 별자리를 그리고 그리기 상태를 제어하는 Hand Constellation 앱")
     }
 
-    @Chapter(name: "Hand Constellation 앱 만들기") {
-        Xcode의 시작 코드에서 출발해 권한, 상태, 손 추적, 체류 판정, 점과 선 렌더링을 작은 코드 변경 단위로 연결합니다.
+    @Chapter(name: "프로젝트 시작하기") {
+        Xcode에서 visionOS 프로젝트를 만들고, 자동으로 생성된 코드를 읽은 뒤, 손 추적 사용 목적을 설정합니다.
 
-        @Image(source: constellation-hero.png, alt: "검지 끝의 주황색 커서와 공중에 연결된 노란 점, 파란 선으로 이루어진 별자리")
+        @Image(source: prerequisites.png, alt: "필요한 사전 지식, 과정에서 설명하는 개념, 확인 환경을 정리한 표")
 
         @TutorialReference(tutorial: "doc:BuildingHandConstellation")
+        @TutorialReference(tutorial: "doc:CreatingTheVisionOSProject")
+        @TutorialReference(tutorial: "doc:ReadingTheStarterCode")
+        @TutorialReference(tutorial: "doc:AddingHandTrackingPermission")
+    }
+
+    @Chapter(name: "앱의 상태와 화면 만들기") {
+        창과 몰입형 공간이 함께 볼 공통 상태를 만들고, Xcode의 기본 화면을 제어 창으로 바꿉니다.
+
+        @Image(source: scene-structure.png, alt: "SwiftUI 제어 창에서 혼합 몰입형 공간의 RealityKit 장면을 여는 구조")
+
+        @TutorialReference(tutorial: "doc:CreatingTheAppModelFile")
+        @TutorialReference(tutorial: "doc:BuildingTheAppModel")
+        @TutorialReference(tutorial: "doc:RenamingContentViewToControlView")
+        @TutorialReference(tutorial: "doc:BuildingTheControlWindow")
+    }
+
+    @Chapter(name: "손 추적 구현하기") {
+        ARKit 세션을 시작해 권한을 확인하고, 오른손 검지 끝의 위치를 월드 좌표로 바꿉니다.
+
+        @Image(source: hand-skeleton-joints.png, alt: "오른손 골격에서 검지 끝 관절이 강조된 도해")
+
+        @TutorialReference(tutorial: "doc:CreatingTheHandTrackingServiceFile")
+        @TutorialReference(tutorial: "doc:StartingTheHandTrackingSession")
+        @TutorialReference(tutorial: "doc:ConvertingTheFingertipToWorldSpace")
+    }
+
+    @Chapter(name: "점 입력과 손짓 구현하기") {
+        검지가 한곳에 머무는 동작을 한 번의 점 입력으로 바꾸고, 주먹 유지 손짓으로 그리기 상태를 전환합니다.
+
+        @Image(source: dwell-states.png, alt: "idle, dwelling, coolingDown 세 상태를 화살표로 이은 체류 판정 상태 머신")
+
+        @TutorialReference(tutorial: "doc:CreatingTheInputDetectorFiles")
+        @TutorialReference(tutorial: "doc:CollectingTunableValues")
+        @TutorialReference(tutorial: "doc:DetectingTheDwell")
+        @TutorialReference(tutorial: "doc:DetectingTheFistHold")
+        @TutorialReference(tutorial: "doc:RecognizingAFistInTheHandSkeleton")
+    }
+
+    @Chapter(name: "별자리 모델과 화면 구현하기") {
+        확정된 점을 별자리 단위로 저장하고, RealityKit 엔티티로 점과 선을 표현합니다.
+
+        @Image(source: constellation-storage.png, alt: "이중 배열의 각 행이 하나의 별자리가 되는 저장 구조 그림")
+
+        @TutorialReference(tutorial: "doc:CreatingTheConstellationFiles")
+        @TutorialReference(tutorial: "doc:StoringMultipleConstellations")
+        @TutorialReference(tutorial: "doc:RenderingPointsAndLines")
+    }
+
+    @Chapter(name: "전체 기능 연결하기") {
+        추적, 손짓, 체류, 모델, 렌더러를 안전한 순서로 연결하고 몰입형 공간의 생명주기에 묶습니다.
+
+        @Image(source: input-pipeline.png, alt: "주먹 판정부터 점 확정까지 이어지는 다섯 단계 입력 처리 순서도")
+
+        @TutorialReference(tutorial: "doc:CreatingTheImmersiveFiles")
+        @TutorialReference(tutorial: "doc:BuildingTheCoordinatorLifecycle")
+        @TutorialReference(tutorial: "doc:ConnectingTheInputPipeline")
+        @TutorialReference(tutorial: "doc:ConnectingTheRealityViewAndAppScenes")
+    }
+
+    @Chapter(name: "Vision Pro에서 실행하기") {
+        Apple Vision Pro에서 앱을 실행해 손 추적 권한을 허용하고, 서로 연결되지 않은 두 개의 별자리를 만들어 전체 동작을 확인합니다.
+
+        @Image(source: device-first-constellation.png, alt: "다섯 개의 노란 점과 네 개의 파란 선으로 이루어진 첫 별자리")
+
+        @TutorialReference(tutorial: "doc:RunningOnVisionPro")
+        @TutorialReference(tutorial: "doc:DrawingTheFirstConstellation")
+        @TutorialReference(tutorial: "doc:DrawingTheSecondConstellation")
     }
 }

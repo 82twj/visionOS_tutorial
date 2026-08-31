@@ -1,0 +1,53 @@
+import Foundation
+
+/// Converts a held fist pose into a single drawing-mode toggle.
+struct FistHoldDetector: Sendable {
+    enum Phase: Equatable, Sendable {
+        case ready
+        case holding
+        case waitingForRelease
+    }
+
+    struct Snapshot: Equatable, Sendable {
+        let phase: Phase
+        let progress: Float
+        let didToggle: Bool
+    }
+
+    private enum State: Equatable, Sendable {
+        case ready
+        case holding(startedAt: TimeInterval)
+        case waitingForRelease
+    }
+
+    let holdDuration: TimeInterval
+    private var state: State = .ready
+
+    init(holdDuration: TimeInterval = ConstellationConfiguration.standard.fistHoldDuration) {
+        precondition(holdDuration > 0)
+        self.holdDuration = holdDuration
+    }
+
+    /// Processes whether the tracked hand currently forms a fist.
+    mutating func update(isFist: Bool, at timestamp: TimeInterval) -> Snapshot {
+        guard timestamp.isFinite else {
+            reset()
+            return readySnapshot
+        }
+
+        guard isFist else {
+            state = .ready
+            return readySnapshot
+        }
+
+        return readySnapshot
+    }
+
+    mutating func reset() {
+        state = .ready
+    }
+
+    private var readySnapshot: Snapshot {
+        Snapshot(phase: .ready, progress: 0, didToggle: false)
+    }
+}

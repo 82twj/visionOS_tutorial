@@ -1,0 +1,69 @@
+@Tutorial(time: 8) {
+    @Intro(title: "visionOS 프로젝트 만들기") {
+        **이번 단계에서 만들 것**: `HandConstellation`이라는 이름의 새 visionOS App 프로젝트입니다. 코드는 아직 한 줄도 쓰지 않습니다.
+
+        이 페이지는 Xcode 화면 조작만 다룹니다. 여기서 정한 이름과 설정이 이후 모든 Chapter의 파일 위치와 타깃 이름이 됩니다.
+
+        @Image(source: xcode-new-project-template.png, alt: "Xcode 새 프로젝트 창에서 visionOS 탭과 App 템플릿이 파란색으로 강조된 화면")
+    }
+
+    @Section(title: "템플릿 고르기") {
+        @ContentAndMedia {
+            visionOS App 템플릿은 창 하나와 몰입형 공간을 열 수 있는 최소 구조를 만들어 줍니다. 다른 템플릿을 고르면 이후 단계의 파일 구성이 달라집니다.
+
+            @Image(source: xcode-new-project-template.png, alt: "Xcode 새 프로젝트 창에서 visionOS 탭과 App 템플릿이 파란색으로 강조된 화면")
+        }
+
+        @Steps {
+            @Step {
+                Xcode를 열고 시작 화면에서 **Create New Project**를 선택하세요. Xcode가 이미 열려 있다면 **File > New > Project**를 사용합니다.
+            }
+
+            @Step {
+                템플릿 창 위쪽 플랫폼 탭에서 **visionOS**를 선택하세요. 오른쪽 그림에서 파란색으로 표시된 탭입니다.
+            }
+
+            @Step {
+                Application 목록에서 **App**을 선택하고 **Next**를 누르세요. Window나 Immersive Space 템플릿이 아니라 App입니다.
+            }
+        }
+    }
+
+    @Section(title: "이름과 언어 정하기") {
+        @ContentAndMedia {
+            Product Name은 앱 이름이자 소스 폴더 이름이 됩니다. 이후 페이지의 파일 경로 안내가 이 이름을 그대로 사용하므로 철자를 정확히 맞추세요.
+
+            @Image(source: xcode-project-options.png, alt: "Product Name에 HandConstellation, Interface에 SwiftUI, Language에 Swift를 지정한 화면")
+        }
+
+        @Steps {
+            @Step {
+                Product Name에 `HandConstellation`을 입력하세요. 공백이나 하이픈 없이 한 단어로 씁니다.
+            }
+
+            @Step {
+                Interface를 **SwiftUI**로, Language를 **Swift**로 선택하세요. 이 과정의 모든 화면 코드는 SwiftUI로 작성합니다.
+            }
+
+            @Step {
+                Initial Scene은 **Window**로 둡니다. 몰입형 공간은 Chapter 6에서 직접 추가하며, 그 과정을 통해 두 씬의 관계를 배웁니다.
+            }
+
+            @Step {
+                **Next**를 누르고 프로젝트를 저장할 폴더를 고르세요. 나중에 다시 열 수 있도록 저장 위치를 기억해 둡니다.
+            }
+
+            @Step {
+                프로젝트가 열리면 Project navigator 맨 위의 파란 아이콘을 선택하고 TARGETS에서 **HandConstellation**을 고른 뒤, **General** 탭에서 Minimum Deployments가 visionOS 2.0 이상인지 확인하세요.
+            }
+
+            @Step {
+                **결과 확인**: Xcode 창 제목이 `HandConstellation`이고 Project navigator에 `HandConstellationApp.swift`와 `ContentView.swift`가 보이면 성공입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: 플랫폼 탭에 visionOS가 없다면 Xcode 버전이 낮거나 visionOS 플랫폼이 설치되지 않은 것입니다. **Settings > Components**에서 설치한 뒤 Xcode를 다시 실행하세요.
+            }
+        }
+    }
+}

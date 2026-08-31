@@ -1,0 +1,63 @@
+@Tutorial(time: 7) {
+    @Intro(title: "기존 ContentView를 ControlView로 바꾸기") {
+        **이번 단계에서 만들 것**: Xcode가 만들어 준 `ContentView`를 이 앱의 제어 창인 `ControlView`로 바꾸고, 앱 진입점이 새 이름과 `AppModel`을 사용하게 만듭니다.
+
+        화면 내용은 아직 바꾸지 않습니다. 이름과 연결만 정리해 다음 페이지에서 UI에만 집중할 수 있게 합니다.
+
+        @Image(source: scene-structure.png, alt: "SwiftUI 제어 창에서 혼합 몰입형 공간의 RealityKit 장면을 여는 구조")
+    }
+
+    @Section(title: "파일과 타입 이름 바꾸기") {
+        @ContentAndMedia {
+            `ContentView`는 템플릿이 붙여 준 일반적인 이름입니다. 이 앱에서 이 화면이 하는 일은 몰입형 공간을 열고 닫고 그리기를 전환하는 **제어**이므로, 이름을 바꿔 두면 이후 코드를 읽기 쉬워집니다.
+        }
+
+        @Steps {
+            @Step {
+                Project navigator에서 `ContentView.swift`를 한 번 클릭한 뒤 다시 클릭해 이름을 `ControlView.swift`로 바꾸세요.
+            }
+
+            @Step {
+                파일 안의 `struct ContentView`와 `#Preview` 안의 `ContentView()`도 `ControlView`로 바꾸세요. Xcode에서 타입 이름을 보조 클릭하고 **Refactor > Rename**을 쓰면 두 곳이 함께 바뀝니다.
+
+                @Code(name: "ControlView.swift", file: C02-T03-ControlView-00.swift, previousFile: C01-T03-ContentView-00.swift)
+            }
+
+            @Step {
+                `ControlView`가 사용할 세 가지 환경 값을 추가하세요. `appModel`은 공통 상태를 읽고, 나머지 두 값은 몰입형 공간을 열고 닫는 데 사용합니다.
+
+                미리 보기에도 `AppModel()`을 넘겨야 Canvas가 동작합니다.
+
+                @Code(name: "ControlView.swift", file: C02-T03-ControlView-01.swift, previousFile: C02-T03-ControlView-00.swift)
+            }
+        }
+    }
+
+    @Section(title: "앱 진입점 연결하기") {
+        @ContentAndMedia {
+            `AppModel` 인스턴스는 앱이 살아 있는 동안 하나만 있어야 합니다. 진입점에서 `@State`로 만들고 환경으로 내려보내면, 어느 화면에서 읽어도 같은 인스턴스를 보게 됩니다.
+        }
+
+        @Steps {
+            @Step {
+                `HandConstellationApp.swift`에서 `AppModel` 인스턴스를 상태로 만들고, `ContentView()`를 `ControlView()`로 바꾸세요.
+
+                @Code(name: "HandConstellationApp.swift", file: C02-T03-HandConstellationApp-01.swift, previousFile: C01-T03-HandConstellationApp-00.swift)
+            }
+
+            @Step {
+                `.environment(appModel)`을 붙여 하위 화면이 공통 상태를 읽게 하고, 창 크기가 내용에 맞게 정해지도록 `.windowResizability(.contentSize)`를 추가하세요.
+
+                @Code(name: "HandConstellationApp.swift", file: C02-T03-HandConstellationApp-02.swift, previousFile: C02-T03-HandConstellationApp-01.swift)
+            }
+
+            @Step {
+                **결과 확인**: 빌드가 성공하고 Simulator에서 여전히 `Hello, world!` 창이 보이면 성공입니다. 이름만 바꿨으므로 화면은 그대로입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: `ContentView`를 찾을 수 없다는 오류가 남아 있다면 진입점 파일에서 바꾸지 않은 자리가 있는지 확인하세요. 프로젝트 전체 검색으로 `ContentView`를 찾으면 빠릅니다.
+            }
+        }
+    }
+}

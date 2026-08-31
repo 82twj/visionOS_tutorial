@@ -1,0 +1,45 @@
+@Tutorial(time: 5) {
+    @Intro(title: "새 파일 준비하기: 설정값과 입력 감지기") {
+        **이번 단계에서 만들 것**: 비어 있는 Swift 파일 세 개입니다. 기존 파일은 건드리지 않습니다.
+
+        Chapter 4에서 다룰 두 가지 판정은 서로 완전히 다른 일이므로 파일도 나눕니다. 두 판정이 함께 쓰는 숫자들은 세 번째 파일에 모읍니다.
+
+        @Image(source: xcode-new-file.png, alt: "새 파일 만들기 창에서 visionOS 그룹과 Swift File 템플릿이 파란색으로 강조된 화면")
+    }
+
+    @Section(title: "세 파일의 책임 비교하기") {
+        @ContentAndMedia {
+            `DwellDetector`는 **위치**를 받아 점을 찍을지 결정합니다. `FistHoldDetector`는 **주먹인지 아닌지**만 받아 그리기를 전환할지 결정합니다.
+
+            둘 다 시간과 거리 기준값을 쓰는데, 그 숫자를 코드 곳곳에 흩어 두면 나중에 조정하기 어렵습니다. 그래서 `ConstellationConfiguration`에 모읍니다.
+        }
+
+        @Steps {
+            @Step {
+                `HandConstellation` 폴더를 보조 클릭하고 **New File from Template**에서 **Swift File**을 골라 `ConstellationConfiguration.swift`를 만드세요. Targets의 **HandConstellation** 체크를 확인합니다.
+
+                @Code(name: "ConstellationConfiguration.swift", file: C04-T01-Configuration-00.swift, reset: true)
+            }
+
+            @Step {
+                같은 방법으로 `DwellDetector.swift`를 만드세요. 이 파일은 검지가 한곳에 머무는 시간을 재는 일만 합니다.
+
+                @Code(name: "DwellDetector.swift", file: C04-T01-DwellDetector-00.swift, reset: true)
+            }
+
+            @Step {
+                마지막으로 `FistHoldDetector.swift`를 만드세요. 이 파일은 주먹을 유지한 시간을 재는 일만 합니다. 손 모양을 판단하는 코드는 여기가 아니라 `HandTrackingService`에 들어갑니다.
+
+                @Code(name: "FistHoldDetector.swift", file: C04-T01-FistHoldDetector-00.swift, reset: true)
+            }
+
+            @Step {
+                **결과 확인**: Project navigator에 세 파일이 모두 보이고, 각 파일이 `import Foundation` 한 줄이면 성공입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: 파일을 만들 때 SwiftUI View 템플릿을 고르면 `View` 프로토콜 코드가 함께 들어옵니다. 그런 경우 파일을 지우고 **Swift File**로 다시 만드는 편이 빠릅니다.
+            }
+        }
+    }
+}

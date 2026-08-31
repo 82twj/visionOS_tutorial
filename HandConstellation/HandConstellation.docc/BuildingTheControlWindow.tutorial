@@ -1,0 +1,149 @@
+@Tutorial(time: 10) {
+    @Intro(title: "제어 창의 화면과 동작 완성하기") {
+        **이번 단계에서 만들 것**: 상태를 보여 주고 몰입형 공간을 열고 닫는 제어 창입니다.
+
+        위에서 아래로 한 줄씩 쌓아 갑니다. 각 줄을 추가할 때 그 줄이 필요로 하는 계산 속성도 함께 나타납니다.
+
+        @Image(source: scene-structure.png, alt: "SwiftUI 제어 창과 혼합 몰입형 공간이 AppModel을 공유하는 구조")
+    }
+
+    @Section(title: "현재 상태 보여 주기") {
+        @ContentAndMedia {
+            사용자는 창을 보고 지금 손 추적이 되고 있는지, 그리기가 켜져 있는지 알 수 있어야 합니다. 몰입형 공간 안에서는 문제 원인을 알기 어렵기 때문입니다.
+        }
+
+        @Steps {
+            @Step {
+                `VStack`의 내용을 앱 제목과 짧은 사용 설명으로 바꾸세요. 정렬을 `.leading`으로 두면 글이 왼쪽에 맞춰집니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-02.swift, previousFile: C02-T03-ControlView-01.swift)
+            }
+
+            @Step {
+                별자리와 점 개수, 추적 상태를 한 줄에 보여 주는 카드를 추가하세요. 아래쪽에 함께 나타난 세 계산 속성이 `trackingStatus`를 글자, 기호, 색으로 바꿔 줍니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-03.swift, previousFile: C02-T04-ControlView-02.swift)
+            }
+
+            @Step {
+                Chapter 2에서 만든 `statusMessage`를 그대로 보여 주는 문장을 추가하세요. 상태에 따라 다음에 할 행동을 안내합니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-04.swift, previousFile: C02-T04-ControlView-03.swift)
+            }
+
+            @Step {
+                그리기 켜짐과 꺼짐을 보여 주는 줄과, 그 표시에 쓰이는 세 계산 속성을 추가하세요. 오른쪽에는 주먹 손짓 안내를 함께 둡니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-05.swift, previousFile: C02-T04-ControlView-04.swift)
+            }
+
+            @Step {
+                주먹을 쥐고 있는 동안 진행률 막대를 보여 주세요. 진행률이 0보다 클 때만 나타나므로, 평소에는 창이 조용합니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-06.swift, previousFile: C02-T04-ControlView-05.swift)
+            }
+        }
+    }
+
+    @Section(title: "몰입형 공간 열고 닫기") {
+        @ContentAndMedia {
+            `openImmersiveSpace`는 결과를 돌려주는 비동기 함수입니다. 사용자가 시스템 확인을 취소할 수도 있으므로, 성공했을 때만 상태를 `.open`으로 바꿔야 창의 버튼이 실제와 어긋나지 않습니다.
+        }
+
+        @Steps {
+            @Step {
+                공간을 여는 부분을 먼저 만드세요. 열기 직전에 그리기를 끄고 `.transitioning`으로 바꾼 다음, 결과가 `.opened`일 때만 `.open`을 저장합니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-07.swift, previousFile: C02-T04-ControlView-06.swift)
+            }
+
+            @Step {
+                공간을 닫는 부분과 전환 중일 때 아무것도 하지 않는 부분을 추가하세요. 닫을 때 그리기를 끄고 개수를 0으로 되돌립니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-08.swift, previousFile: C02-T04-ControlView-07.swift)
+            }
+        }
+    }
+
+    @Section(title: "버튼 세 개 놓기") {
+        @ContentAndMedia {
+            버튼은 각각 하나의 일만 합니다. 시작·종료, 그리기 전환, 초기화입니다. 지금 할 수 없는 동작은 `disabled`로 막아 사용자가 잘못된 순서로 누르지 않게 합니다.
+        }
+
+        @Steps {
+            @Step {
+                시작·종료 버튼을 추가하세요. 공간이 열려 있으면 먼저 그리기를 끄고 닫습니다. 함께 추가되는 두 계산 속성이 현재 상태에 맞는 버튼 글자와 기호를 고릅니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-09.swift, previousFile: C02-T04-ControlView-08.swift)
+            }
+
+            @Step {
+                그리기 전환 버튼을 추가하세요. 몰입형 공간이 열려 있고 손 추적이 진행 중일 때만 누를 수 있습니다. 주먹 손짓을 쓸 수 없는 상황에서도 그리기를 켤 수 있는 대체 경로입니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-10.swift, previousFile: C02-T04-ControlView-09.swift)
+            }
+
+            @Step {
+                초기화 버튼을 추가하세요. 지울 점이 하나도 없으면 눌리지 않습니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-11.swift, previousFile: C02-T04-ControlView-10.swift)
+            }
+
+            @Step {
+                마지막으로 안전 안내 문구를 추가하세요. 공중에 팔을 뻗는 앱이므로 주변 물체와의 거리를 미리 알려 줍니다.
+
+                @Code(name: "ControlView.swift", file: C02-T04-ControlView-12.swift, previousFile: C02-T04-ControlView-11.swift)
+            }
+
+            @Step {
+                **결과 확인**: Simulator에서 창에 제목, 상태 카드, 안내 문장, 버튼 세 개가 보이면 성공입니다. **별자리 그리기 시작**은 아직 누르지 마세요. 몰입형 공간 씬은 Chapter 6에서 추가합니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: `statusLabel`이나 `drawingStatusColor`를 찾을 수 없다는 오류가 나면 코드 아래쪽의 계산 속성들이 모두 들어갔는지 확인하세요. 오른쪽 코드를 끝까지 내려 확인할 수 있습니다.
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            `AppModel`의 `drawingState` 초기값이 `.disabled`인 이유는 무엇인가요?
+
+            @Choice(isCorrect: true) {
+                공간을 여는 손동작이 곧바로 별자리 점이 되지 않게 하기 위해서입니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    안전한 기본값에서 시작하고, 사용자가 명시적으로 켜도록 만듭니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                `@Observable`이 Boolean이 아닌 값을 기본값 없이 만들 수 없기 때문입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    기술적 제약이 아니라 사용자 경험을 위한 선택입니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            `ImmersiveSpaceState`에 `.transitioning`이 있는 이유는 무엇인가요?
+
+            @Choice(isCorrect: false) {
+                몰입형 공간이 열리는 애니메이션을 직접 그리기 위해서입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    전환 애니메이션은 시스템이 담당합니다.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                공간을 여는 동안 버튼을 막아 같은 요청이 두 번 나가지 않게 하기 위해서입니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    `isTransitioning`이 참인 동안 시작 버튼이 비활성화됩니다.
+                }
+            }
+        }
+    }
+}

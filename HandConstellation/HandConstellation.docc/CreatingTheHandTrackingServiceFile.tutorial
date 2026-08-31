@@ -1,0 +1,47 @@
+@Tutorial(time: 5) {
+    @Intro(title: "새 파일 준비하기: HandTrackingService") {
+        **이번 단계에서 만들 것**: 비어 있는 `HandTrackingService.swift` 파일 하나입니다. 기존 파일은 건드리지 않습니다.
+
+        ARKit과 관련된 코드를 화면 코드와 섞지 않고 이 파일 한 곳에 모읍니다. 나중에 손 추적 방식을 바꾸더라도 이 파일만 보면 됩니다.
+
+        @Image(source: xcode-new-file.png, alt: "새 파일 만들기 창에서 visionOS 그룹과 Swift File 템플릿이 파란색으로 강조된 화면")
+    }
+
+    @Section(title: "ARKit 코드를 담을 파일 만들기") {
+        @ContentAndMedia {
+            이 파일이 맡을 일은 세 가지입니다. 손 추적을 시작하고, 오른손 검지 끝의 위치를 계산하고, 오른손이 주먹인지 판단하는 것입니다. 화면이나 별자리 규칙은 다루지 않습니다.
+
+            @Image(source: hand-skeleton-joints.png, alt: "오른손 골격에서 검지 끝 관절이 강조된 도해")
+        }
+
+        @Steps {
+            @Step {
+                Project navigator에서 `HandConstellation` 폴더를 보조 클릭하고 **New File from Template**을 선택하세요.
+            }
+
+            @Step {
+                **visionOS** 그룹의 **Swift File** 템플릿을 고르고 **Next**를 누르세요.
+            }
+
+            @Step {
+                파일 이름에 `HandTrackingService.swift`를 입력하고, Targets에서 **HandConstellation**에 체크가 되어 있는지 확인한 뒤 **Create**를 누르세요.
+
+                @Image(source: xcode-file-options.png, alt: "파일 이름과 Target Membership을 확인하는 저장 화면")
+            }
+
+            @Step {
+                새 파일에는 `import Foundation` 한 줄만 있습니다. 다음 페이지에서 ARKit import를 추가하는 것부터 시작합니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T01-HandTrackingService-00.swift, reset: true)
+            }
+
+            @Step {
+                **결과 확인**: Project navigator에 `HandTrackingService.swift`가 `AppModel.swift`와 같은 폴더에 보이면 성공입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: 파일이 엉뚱한 위치에 만들어졌다면 Project navigator에서 드래그해 옮길 수 있습니다. 옮긴 뒤에도 Target Membership 체크는 그대로 유지됩니다.
+            }
+        }
+    }
+}

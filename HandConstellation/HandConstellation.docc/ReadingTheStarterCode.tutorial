@@ -1,0 +1,85 @@
+@Tutorial(time: 7) {
+    @Intro(title: "Xcode 기본 코드 읽고 실행하기") {
+        **이번 단계에서 만들 것**: 없습니다. Xcode가 자동으로 넣어 준 두 Swift 파일을 읽고, Simulator에서 기본 앱이 실행되는지 확인합니다.
+
+        완성 코드를 붙여 넣기 전에 시작점을 이해해 두면, 다음 Chapter부터 오른쪽 코드에서 파란색으로 강조되는 줄이 왜 그 자리에 들어가는지 알 수 있습니다.
+
+        @Image(source: xcode-project-navigator.png, alt: "Project navigator에서 앱 진입점 파일과 ContentView.swift가 파란색으로 강조된 화면")
+    }
+
+    @Section(title: "두 개의 시작 파일 읽기") {
+        @ContentAndMedia {
+            visionOS App 템플릿은 앱의 진입점 파일과 첫 화면 파일을 만들어 줍니다. 이 페이지에서는 두 파일을 읽기만 하고 수정하지 않습니다.
+
+            @Image(source: xcode-project-navigator.png, alt: "Project navigator에서 앱 진입점 파일과 ContentView.swift가 파란색으로 강조된 화면")
+        }
+
+        @Steps {
+            @Step {
+                Project navigator에서 `ContentView.swift`를 여세요. 오른쪽 코드가 Xcode가 넣어 준 시작 코드입니다. 아직 바꾸지 마세요.
+
+                @Code(name: "ContentView.swift", file: C01-T03-ContentView-00.swift, reset: true)
+            }
+
+            @Step {
+                `import SwiftUI`는 `Text`, `Image`, `VStack` 같은 화면 구성 요소를 사용할 수 있게 합니다.
+
+                @Code(name: "ContentView.swift", file: C01-T03-ContentView-00.swift)
+            }
+
+            @Step {
+                `struct ContentView: View`는 이 타입이 하나의 SwiftUI 화면임을 뜻합니다. `body` 안의 내용이 실제로 보이는 부분입니다.
+
+                @Code(name: "ContentView.swift", file: C01-T03-ContentView-00.swift)
+            }
+
+            @Step {
+                맨 아래 `#Preview`는 앱을 실행하지 않고도 Xcode Canvas에서 화면을 미리 보여 줍니다. Chapter 2에서 이 파일이 제어 창이 됩니다.
+
+                @Code(name: "ContentView.swift", file: C01-T03-ContentView-00.swift)
+            }
+
+            @Step {
+                이제 `HandConstellationApp.swift`를 여세요. `@main`이 붙은 타입이 앱의 시작점이고, `WindowGroup` 안의 `ContentView()`가 처음 표시할 창입니다.
+
+                @Code(name: "HandConstellationApp.swift", file: C01-T03-HandConstellationApp-00.swift, reset: true)
+            }
+
+            @Step {
+                `body`의 타입이 `some Scene`인 점에 주목하세요. 화면 하나가 아니라 **씬 목록**을 반환합니다. Chapter 6에서 여기에 몰입형 공간 씬을 하나 더 추가합니다.
+
+                @Code(name: "HandConstellationApp.swift", file: C01-T03-HandConstellationApp-00.swift)
+            }
+        }
+    }
+
+    @Section(title: "Simulator에서 실행하기") {
+        @ContentAndMedia {
+            손 추적을 만들기 전에 프로젝트 자체가 정상인지 먼저 확인합니다. 이 단계는 Simulator만으로 충분합니다.
+
+            @Image(source: xcode-simulator-hello.png, alt: "실행 대상으로 Apple Vision Pro Simulator를 고르고 Hello, world! 창을 확인하는 화면")
+        }
+
+        @Steps {
+            @Step {
+                Xcode 위쪽 도구 막대의 실행 대상에서 Apple Vision Pro Simulator를 선택하세요.
+            }
+
+            @Step {
+                **Run** 버튼을 누르고 Simulator가 켜질 때까지 기다리세요. 처음 실행은 몇 분이 걸릴 수 있습니다.
+            }
+
+            @Step {
+                `Hello, world!` 창이 보이면 시작 프로젝트가 정상입니다.
+            }
+
+            @Step {
+                **결과 확인**: Simulator에 창이 뜨고 Xcode에 빌드 오류가 없으면 성공입니다. 손 추적은 아직 아무것도 만들지 않았으므로 동작하지 않는 것이 정상입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: Simulator runtime이 없다는 오류가 나오면 **Settings > Components**에서 visionOS Simulator를 설치하세요. 빌드는 되는데 창이 보이지 않으면 Simulator에서 홈 화면으로 나갔다가 앱 아이콘을 다시 눌러 보세요.
+            }
+        }
+    }
+}

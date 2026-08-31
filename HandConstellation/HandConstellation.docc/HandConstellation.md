@@ -17,6 +17,8 @@ Hand Constellation은 오른손 검지 끝을 커서로 사용합니다. 사용�
 5. `ConstellationModel`이 별자리별 점과 선분을 결정합니다.
 6. `ConstellationRenderer`가 RealityKit 엔티티를 장면에 추가합니다.
 
+체류 시간, 안정 반경, 재활성화 거리, 점과 선의 크기 같은 조절 값은 `ConstellationConfiguration` 한 곳에 모여 있습니다.
+
 > Important: ARKit 손 추적 데이터는 몰입형 공간에서 사용합니다. 실제 손 추적과 권한 흐름은 Apple Vision Pro에서 확인하세요.
 
 ## Topics
@@ -25,6 +27,7 @@ Hand Constellation은 오른손 검지 끝을 커서로 사용합니다. 사용�
 
 - <doc:HandConstellationTutorials>
 - <doc:BuildingHandConstellation>
+- <doc:RunningOnVisionPro>
 
 ### 설계 이해하기
 

@@ -1,0 +1,103 @@
+@Tutorial(time: 10) {
+    @Intro(title: "AppModel의 상태를 작은 단위로 추가하기") {
+        **이번 단계에서 만들 것**: 창과 몰입형 공간이 함께 읽고 쓰는 `AppModel` 타입입니다.
+
+        상태를 한 번에 다 적지 않고, 각 값이 왜 필요한지 확인하면서 한 Step에 하나씩 추가합니다. 오른쪽 코드에서 파란색으로 강조된 줄만 새로 입력하세요.
+
+        @Image(source: drawing-toggle.png, alt: "그리기 꺼짐과 켜짐 상태를 하나의 앱 모델에서 공유하는 구조")
+    }
+
+    @Section(title: "관찰 가능한 타입 만들기") {
+        @ContentAndMedia {
+            `@Observable`은 Swift의 Observation 기능입니다. 이 매크로가 붙은 타입의 속성이 바뀌면, 그 속성을 읽고 있던 SwiftUI 화면이 자동으로 다시 그려집니다.
+
+            `@MainActor`는 이 타입의 모든 코드가 메인 스레드에서만 실행된다는 뜻입니다. 화면 상태를 다루므로 메인 스레드로 고정해 두면 경합을 걱정하지 않아도 됩니다.
+        }
+
+        @Steps {
+            @Step {
+                `import Foundation`을 `import Observation`으로 바꾸고, `@MainActor`와 `@Observable`을 붙인 빈 클래스를 선언하세요.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-01.swift, previousFile: C02-T01-AppModel-00.swift)
+            }
+
+            @Step {
+                몰입형 공간의 세 상태를 나타내는 `ImmersiveSpaceState`를 추가하세요. 닫힘과 열림 사이에 **전환 중**을 두면 시작 버튼을 연속으로 누르는 일을 막을 수 있습니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-02.swift, previousFile: C02-T02-AppModel-01.swift)
+            }
+
+            @Step {
+                손 추적 진행 상태를 나타내는 `TrackingStatus`를 추가하세요. 권한 확인 중, 추적 중, 미지원, 거부, 오류를 구분해 두면 창에서 서로 다른 안내를 보여 줄 수 있습니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-03.swift, previousFile: C02-T02-AppModel-02.swift)
+            }
+
+            @Step {
+                점 생성이 가능한지를 나타내는 `DrawingState`를 추가하세요. 이 값이 두 상태뿐인 덕분에 창 버튼과 주먹 손짓이 같은 규칙을 공유할 수 있습니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-04.swift, previousFile: C02-T02-AppModel-03.swift)
+            }
+        }
+    }
+
+    @Section(title: "저장할 값 정하기") {
+        @ContentAndMedia {
+            앞에서 만든 세 enum은 값의 **종류**만 정의했습니다. 이제 실제로 현재 값을 담을 속성을 추가합니다.
+        }
+
+        @Steps {
+            @Step {
+                몰입형 공간을 여는 데 사용할 ID 상수와, 앞의 세 enum을 담을 저장 속성을 추가하세요. `drawingState`의 초기값이 `.disabled`인 점을 확인하세요. 공간을 여는 손동작이 곧바로 점이 되지 않게 하는 안전장치입니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-05.swift, previousFile: C02-T02-AppModel-04.swift)
+            }
+
+            @Step {
+                점 개수, 별자리 개수, 주먹 유지 진행률, 초기화 요청 번호를 추가하세요. 앞의 세 값은 창에 그대로 표시하고, `resetGeneration`은 Chapter 6에서 장면을 지우는 신호로 사용합니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-06.swift, previousFile: C02-T02-AppModel-05.swift)
+            }
+
+            @Step {
+                현재 상태를 한국어 문장으로 바꾸는 `statusMessage`를 추가하세요. 문장 만들기를 여기에 모아 두면 화면 코드가 짧아집니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-07.swift, previousFile: C02-T02-AppModel-06.swift)
+            }
+
+            @Step {
+                `isTransitioning`과 `isDrawingEnabled` 계산 속성을 추가하세요. 여러 화면에서 enum 비교를 되풀이하지 않고 읽기 쉬운 Boolean으로 쓸 수 있습니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-08.swift, previousFile: C02-T02-AppModel-07.swift)
+            }
+        }
+    }
+
+    @Section(title: "상태를 바꾸는 통로 만들기") {
+        @ContentAndMedia {
+            상태를 바꾸는 코드를 여러 곳에 흩어 놓으면, 창 버튼과 주먹 손짓의 동작이 조금씩 달라지기 쉽습니다. 바꾸는 경로를 메서드 세 개로 모읍니다.
+        }
+
+        @Steps {
+            @Step {
+                그리기 상태를 직접 지정하는 메서드와 반대로 뒤집는 메서드를 추가하세요. 상태를 바꿀 때 진행률을 0으로 되돌리는 것도 여기서 함께 처리합니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-09.swift, previousFile: C02-T02-AppModel-08.swift)
+            }
+
+            @Step {
+                초기화를 요청하는 메서드를 추가하세요. 값을 직접 지우는 대신 `resetGeneration`을 1 올립니다. 몰입형 화면이 이 숫자의 변화를 보고 장면을 지웁니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-10.swift, previousFile: C02-T02-AppModel-09.swift)
+            }
+
+            @Step {
+                **결과 확인**: 이 시점의 `AppModel.swift`는 실제 앱의 완성본과 같습니다. **Product > Build**가 오류 없이 끝나면 성공입니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: `@Observable`을 찾을 수 없다는 오류가 나면 첫 줄이 `import Observation`인지 확인하세요. `Foundation`만 import하면 이 매크로를 쓸 수 없습니다.
+            }
+        }
+    }
+}

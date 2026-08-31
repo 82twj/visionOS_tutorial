@@ -1,0 +1,113 @@
+@Tutorial(time: 11) {
+    @Intro(title: "코디네이터의 생명주기 만들기") {
+        **이번 단계에서 만들 것**: 다섯 구성 요소를 소유하고, 손 추적 세션을 시작하고 끝내는 `ImmersiveCoordinator`입니다.
+
+        입력을 처리하는 부분은 다음 페이지에서 만듭니다. 여기서는 시작, 종료, 초기화처럼 **바깥에서 부르는** 메서드를 먼저 완성합니다.
+
+        @Image(source: scene-structure.png, alt: "SwiftUI 제어 창과 혼합 몰입형 공간이 AppModel을 공유하는 구조")
+    }
+
+    @Section(title: "구성 요소 모으기") {
+        @ContentAndMedia {
+            코디네이터는 다섯 가지를 소유합니다. 손 추적 서비스, 체류 감지기, 주먹 감지기, 별자리 모델, 렌더러입니다.
+
+            렌더러만 공개하는 이유는 `ImmersiveView`가 `rootEntity`를 장면에 추가해야 하기 때문입니다. 나머지는 바깥에서 볼 필요가 없습니다.
+        }
+
+        @Steps {
+            @Step {
+                필요한 세 모듈을 import하고 클래스를 선언한 뒤 렌더러를 공개 속성으로 두세요. `@Observable`을 붙이면 SwiftUI가 이 타입의 변화를 관찰할 수 있습니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-01.swift, previousFile: C06-T01-ImmersiveCoordinator-00.swift)
+            }
+
+            @Step {
+                나머지 구성 요소를 private으로 선언하세요. 마지막 `appliedDrawingState`는 코디네이터가 마지막으로 반영한 그리기 상태를 기억합니다. 상태가 실제로 바뀐 순간을 한 번만 처리하기 위해 필요합니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-02.swift, previousFile: C06-T02-ImmersiveCoordinator-01.swift)
+            }
+
+            @Step {
+                initializer에서 하나의 설정으로 네 구성 요소를 만드세요. 같은 설정을 넘기므로 감지기의 기준값과 렌더러의 크기가 서로 어긋나지 않습니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-03.swift, previousFile: C06-T02-ImmersiveCoordinator-02.swift)
+            }
+
+            @Step {
+                진행 중인 입력을 취소하는 private 도우미 두 개를 추가하세요. `cancelDwell`은 체류와 커서를, `trackingLost`는 거기에 주먹 판정까지 되돌립니다. 이후 여러 곳에서 이 둘을 부릅니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-04.swift, previousFile: C06-T02-ImmersiveCoordinator-03.swift)
+            }
+        }
+    }
+
+    @Section(title: "추적 루프 만들기") {
+        @ContentAndMedia {
+            `anchorUpdates`는 async sequence입니다. 배열처럼 `for await`으로 순회하지만, 값이 준비될 때까지 기다렸다가 하나씩 넘겨줍니다. 손 앵커가 갱신될 때마다 한 번씩 몸통이 실행됩니다.
+
+            이 반복은 화면이 사라져 task가 취소될 때까지 이어집니다.
+        }
+
+        @Steps {
+            @Step {
+                `run`을 선언하고 상태를 `.requestingAuthorization`으로 바꾼 뒤 손 추적을 시작하세요. 성공하면 `.tracking`이 됩니다. 지금은 오류를 하나로 묶어 처리하고, 곧 갈래를 나눕니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-05.swift, previousFile: C06-T02-ImmersiveCoordinator-04.swift)
+            }
+
+            @Step {
+                손 앵커를 순회하세요. task가 취소되면 반복을 끝내고, 오른손이 아닌 앵커는 건너뜁니다. 이 앱은 오른손만 사용합니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-06.swift, previousFile: C06-T02-ImmersiveCoordinator-05.swift)
+            }
+
+            @Step {
+                반복이 정상적으로 끝났을 때만 상태를 `.idle`로 되돌리세요. 취소로 끝난 경우에는 이미 화면이 사라지는 중이므로 상태를 건드리지 않습니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-07.swift, previousFile: C06-T02-ImmersiveCoordinator-06.swift)
+            }
+
+            @Step {
+                오류 갈래를 나누고 마무리 코드를 추가하세요. 미지원, 권한 거부, 취소, 그 밖의 오류를 서로 다른 상태로 옮기므로 창에서 각각 다른 안내를 보여 줄 수 있습니다. 어떤 경로로 끝나든 세션을 멈추고 커서를 숨깁니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-08.swift, previousFile: C06-T02-ImmersiveCoordinator-07.swift)
+            }
+        }
+    }
+
+    @Section(title: "상태 변화와 종료 처리하기") {
+        @ContentAndMedia {
+            그리기 상태는 두 곳에서 바뀝니다. 창의 버튼과 주먹 손짓입니다. 두 경로가 같은 결과를 내도록 반영 코드를 한곳에 모읍니다.
+        }
+
+        @Steps {
+            @Step {
+                그리기 상태가 실제로 바뀌었을 때만 반응하는 메서드를 추가하세요. 진행 중인 체류를 취소하고, 꺼지는 경우에는 현재 별자리를 끝냅니다. 이 한 줄 덕분에 다시 켜서 찍는 첫 점이 새 별자리가 됩니다.
+
+                함께 추가한 `drawingStateChanged`는 `ImmersiveView`가 부를 통로입니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-09.swift, previousFile: C06-T02-ImmersiveCoordinator-08.swift)
+            }
+
+            @Step {
+                전체 초기화 메서드를 추가하세요. 감지기, 모델, 렌더러를 모두 되돌리고 창의 개수 표시도 0으로 맞춥니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-10.swift, previousFile: C06-T02-ImmersiveCoordinator-09.swift)
+            }
+
+            @Step {
+                종료 메서드를 추가하세요. 세션을 멈추고, 장면을 비우고, 그리기를 꺼 둡니다. 다음에 공간을 다시 열었을 때 이전 세션의 상태가 남지 않게 합니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-11.swift, previousFile: C06-T02-ImmersiveCoordinator-10.swift)
+            }
+
+            @Step {
+                **결과 확인**: `process(anchor:)`를 찾을 수 없다는 오류 하나만 남으면 정상입니다. 그 메서드는 다음 페이지에서 만듭니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: `anchorUpdates`를 찾을 수 없다면 `handTrackingService.provider`를 거쳐 접근하고 있는지 확인하세요. 세션이 아니라 제공자가 앵커를 만듭니다.
+            }
+        }
+    }
+}

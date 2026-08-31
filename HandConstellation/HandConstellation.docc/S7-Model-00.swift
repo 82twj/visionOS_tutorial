@@ -1,4 +1,0 @@
-import simd
-
-struct ConstellationModel {
-}

@@ -1,0 +1,121 @@
+@Tutorial(time: 10) {
+    @Intro(title: "오른손 검지 끝을 월드 좌표로 바꾸기") {
+        **이번 단계에서 만들 것**: 손 앵커 하나를 받아 오른손 검지 끝의 월드 위치를 돌려주는 메서드입니다.
+
+        ARKit이 주는 관절 위치는 **손 앵커를 기준으로 한** 좌표입니다. RealityKit 장면에 점을 놓으려면 이를 월드 기준으로 바꿔야 합니다. 코드를 쓰기 전에 그 계산이 무엇인지 먼저 봅니다.
+
+        @Image(source: world-transform-math.png, alt: "두 개의 4×4 변환을 곱해 얻은 행렬의 네 번째 열에서 위치를 꺼내는 과정 그림")
+    }
+
+    @Section(title: "좌표 변환 이해하기") {
+        @ContentAndMedia {
+            `simd`는 Apple 플랫폼의 벡터·행렬 계산 라이브러리입니다. 여기서는 4×4 변환 행렬 두 개를 곱하는 데만 사용합니다.
+
+            변환 행렬은 "어떤 기준에서 어떤 기준으로" 옮기는지를 담습니다. 두 변환을 곱하면 두 이동을 이어 붙인 하나의 변환이 됩니다.
+
+            @Image(source: world-transform-math.png, alt: "손 앵커 변환과 관절 변환을 곱해 월드 변환을 얻는 그림")
+        }
+
+        @Steps {
+            @Step {
+                오른쪽 그림의 왼쪽 칸을 보세요. `originFromAnchorTransform`은 월드 원점에서 손 앵커까지의 변환입니다. 손이 움직이면 이 값이 바뀝니다.
+            }
+
+            @Step {
+                가운데 칸의 `anchorFromJointTransform`은 손 앵커에서 특정 관절까지의 변환입니다. 손가락을 굽히면 이 값이 바뀝니다.
+            }
+
+            @Step {
+                두 변환을 곱하면 월드 원점에서 검지 끝까지의 변환이 됩니다. 곱하는 순서가 중요합니다. 왼쪽부터 바깥 기준, 오른쪽으로 갈수록 안쪽 기준입니다.
+            }
+
+            @Step {
+                아래쪽 칸을 보세요. 결과 행렬의 네 번째 열(`columns.3`)에 위치가 들어 있습니다. 앞의 세 열은 회전과 크기 정보입니다.
+            }
+        }
+    }
+
+    @Section(title: "메서드로 옮기기") {
+        @ContentAndMedia {
+            앞의 계산을 하기 전에 값을 믿을 수 있는지 먼저 확인합니다. 손이 화면 밖으로 나가거나 가려지면 ARKit은 오래된 값이나 의미 없는 값을 줄 수 있습니다.
+
+            `guard`가 이어질 때는 각 줄이 어떤 실패를 막는지 따로 읽어 보세요.
+        }
+
+        @Steps {
+            @Step {
+                메서드를 선언하고 세 가지를 확인하세요. 왼손 앵커가 아닌지, 앵커가 지금 추적 중인지, 손 골격 데이터가 들어 있는지입니다. 반환 타입이 옵셔널이므로 하나라도 실패하면 위치를 만들지 않고 `nil`을 돌려줍니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T03-HandTrackingService-08.swift, previousFile: C03-T02-HandTrackingService-07.swift)
+            }
+
+            @Step {
+                손 골격에서 `.indexFingerTip` 관절을 꺼내고, 그 관절 하나가 추적 중인지 다시 확인하세요. 손 전체는 보이는데 특정 손가락만 가려지는 경우가 있습니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T03-HandTrackingService-09.swift, previousFile: C03-T03-HandTrackingService-08.swift)
+            }
+
+            @Step {
+                앞에서 본 곱셈을 그대로 씁니다. 결과 행렬의 `columns.3`에서 x, y, z를 꺼내 위치를 만드세요.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T03-HandTrackingService-10.swift, previousFile: C03-T03-HandTrackingService-09.swift)
+            }
+
+            @Step {
+                마지막으로 세 성분이 모두 유한한 수인지 확인하고 돌려주세요. 추적이 끊기는 순간 무한대나 `NaN`이 섞여 들어올 수 있고, 그 값이 그대로 흘러가면 이후 거리 계산이 전부 어긋납니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T03-HandTrackingService-11.swift, previousFile: C03-T03-HandTrackingService-10.swift)
+            }
+
+            @Step {
+                **결과 확인**: 빌드가 성공하면 됩니다. `hasFiniteComponents`가 아직 없다는 오류가 난다면 정상입니다. 이 도우미는 Chapter 4에서 `DwellDetector.swift`와 함께 추가합니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: 곱셈 순서를 바꾸면 빌드는 되지만 점이 엉뚱한 곳에 생깁니다. `anchor.originFromAnchorTransform`이 앞, `indexFingerTip.anchorFromJointTransform`이 뒤인지 확인하세요.
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            `HandTrackingProvider.isSupported` 검사와 권한 검사는 어떻게 다른가요?
+
+            @Choice(isCorrect: true) {
+                앞은 이 실행 환경에 기능이 있는지를, 뒤는 사용자가 사용을 허락했는지를 확인합니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    지원하지 않는 환경에서는 권한을 물어볼 필요조차 없습니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                둘은 같은 검사이며 하나만 있어도 충분합니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    지원되는 기기에서도 사용자가 권한을 거부할 수 있습니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            두 변환을 곱한 행렬에서 위치는 어디에 있나요?
+
+            @Choice(isCorrect: false) {
+                `columns.0`의 x, y, z
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    앞의 세 열은 회전과 크기를 담습니다.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                `columns.3`의 x, y, z
+
+                @Justification(reaction: "맞습니다!") {
+                    4×4 변환 행렬의 네 번째 열이 평행 이동, 즉 위치입니다.
+                }
+            }
+        }
+    }
+}

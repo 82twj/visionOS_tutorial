@@ -1,0 +1,83 @@
+@Tutorial(time: 10) {
+    @Intro(title: "ARKit 손 추적 세션 시작하기") {
+        **이번 단계에서 만들 것**: 손 추적을 시작하고 멈추는 `HandTrackingService` 타입입니다.
+
+        시작하기 전에 세 가지를 확인해야 합니다. 실행 환경이 손 추적을 **지원**하는지, 사용자가 **권한**을 허용했는지, 그리고 세션이 실제로 **실행**되는지입니다. 이 셋은 서로 다른 문제이므로 코드에서도 따로 다룹니다.
+
+        @Image(source: hand-skeleton-joints.png, alt: "오른손 골격과 관절이 제공하는 정보를 정리한 도해")
+    }
+
+    @Section(title: "ARKit의 두 타입 이해하기") {
+        @ContentAndMedia {
+            `ARKitSession`은 카메라와 센서를 쓸 권한을 관리하고 데이터 제공자를 실행하는 **세션**입니다.
+
+            `HandTrackingProvider`는 그 세션 위에서 손 앵커를 계속 만들어 내는 **제공자**입니다. 세션 하나에 여러 제공자를 올릴 수 있습니다.
+
+            이 앱은 세션 하나와 손 추적 제공자 하나만 사용합니다.
+        }
+
+        @Steps {
+            @Step {
+                `ARKit`과 `simd`를 import하고, 지원하지 않는 환경과 권한 거부를 구분할 오류 타입을 추가하세요. `LocalizedError`를 따르면 오류를 화면에 그대로 보여 줄 수 있습니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-01.swift, previousFile: C03-T01-HandTrackingService-00.swift)
+            }
+
+            @Step {
+                `@MainActor` 클래스를 선언하고 제공자와 세션을 속성으로 두세요. 제공자는 코디네이터가 손 앵커를 받아야 하므로 공개하고, 세션은 이 타입 안에서만 씁니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-02.swift, previousFile: C03-T02-HandTrackingService-01.swift)
+            }
+        }
+    }
+
+    @Section(title: "지원과 권한을 차례로 확인하기") {
+        @ContentAndMedia {
+            아래 세 개의 검사는 각각 다른 실패를 걸러 냅니다. 순서를 바꾸면 사용자에게 잘못된 안내를 하게 됩니다.
+
+            지원하지 않는 환경에서는 권한을 물어볼 필요가 없고, 권한이 없으면 세션을 실행할 수 없습니다.
+
+            > Note: 여기서부터는 메서드 하나를 여러 Step에 걸쳐 채웁니다. 중간 Step에는 아직 만들지 않은 부분을 대신하는 임시 줄이 들어갈 수 있습니다. 다음 Step에서 그 줄이 사라지면 정상입니다.
+        }
+
+        @Steps {
+            @Step {
+                첫 줄에서 현재 실행 환경이 손 추적을 지원하는지 검사하세요. Simulator처럼 지원하지 않는 환경이면 여기서 멈춥니다. 이 검사를 빼면 Simulator에서 권한 창이 뜨는 이상한 흐름이 됩니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-03.swift, previousFile: C03-T02-HandTrackingService-02.swift)
+            }
+
+            @Step {
+                현재 권한 상태를 조회하세요. 사용자가 아직 선택한 적이 없다면 `.notDetermined`입니다. 조회 결과가 없을 때를 대비해 기본값도 `.notDetermined`로 둡니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-04.swift, previousFile: C03-T02-HandTrackingService-03.swift)
+            }
+
+            @Step {
+                아직 선택하지 않았을 때만 시스템 권한 창을 띄우고, 허용되지 않았으면 오류를 던지세요. 이미 거부한 사용자에게 창을 반복해서 띄우지 않기 위한 조건입니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-05.swift, previousFile: C03-T02-HandTrackingService-04.swift)
+            }
+
+            @Step {
+                세 검사를 모두 통과했을 때만 세션에 제공자를 올려 추적을 시작하세요. 이 줄이 성공하면 손 앵커가 흐르기 시작합니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-06.swift, previousFile: C03-T02-HandTrackingService-05.swift)
+            }
+
+            @Step {
+                세션을 멈추는 메서드를 추가하세요. 몰입형 공간을 닫을 때 이 메서드를 불러 센서 사용을 끝냅니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-07.swift, previousFile: C03-T02-HandTrackingService-06.swift)
+            }
+
+            @Step {
+                **결과 확인**: 빌드가 성공하면 됩니다. 이 타입을 아직 아무도 사용하지 않으므로 앱 동작은 달라지지 않습니다.
+            }
+
+            @Step {
+                **문제가 생겼다면**: `HandTrackingProvider`를 찾을 수 없다면 첫 줄의 `import ARKit`이 들어갔는지 확인하세요. 실행 대상이 visionOS가 아닌 경우에도 같은 오류가 납니다.
+            }
+        }
+    }
+}
