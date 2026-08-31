@@ -2,21 +2,21 @@
     @Intro(title: "여러 별자리를 나누어 저장하기") {
         **이번 단계에서 만들 것**: 확정된 점을 받아 별자리 단위로 저장하고, 이전 점과의 선분을 알려 주는 `ConstellationModel`입니다.
 
-        점을 배열 하나에 모두 넣으면 그리기를 껐다 켠 뒤에 찍은 점이 이전 별자리와 이어져 버립니다. 그래서 배열의 배열을 씁니다.
+        점을 배열 하나에 모두 넣으면 그리기를 껐다 켠 뒤에 찍은 점이 이전 별자리와 이어져 버립니다. 그래서 각 별자리가 자기 점 배열과 닫힘 상태를 갖게 합니다.
 
-        @Image(source: constellation-storage.png, alt: "이중 배열의 두 행이 각각 하나의 별자리가 되고 행 사이에는 선이 없음을 보여 주는 그림")
+        @Image(source: constellation-storage.png, alt: "각 별자리가 점 배열과 열림 또는 닫힘 상태를 가지며 별자리 사이에는 선이 없음을 보여 주는 그림")
     }
 
     @Section(title: "저장 구조 이해하기") {
         @ContentAndMedia {
-            `[[SIMD3<Float>]]`는 "위치 배열들의 배열"입니다. 바깥 배열의 원소 하나가 별자리 하나입니다.
+            `[Constellation]`에서 원소 하나가 별자리 하나입니다. 각 원소는 `[SIMD3<Float>]` 점 배열과 `isClosed` 상태를 가집니다.
 
-            @Image(source: constellation-storage.png, alt: "이중 배열로 두 별자리를 저장한 구조 그림")
+            @Image(source: constellation-storage.png, alt: "점 배열과 닫힘 상태로 두 별자리를 저장한 구조 그림")
         }
 
         @Steps {
             @Step {
-                오른쪽 그림의 첫 번째 줄이 `constellations[0]`입니다. 점 다섯 개가 순서대로 이어져 선 네 개가 됩니다.
+                오른쪽 그림의 첫 번째 줄이 `constellations[0]`입니다. 점 세 개가 순서대로 이어지고 첫 점으로 닫혀 선 세 개가 됩니다.
             }
 
             @Step {
@@ -116,7 +116,13 @@
             }
 
             @Step {
-                **결과 확인**: 이 시점의 `ConstellationModel.swift`는 실제 앱의 완성본과 같습니다. 이 타입은 프레임워크에 의존하지 않으므로 macOS에서 `swift test`로 바로 검증할 수 있습니다.
+                별자리를 점 배열과 `isClosed` 상태를 가진 값으로 바꾸고 `closeCurrentConstellation()`을 추가하세요. 일반 점은 현재 별자리의 모든 기존 점과 최소 거리를 검사합니다. 닫기는 새 점을 넣지 않고 마지막 점에서 저장된 첫 점까지의 선분만 반환합니다.
+
+                @Code(name: "ConstellationModel.swift", file: C05-T02-ConstellationModel-13.swift, previousFile: C05-T02-ConstellationModel-12.swift)
+            }
+
+            @Step {
+                **결과 확인**: `swift test`에서 삼각형을 닫아도 점이 세 개로 유지되고, 닫힌 뒤의 다음 점이 선 없이 새 별자리를 시작하면 성공입니다.
             }
 
             @Step {

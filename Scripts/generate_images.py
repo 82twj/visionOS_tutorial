@@ -470,6 +470,10 @@ for title, color, rows in groups:
         body.append(t(x + 26, y, key, 17, color, 600, font=MONO))
         body.append(t(x + 26, y + 30, value, 19, BODY))
     x += 336
+body.append(rect(728, 450, 316, 124, 20, PANEL, ACCENT, 2))
+body.append(t(754, 486, "닫기 스냅", 22, INK, 650))
+body.append(t(754, 520, "진입 0.030 m", 17, ACCENT, 600, font=MONO))
+body.append(t(754, 550, "해제 0.040 m", 17, ACCENT, 600, font=MONO))
 body.append(rect(56, 596, 988, 62, 16, "#131b2b", ACCENT, 2))
 body.append(t(88, 634, "ARKit과 RealityKit의 거리 단위는 미터입니다. 0.015는 1.5cm를 뜻합니다.",
               20, BODY))
@@ -537,11 +541,11 @@ figure("fist-hold-states", "주먹 유지 상태 머신",
 
 # --- 14. 별자리 저장 구조 -----------------------------------------------------
 
-body = [heading("여러 별자리를 나누어 저장하기", "constellations: [[SIMD3<Float>]]")]
+body = [heading("여러 별자리를 나누어 저장하기", "constellations: [Constellation]")]
 body.append(rect(56, 168, 988, 300, 24, PANEL, LINE, 2))
 body.append(t(88, 214, "constellations", 24, INK, 650, font=MONO))
 y = 250
-for label, count, color in [("[0]", 5, YELLOW), ("[1]", 4, ACCENT)]:
+for label, count, color, closed in [("[0]", 3, YELLOW, True), ("[1]", 4, ACCENT, False)]:
     body.append(rect(88, y, 924, 96, 18, "#0e1524", color, 2))
     body.append(t(116, y + 56, label, 22, color, 650, font=MONO))
     for i in range(count):
@@ -552,18 +556,21 @@ for label, count, color in [("[0]", 5, YELLOW), ("[1]", 4, ACCENT)]:
     for i in range(count):
         cx = 210 + i * 92
         body.append(f'<circle cx="{cx}" cy="{y+48}" r="18" fill="{color}"/>')
-    body.append(t(760, y + 56, f"점 {count}개 · 선 {count-1}개", 20, BODY))
+    line_count = count if closed else count - 1
+    body.append(t(650, y + 56, f"점 {count}개 · 선 {line_count}개", 20, BODY))
+    body.append(t(866, y + 56, "닫힘" if closed else "열림", 18,
+                  GREEN if closed else MUTED, 650))
     y += 116
 body.append(rect(56, 500, 484, 160, 20, "#131b2b", GREEN, 2))
 body.append(t(88, 546, "선이 생기는 곳", 22, GREEN, 650))
-body.append(t(88, 588, "같은 배열 안에서 이전 점이", 19, BODY))
-body.append(t(88, 620, "있을 때만 선분을 만듭니다.", 19, BODY))
+body.append(t(88, 588, "같은 Constellation 안에서", 19, BODY))
+body.append(t(88, 620, "이전 점 또는 첫 점으로 잇습니다.", 19, BODY))
 body.append(rect(560, 500, 484, 160, 20, "#131b2b", ORANGE, 2))
 body.append(t(592, 546, "선이 생기지 않는 곳", 22, ORANGE, 650))
 body.append(t(592, 588, "[0]의 마지막 점과 [1]의 첫 점", 19, BODY))
 body.append(t(592, 620, "사이에는 선이 없습니다.", 19, BODY))
-figure("constellation-storage", "여러 별자리를 저장하는 이중 배열",
-       "이중 배열의 두 행이 각각 하나의 별자리가 되고 행 사이에는 선이 없음을 보여 주는 그림",
+figure("constellation-storage", "여러 별자리와 닫힘 상태 저장",
+       "각 Constellation이 점 배열과 열림 또는 닫힘 상태를 가지며 별자리 사이에는 선이 없음을 보여 주는 그림",
        "".join(body))
 
 # --- 15. 엔티티 트리 ----------------------------------------------------------
@@ -573,21 +580,22 @@ body.append(rect(400, 170, 300, 96, 20, PANEL, ACCENT, 3))
 body.append(t(550, 214, "rootEntity", 24, ACCENT, 650, "middle", font=MONO))
 body.append(t(550, 246, "장면에 추가되는 단 하나의 부모", 17, MUTED, anchor="middle"))
 children = [
-    ("lineContainer", "파란 원기둥 선분", ACCENT, 72),
-    ("pointContainer", "노란 구 점", YELLOW, 400),
-    ("cursor", "주황 검지 커서", ORANGE, 728),
+    ("lineContainer", "파란 확정 선분", ACCENT, 36),
+    ("pointContainer", "노란 구 점", YELLOW, 292),
+    ("guidanceContainer", "닫기 대상·미리보기", GREEN, 548),
+    ("cursor", "검지 커서", ORANGE, 804),
 ]
 for label, note, color, x in children:
-    body.append(f'<path d="M550 266 V 320 H {x+150} V 366" fill="none" stroke="{LINE}" stroke-width="3"/>')
-    body.append(rect(x, 366, 300, 118, 20, PANEL, color, 2))
-    body.append(t(x + 150, 412, label, 21, color, 650, "middle", font=MONO))
-    body.append(t(x + 150, 448, note, 18, BODY, anchor="middle"))
+    body.append(f'<path d="M550 266 V 320 H {x+118} V 366" fill="none" stroke="{LINE}" stroke-width="3"/>')
+    body.append(rect(x, 366, 236, 118, 20, PANEL, color, 2))
+    body.append(t(x + 118, 412, label, 17, color, 650, "middle", font=MONO))
+    body.append(t(x + 118, 448, note, 16, BODY, anchor="middle"))
 body.append(rect(56, 528, 988, 132, 20, "#131b2b", LINE, 2))
 body.append(t(88, 572, "컨테이너를 나누면", 22, INK, 650))
-body.append(t(88, 612, "초기화할 때 점과 선의 자식만 지우면 되고, 커서는 그대로 둘 수 있습니다.", 20, BODY))
-body.append(t(88, 644, "커서는 체류 중일 때만 켜지므로 처음에는 isEnabled 가 false 입니다.", 20, MUTED))
+body.append(t(88, 612, "초기화할 때 확정 점·선과 닫기 안내를 지우고 커서 엔티티는 재사용합니다.", 20, BODY))
+body.append(t(88, 644, "첫 점 강조와 미리보기 선은 guidanceContainer 안에서만 켜고 끕니다.", 20, MUTED))
 figure("entity-tree", "RealityKit 엔티티 트리",
-       "rootEntity 아래에 선 컨테이너, 점 컨테이너, 커서가 자식으로 붙은 구조도",
+       "rootEntity 아래에 선, 점, 닫기 안내 컨테이너와 커서가 자식으로 붙은 구조도",
        "".join(body))
 
 # --- 16. 파일 책임 비교 -------------------------------------------------------
@@ -624,22 +632,23 @@ steps = [
     ("1", "주먹인지 먼저 판정", "제어 손짓이 그리기보다 우선", ORANGE),
     ("2", "주먹이면 체류 취소 후 반환", "손짓 자체가 점이 되지 않음", ORANGE),
     ("3", "그리기 꺼짐이면 반환", "꺼진 상태에서는 점이 생기지 않음", MUTED),
-    ("4", "검지 위치를 체류 감지기로", "진행률로 커서를 키움", ACCENT),
-    ("5", "확정된 위치만 모델로", "모델이 허용할 때만 렌더러가 그림", YELLOW),
+    ("4", "시작점 닫기 후보를 먼저", "스냅 영역이면 일반 점 입력을 멈춤", GREEN),
+    ("5", "그 밖의 위치는 점 체류로", "진행률로 커서를 키움", ACCENT),
+    ("6", "확정 결과만 모델로", "점 추가 또는 기존 첫 점으로 닫기", YELLOW),
 ]
-y = 168
+y = 136
 for number, title, note, color in steps:
-    body.append(rect(56, y, 988, 88, 18, PANEL, color, 2))
-    body.append(f'<circle cx="106" cy="{y+44}" r="26" fill="{color}"/>')
-    body.append(t(106, y + 53, number, 24, "#0b1120", 700, "middle"))
-    body.append(t(154, y + 38, title, 23, INK, 650))
-    body.append(t(154, y + 70, note, 19, MUTED))
-    if y < 540:
-        body.append(f'<path d="M550 {y+88} v 6" stroke="{LINE}" stroke-width="3"/>'
-                    + head(550, y + 104, 90, LINE, 12))
-    y += 106
+    body.append(rect(56, y, 988, 76, 16, PANEL, color, 2))
+    body.append(f'<circle cx="106" cy="{y+38}" r="23" fill="{color}"/>')
+    body.append(t(106, y + 46, number, 22, "#0b1120", 700, "middle"))
+    body.append(t(154, y + 32, title, 21, INK, 650))
+    body.append(t(154, y + 61, note, 18, MUTED))
+    if number != "6":
+        body.append(f'<path d="M550 {y+76} v 4" stroke="{LINE}" stroke-width="3"/>'
+                    + head(550, y + 88, 90, LINE, 10))
+    y += 88
 figure("input-pipeline", "한 프레임의 입력 처리 순서",
-       "주먹 판정, 그리기 상태 검사, 체류 판정, 점 확정으로 이어지는 다섯 단계 순서도",
+       "주먹 판정, 그리기 상태 검사, 시작점 닫기, 일반 점 체류, 모델 확정으로 이어지는 여섯 단계 순서도",
        "".join(body))
 
 # --- 18. 실행 대상 선택 -------------------------------------------------------
@@ -739,11 +748,73 @@ figure("device-first-constellation", "다섯 점으로 만든 첫 별자리",
        "번호가 붙은 다섯 개의 노란 점과 이를 잇는 네 개의 파란 선으로 이루어진 첫 별자리",
        "".join(body))
 
-# --- 21. 두 번째 별자리 ------------------------------------------------------
+# --- 21. 시작점 스냅과 닫기 피드백 -----------------------------------------
+
+body = [heading("처음 점으로 돌아가 도형 닫기", "새 점이 아니라 기존 첫 점을 다시 선택합니다")]
+panels = [
+    (56, "1. 닫기 가능", "첫 점이 크게 빛남"),
+    (392, "2. 첫 점에서 머무르기", "미리보기 선과 진행률"),
+    (728, "3. 닫기 완료", "점 3개 · 선 3개"),
+]
+for x, title, note in panels:
+    body.append(rect(x, 158, 316, 420, 24, "#070b15", LINE, 2, opacity=0.72))
+    body.append(t(x + 24, 202, title, 22, INK, 650))
+    body.append(t(x + 24, 548, note, 18, MUTED))
+
+panel_points = [(118, 452), (214, 278), (318, 448)]
+for panel_index, panel_x in enumerate([0, 336, 672]):
+    pts = [(x + panel_x, y) for x, y in panel_points]
+    body.append(polyline(pts[:3] if panel_index == 2 else pts[:3], ACCENT))
+    if panel_index == 2:
+        (x1, y1), (x2, y2) = pts[2], pts[0]
+        body.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
+                    f'stroke="{ACCENT}" stroke-width="9" stroke-linecap="round"/>')
+    first_x, first_y = pts[0]
+    body.append(f'<circle cx="{first_x}" cy="{first_y}" r="31" fill="none" '
+                f'stroke="{ACCENT}" stroke-width="6" opacity=".8"/>')
+    if panel_index == 1:
+        last_x, last_y = pts[2]
+        body.append(f'<line x1="{last_x}" y1="{last_y}" x2="{first_x}" y2="{first_y}" '
+                    f'stroke="{ACCENT}" stroke-width="6" stroke-dasharray="14 10" opacity=".65"/>')
+        body.append(f'<circle cx="{first_x+16}" cy="{first_y-12}" r="16" fill="{ORANGE}"/>')
+        body.append(t(first_x + 52, first_y - 34, "검지 커서", 16, ORANGE, 600))
+body.append(rect(56, 606, 988, 62, 16, "#131b2b", GREEN, 2))
+body.append(t(88, 644, "마지막 선의 끝은 손가락 좌표가 아니라 저장된 첫 점 좌표이므로 정확히 닫힙니다.", 20, BODY))
+figure("closure-snap-feedback", "시작점 스냅으로 도형 닫기",
+       "세 점 이후 첫 점 강조, 시작점 dwell과 미리보기 선, 점 세 개와 선 세 개로 닫힌 완료 상태",
+       "".join(body))
+
+# --- 22. 닫힌 삼각형 --------------------------------------------------------
+
+triangle = [(190, 470), (390, 230), (620, 470), (190, 470)]
+body = [heading("세 점으로 완성한 닫힌 삼각형", "처음 점에서 0.8초 머물러 닫기")]
+body.append(rect(56, 160, 700, 420, 26, "#070b15", ACCENT, 2, opacity=0.65))
+for i in range(1, len(triangle)):
+    x1, y1 = triangle[i - 1]
+    x2, y2 = triangle[i]
+    body.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
+                f'stroke="{ACCENT}" stroke-width="9" stroke-linecap="round"/>')
+for index, (x, y) in enumerate(triangle[:3]):
+    body.append(f'<circle cx="{x}" cy="{y}" r="16" fill="{YELLOW}" stroke="#fff1a8" stroke-width="5"/>')
+    body.append(t(x, y - 32, str(index + 1), 20, INK, 700, "middle"))
+body.append(f'<circle cx="190" cy="470" r="34" fill="none" stroke="{GREEN}" stroke-width="6"/>')
+body.append(card(784, 160, 260, 200, "완료 상태", [
+    "별자리 1개", "점 3개", "선 3개",
+], GREEN))
+body.append(card(784, 380, 260, 200, "제어창 안내", [
+    "도형이 닫혔어요", "손을 옮기면", "새 별자리 시작",
+], ACCENT))
+body.append(rect(56, 606, 988, 62, 16, "#131b2b", LINE, 2))
+body.append(t(88, 644, "첫 점을 복제하지 않으므로 네 번째 점 없이 세 변이 정확히 만납니다.", 20, BODY))
+figure("device-closed-triangle", "닫힌 삼각형 완성 결과",
+       "노란 점 세 개와 파란 선 세 개로 정확히 닫힌 삼각형, 첫 점 완료 강조와 제어창 안내",
+       "".join(body))
+
+# --- 23. 두 번째 별자리 ------------------------------------------------------
 
 body = [heading("분리된 두 번째 별자리", "그리기를 끄고 다시 켠 뒤")]
 body.append(rect(56, 160, 988, 420, 26, "#070b15", ACCENT, 2, opacity=0.65))
-body.append(polyline([(120, 470), (230, 300), (370, 400), (470, 250), (580, 360)]))
+body.append(polyline([(120, 470), (270, 250), (480, 470), (120, 470)]))
 body.append(polyline([(700, 470), (800, 320), (910, 420), (985, 272)]))
 body.append(f'<circle cx="640" cy="418" r="38" fill="none" stroke="{ORANGE}" stroke-width="5"/>')
 body.append(f'<path d="M616 394 l48 48" stroke="{ORANGE}" stroke-width="6" stroke-linecap="round"/>')
@@ -751,7 +822,7 @@ body.append(t(640, 512, "여기에 선이 없어야 합니다", 20, ORANGE, 650,
 body.append(t(300, 214, "첫 번째 별자리", 21, YELLOW, 650, "middle"))
 body.append(t(846, 214, "두 번째 별자리", 21, YELLOW, 650, "middle"))
 body.append(rect(56, 606, 988, 62, 16, "#131b2b", GREEN, 2))
-body.append(t(88, 644, "창의 표시가 별자리 2개 · 점 9개 가 되면 별자리 분리가 올바르게 동작한 것입니다.",
+body.append(t(88, 644, "창의 표시가 별자리 2개 · 점 7개 가 되면 별자리 분리가 올바르게 동작한 것입니다.",
               20, BODY))
 figure("device-second-constellation", "분리된 두 번째 별자리",
        "첫 번째 별자리와 두 번째 별자리 사이에 선이 없음을 강조 표시로 나타낸 화면",

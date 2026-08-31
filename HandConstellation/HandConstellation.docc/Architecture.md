@@ -15,8 +15,9 @@ HandTrackingService ── 월드 검지 위치
 ImmersiveCoordinator
         ├── FistHoldDetector ── 그리기 켜기/끄기
         ├── DwellDetector ── 확정 위치
-        ├── ConstellationModel ── 별자리별 점 + 선택적 선분
-        └── ConstellationRenderer ── RealityKit 엔티티
+        ├── ClosureDetector ── 첫 점 스냅 + 닫기 확정
+        ├── ConstellationModel ── 별자리별 점 + 열림/닫힘 + 선분
+        └── ConstellationRenderer ── 점·선·커서·닫기 안내 엔티티
 ```
 
 ## 계층별 책임
@@ -33,11 +34,11 @@ ImmersiveCoordinator
 
 ### 순수 도메인 로직
 
-`FistHoldDetector`, `DwellDetector`, `ConstellationModel`은 ARKit이나 RealityKit에 의존하지 않습니다. 그래서 호스트 macOS에서도 Swift Package 테스트를 실행해 손짓의 1회 전환과 재활성화, 체류 경계값, 추적 손실, 별자리 분리, 최소 거리, 최대 점 개수를 검증할 수 있습니다.
+`FistHoldDetector`, `DwellDetector`, `ClosureDetector`, `ConstellationModel`은 ARKit이나 RealityKit에 의존하지 않습니다. 그래서 호스트 macOS에서도 Swift Package 테스트를 실행해 손짓의 1회 전환과 재활성화, 체류 경계값, 시작점 스냅과 히스테리시스, 추적 손실, 별자리 분리와 닫기, 최소 거리, 최대 점 개수를 검증할 수 있습니다.
 
 ### 장면 출력
 
-`ConstellationRenderer`는 커서, 점 컨테이너, 선 컨테이너를 소유합니다. 모델이 전달한 값만 렌더링하며 ARKit 세션이나 체류 시간을 알지 못합니다.
+`ConstellationRenderer`는 커서, 점 컨테이너, 선 컨테이너와 닫기 안내 컨테이너를 소유합니다. 세 점 이상이면 첫 점에 큰 반투명 대상을 표시하고, 사용자가 가까이 오면 마지막 점에서 첫 점까지 미리보기 선을 보여 줍니다. 모델이 전달한 값만 확정 렌더링하며 ARKit 세션을 알지 못합니다.
 
 ## 데이터 흐름
 
@@ -47,8 +48,10 @@ ImmersiveCoordinator
 4. 주먹을 0.6초 유지하면 그리기 상태가 한 번 전환됩니다. 그리기를 끌 때 진행 중인 체류를 취소하고 현재 별자리를 마칩니다.
 5. 그리기가 켜진 동안 coordinator가 검지 위치를 `DwellDetector`에 전달합니다.
 6. detector가 체류 완료 위치를 한 번만 방출합니다.
-7. model이 점을 현재 별자리에 저장하고 같은 별자리 안에서만 이전 점과의 선분을 계산합니다.
-8. renderer가 점과 선택적 선을 루트 엔티티 아래에 추가합니다.
+7. 세 점 이상이면 closure detector가 첫 점의 스냅 영역과 닫기 dwell을 검사합니다.
+8. 닫기가 확정되면 model은 새 점 없이 마지막 점에서 정확한 첫 점까지의 선분을 만들고 별자리를 닫습니다.
+9. 일반 입력이면 model이 서로 겹치지 않는 점을 현재 별자리에 저장하고 이전 점과의 선분을 계산합니다.
+10. renderer가 확정 점과 선, 첫 점 강조와 미리보기 상태를 루트 엔티티 아래에 반영합니다.
 
 추적이 손실되면 3단계의 진행 상태와 커서만 취소합니다. 이미 확정한 별자리 데이터는 사용자가 초기화하거나 몰입형 공간을 닫기 전까지 유지합니다.
 
@@ -61,6 +64,8 @@ ImmersiveCoordinator
 | `dwellDuration` | 0.8초 | 점을 확정하기 위한 체류 시간 |
 | `stabilityRadius` | 0.015m | 같은 체류로 인정하는 흔들림 반경 |
 | `rearmDistance` | 0.03m | 다음 체류를 허용하기 위한 이동 거리 |
+| `closureSnapDistance` | 0.03m | 첫 점을 닫기 대상으로 선택하는 진입 반경 |
+| `closureReleaseDistance` | 0.04m | 닫기 진행을 유지하는 해제 반경 |
 | `minimumPointDistance` | 0.03m | 너무 가까운 점을 모델에서 거부하는 거리 |
 | `maximumPointCount` | 100 | 한 장면에서 허용하는 최대 점 개수 |
 | `fistHoldDuration` | 0.6초 | 그리기 상태 전환에 필요한 주먹 유지 시간 |

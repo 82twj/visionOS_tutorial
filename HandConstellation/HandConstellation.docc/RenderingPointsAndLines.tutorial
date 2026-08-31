@@ -4,14 +4,14 @@
 
         RealityKit은 3D 장면을 **엔티티 트리**로 다룹니다. 코드를 쓰기 전에 이 앱이 만들 트리 모양을 먼저 봅니다.
 
-        @Image(source: entity-tree.png, alt: "rootEntity 아래에 선 컨테이너, 점 컨테이너, 커서가 자식으로 붙은 구조도")
+        @Image(source: entity-tree.png, alt: "rootEntity 아래에 선, 점, 닫기 안내 컨테이너와 커서가 자식으로 붙은 구조도")
     }
 
     @Section(title: "엔티티 트리 이해하기") {
         @ContentAndMedia {
             엔티티는 장면 안의 물체 하나입니다. 엔티티에 mesh와 material을 붙이면 눈에 보이고, 붙이지 않으면 자식들을 담는 빈 그룹이 됩니다.
 
-            @Image(source: entity-tree.png, alt: "루트 엔티티와 세 자식 컨테이너로 이루어진 트리 그림")
+            @Image(source: entity-tree.png, alt: "루트 엔티티와 선, 점, 닫기 안내 컨테이너 및 커서로 이루어진 트리 그림")
         }
 
         @Steps {
@@ -112,7 +112,13 @@
             }
 
             @Step {
-                **결과 확인**: 이 시점의 `ConstellationRenderer.swift`는 실제 앱의 완성본과 같습니다. 빌드가 성공하면 됩니다. 아직 아무도 이 타입을 사용하지 않으므로 화면은 그대로입니다.
+                닫기 안내 컨테이너를 추가하세요. 세 점 이상이면 첫 점보다 큰 반투명 구로 대상을 강조하고, 스냅 영역에서는 마지막 점부터 첫 점까지 가는 가는 미리보기 선을 표시합니다. 완료할 때는 새 점 없이 실제 선만 추가합니다.
+
+                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-12.swift, previousFile: C05-T03-ConstellationRenderer-11.swift)
+            }
+
+            @Step {
+                **결과 확인**: 이 시점의 `ConstellationRenderer.swift`는 실제 앱의 완성본과 같습니다. 빌드가 성공하면 됩니다. 입력 연결은 Chapter 6에서 완성합니다.
             }
 
             @Step {

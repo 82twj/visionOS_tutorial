@@ -27,6 +27,7 @@ let package = Package(
                 "Info.plist"
             ],
             sources: [
+                "ClosureDetector.swift",
                 "ConstellationConfiguration.swift",
                 "ConstellationModel.swift",
                 "DwellDetector.swift",

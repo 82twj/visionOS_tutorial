@@ -1,6 +1,6 @@
 # Hand Constellation
 
-ARKit의 visionOS Hand Tracking으로 오른손 검지 끝을 인식하고, 한 위치에 오래 머물면 공중에 점을 찍은 뒤 다음 점과 선으로 연결하는 SwiftUI 튜토리얼 프로젝트입니다. 오른손 주먹 손짓으로 그리기를 켜고 끄며 한 세션에서 여러 별자리를 나누어 만들 수 있습니다.
+ARKit의 visionOS Hand Tracking으로 오른손 검지 끝을 인식하고, 한 위치에 오래 머물면 공중에 점을 찍은 뒤 다음 점과 선으로 연결하는 SwiftUI 튜토리얼 프로젝트입니다. 점을 세 개 이상 만든 뒤 빛나는 첫 점에서 머물면 중복 점 없이 닫힌 도형을 완성할 수 있습니다.
 
 ![Hand Constellation 대표 이미지](HandConstellation/HandConstellation.docc/constellation-hero.svg)
 
@@ -11,9 +11,11 @@ ARKit의 visionOS Hand Tracking으로 오른손 검지 끝을 인식하고, 한 
 3. 오른손 검지 끝의 주황색 커서를 원하는 위치에 둡니다.
 4. 작은 범위 안에서 약 0.8초 동안 머물면 노란 점이 생깁니다.
 5. 손가락을 3cm 이상 옮긴 다음 다시 머물면 새 점과 이전 점 사이에 파란 선이 생깁니다.
-6. 오른손 주먹을 다시 0.6초 유지하면 그리기가 꺼집니다. 기존 별자리는 유지되고 손을 움직여도 새 점이 생기지 않습니다.
-7. 그리기를 다시 켠 뒤 만드는 첫 점은 이전 별자리와 연결되지 않고 새 별자리를 시작합니다.
-8. **초기화**로 모든 별자리의 점과 선을 지울 수 있습니다.
+6. 점이 세 개 이상이면 첫 점이 청록색으로 강조됩니다. 첫 점으로 돌아가 머물면 미리보기 선이 채워진 뒤 도형이 닫힙니다.
+7. 닫을 때는 기존 첫 점을 재사용하므로 삼각형은 점 3개와 선 3개로 완성됩니다.
+8. 오른손 주먹을 다시 0.6초 유지하면 그리기가 꺼집니다. 기존 별자리는 유지되고 손을 움직여도 새 점이 생기지 않습니다.
+9. 닫은 뒤 또는 그리기를 다시 켠 뒤 만드는 첫 점은 이전 별자리와 연결되지 않고 새 별자리를 시작합니다.
+10. **초기화**로 모든 별자리의 점과 선을 지울 수 있습니다.
 
 ## 개발 환경
 
@@ -44,9 +46,10 @@ HandConstellation/
 ├── HandTrackingService.swift         권한·ARKitSession·검지 좌표·주먹 판정
 ├── ConstellationConfiguration.swift  체류·거리·크기 조절 값
 ├── DwellDetector.swift               체류 상태 머신
+├── ClosureDetector.swift             시작점 스냅과 닫기 체류 판정
 ├── FistHoldDetector.swift            주먹 유지와 1회 전환 판정
 ├── ConstellationModel.swift          점과 선분 규칙
-├── ConstellationRenderer.swift       RealityKit 점·선·커서
+├── ConstellationRenderer.swift       RealityKit 점·선·커서·닫기 피드백
 ├── ImmersiveCoordinator.swift        전체 데이터 흐름 연결
 └── HandConstellation.docc/           DocC 튜토리얼과 참조 문서
 DocumentationTheme/                   확대된 단계·코드 패널용 DocC 렌더 테마
@@ -102,7 +105,7 @@ xcodebuild \
   docbuild
 ```
 
-튜토리얼은 7개 Chapter와 26개의 짧은 페이지로 나뉘어 있고 전체 예상 학습 시간은 약 210분입니다. Chapter 1~6은 Xcode의 초기 코드에서 시작해 앱을 완성하고, Chapter 7은 Apple Vision Pro에서 권한 허용과 완성 동작을 확인합니다. 새 파일을 만드는 페이지와 기존 파일을 고치는 페이지가 분리되어 있으며, 각 코드 단계에서 새로 추가된 줄만 강조합니다. 아키텍처, 체류 판정, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
+튜토리얼은 7개 Chapter와 27개의 짧은 페이지로 나뉩니다. Chapter 1~6은 Xcode의 초기 코드에서 시작해 앱을 완성하고, Chapter 7은 Apple Vision Pro에서 권한 허용, 닫힌 삼각형과 별자리 분리를 확인합니다. 새 파일을 만드는 페이지와 기존 파일을 고치는 페이지가 분리되어 있으며, 각 코드 단계에서 새로 추가된 줄만 강조합니다. 아키텍처, 체류 판정, 시작점 스냅, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
 
 프로젝트의 `DOCC_TEMPLATE_PATH`가 `DocumentationTheme`을 가리키므로 Xcode와 명령줄 빌드 모두 확대된 단계 카드, 파란 현재 단계 표시, 큰 코드 패널 스타일을 동일하게 적용합니다. 테마의 `js/handconstellation-step-sync.js`는 현재 단계가 바뀔 때 오른쪽 코드 패널만 스크롤해 강조된 줄이 보이도록 맞춥니다. 페이지 자체의 스크롤 위치는 건드리지 않고, 좁은 화면에서는 동작하지 않습니다.
 
@@ -113,7 +116,7 @@ xcodebuild \
 1. GitHub 저장소 Settings > Pages에서 Source를 **GitHub Actions**로 선택합니다.
 2. 프로젝트를 `main` 브랜치에 push합니다.
 3. Actions 탭에서 **Deploy DocC to GitHub Pages**가 완료될 때까지 기다립니다.
-4. `https://<계정>.github.io/<저장소>/documentation/handconstellation/`을 엽니다.
+4. [배포된 Hand Constellation 튜토리얼](https://82twj.github.io/visionOS_tutorial/documentation/handconstellation/)을 엽니다.
 
 workflow는 저장소 이름을 `DOCC_HOSTING_BASE_PATH`로 자동 설정합니다. 사용자/조직 Pages처럼 도메인 루트에 배포할 때는 이 값을 빈 문자열로 바꾸세요.
 
@@ -134,8 +137,8 @@ python3 Scripts/generate_images.py
 ## 현재 검증 범위
 
 - visionOS SDK 대상 앱과 테스트 번들 컴파일 성공
-- `swift test`: 15개 테스트 통과
+- `swift test`: 27개 테스트 통과
 - DocC 아카이브 경고 없이 빌드 성공
-- 튜토리얼 코드 스냅샷 133개가 모두 Swift 문법 검사를 통과
+- 튜토리얼 코드 스냅샷 142개가 모두 Swift 문법 검사를 통과
 - 각 파일의 마지막 스냅샷이 실제 앱 소스와 일치
 - 실제 기기 손 추적 동작과 Chapter 7의 캡처는 Apple Vision Pro에서 최종 확인 필요

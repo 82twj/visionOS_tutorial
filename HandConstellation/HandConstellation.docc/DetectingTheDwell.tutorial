@@ -134,6 +134,12 @@
             }
 
             @Step {
+                도형 닫기는 일반 점 감지기 밖에서 확정됩니다. 닫은 직후 같은 첫 점에서 새 별자리가 생기지 않도록 외부 확정을 cooldown으로 전달하는 `beginCooldown`을 추가하세요.
+
+                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-14.swift, previousFile: C04-T03-DwellDetector-13.swift)
+            }
+
+            @Step {
                 **결과 확인**: 이 시점의 `DwellDetector.swift`는 실제 앱의 완성본과 같습니다. 빌드가 성공하면 됩니다. 동작 확인은 Chapter 7에서 실기기로 합니다.
             }
 

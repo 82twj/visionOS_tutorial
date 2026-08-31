@@ -70,7 +70,7 @@
 | Chapter 2를 3개 페이지로 구성 | 4개 페이지 | `ControlView.swift`가 200줄이라 한 페이지 5~15분 규칙을 지킬 수 없다 |
 | Chapter 4를 3개 페이지로 구성 | 5개 페이지 | 설정값 페이지 2개가 추가되고, 손 골격의 주먹 판정을 별도 페이지로 분리했다 |
 | Chapter 6을 3개 페이지로 구성 | 4개 페이지 | `ImmersiveCoordinator.swift`가 187줄이라 생명주기와 입력 파이프라인을 나눴다 |
-| 전체 22~25개 페이지 | 26개 페이지 | 위 조정의 합계이며 계획 4장이 허용한 조정 범위 안이다 |
+| 전체 22~25개 페이지 | 27개 페이지 | 시작점 스냅과 도형 닫기를 설명하는 페이지가 추가되었다 |
 | `HandConstellationApp`의 씬 연결을 Chapter 6에 배치 | 2회로 분리 | Chapter 2에서 `ContentView`를 `ControlView`로 바꿀 때 진입점도 함께 고쳐야 빌드가 유지된다. `ImmersiveSpace` 씬 추가만 Chapter 6에 남겼다 |
 
 ## 5. 실제 앱 소스 변경 없음
@@ -96,7 +96,8 @@ git diff --stat -- HandConstellation/*.swift HandConstellation/Info.plist
 | `xcode-file-options.png` | 파일 이름과 Target Membership 화면 | `CreatingTheAppModelFile` |
 | `xcode-run-destination.png` | Apple Vision Pro 실행 대상 선택 | `RunningOnVisionPro` |
 | `device-permission-prompt.png` | 실제 기기의 손 추적 권한 창 | `RunningOnVisionPro` |
-| `device-first-constellation.png` | 다섯 점으로 만든 첫 별자리 | `DrawingTheFirstConstellation` |
+| `device-closed-triangle.png` | 세 점과 세 선으로 닫힌 삼각형 | `DrawingTheFirstConstellation` |
+| `closure-snap-feedback.png` | 시작점 강조, 미리보기와 닫기 완료 | `DetectingTheClosure`, `DrawingTheFirstConstellation` |
 | `device-second-constellation.png` | 분리된 두 번째 별자리 | `DrawingTheSecondConstellation` |
 
 권한 창 이미지는 실제 시스템 화면을 흉내 내지 않고, 대기 상태임을 이미지 안에 표시한 안내 그림을 사용한다.
@@ -108,13 +109,13 @@ git diff --stat -- HandConstellation/*.swift HandConstellation/Info.plist
 | 항목 | 결과 |
 | --- | --- |
 | 목차에 7개 Chapter가 순서대로 표시 | 확인 |
-| 26개 튜토리얼 페이지가 모두 목차에 연결되고 열림 | 확인 |
+| 27개 튜토리얼 페이지가 모두 목차에 연결되고 열림 | 확인 |
 | 기존 `BuildingHandConstellation` 식별자 보존 | 확인, Chapter 1의 첫 페이지로 재사용 |
 | 새 파일 생성 페이지 5개에 `previousFile` 없음 | 확인 |
 | Vision Pro 실행 절차가 Chapter 7에만 존재 | 확인 |
 | 모든 `@Code`, `previousFile`, `@Image` 참조 해결 | 159개 참조, 누락 0 |
 | 참조되지 않는 스냅샷·이미지 | 0개 |
-| 코드 스냅샷 Swift 문법 검사 | 133개 모두 통과 |
+| 코드 스냅샷 Swift 문법 검사 | 142개 모두 통과 |
 | 각 파일 마지막 스냅샷과 실제 앱 소스 일치 | 11개 파일 모두 일치 |
 | DocC 빌드 | 오류·경고 없음 |
 | `swift test` | 15개 통과 |

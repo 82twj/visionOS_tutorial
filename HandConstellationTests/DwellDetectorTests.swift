@@ -68,6 +68,18 @@ final class DwellDetectorTests: XCTestCase {
         XCTAssertEqual(committed.committedPosition, next)
     }
 
+    func testExternalCommitStartsInCooldown() {
+        var detector = makeDetector()
+
+        detector.beginCooldown(at: origin)
+        let repeated = detector.update(position: origin, at: 0.8)
+        let rearmed = detector.update(position: SIMD3<Float>(0.04, 0, 0), at: 0.9)
+
+        XCTAssertEqual(repeated.phase, .coolingDown)
+        XCTAssertNil(repeated.committedPosition)
+        XCTAssertEqual(rearmed.phase, .dwelling)
+    }
+
     private func makeDetector() -> DwellDetector {
         DwellDetector(dwellDuration: 0.8, stabilityRadius: 0.015, rearmDistance: 0.03)
     }

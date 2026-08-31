@@ -48,6 +48,12 @@
             }
 
             @Step {
+                첫 점 스냅의 진입 반경 3cm와 해제 반경 4cm를 추가하세요. 두 값을 다르게 두면 손이 경계에서 흔들릴 때 닫기 안내가 켜졌다 꺼지는 현상을 줄일 수 있습니다.
+
+                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-06.swift, previousFile: C04-T02-Configuration-05.swift)
+            }
+
+            @Step {
                 **결과 확인**: 이 시점의 `ConstellationConfiguration.swift`는 실제 앱의 완성본과 같습니다. 빌드가 성공하면 됩니다.
             }
 
