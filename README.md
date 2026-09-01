@@ -1,21 +1,22 @@
 # Hand Constellation
 
-ARKit의 visionOS Hand Tracking으로 오른손 검지 끝을 인식하고, 한 위치에 오래 머물면 공중에 점을 찍은 뒤 다음 점과 선으로 연결하는 SwiftUI 튜토리얼 프로젝트입니다. 점을 세 개 이상 만든 뒤 빛나는 첫 점에서 머물면 중복 점 없이 닫힌 도형을 완성할 수 있습니다.
+ARKit의 visionOS Hand Tracking으로 오른손 검지 끝을 인식하고, 공중에 점과 선을 그리는 SwiftUI 튜토리얼 프로젝트입니다. 새 위치에서는 점을 만들고 기존 점에서는 중복 점 없이 선만 다시 연결하므로, 어느 점에서든 가지를 이어 복합적인 별자리를 만들 수 있습니다.
 
 ![Hand Constellation 대표 이미지](HandConstellation/HandConstellation.docc/constellation-hero.svg)
 
 ## 완성 동작
 
 1. **별자리 그리기 시작**을 바라보고 엄지와 검지를 맞대어 몰입형 공간을 엽니다.
-2. 공간은 안전하게 **그리기 꺼짐** 상태로 시작합니다. 창의 **그리기 켜기**를 누르거나 오른손 주먹을 약 0.6초 유지합니다.
-3. 오른손 검지 끝의 주황색 커서를 원하는 위치에 둡니다.
-4. 작은 범위 안에서 약 0.8초 동안 머물면 노란 점이 생깁니다.
-5. 손가락을 3cm 이상 옮긴 다음 다시 머물면 새 점과 이전 점 사이에 파란 선이 생깁니다.
-6. 점이 세 개 이상이면 첫 점이 청록색으로 강조됩니다. 첫 점으로 돌아가 머물면 미리보기 선이 채워진 뒤 도형이 닫힙니다.
-7. 닫을 때는 기존 첫 점을 재사용하므로 삼각형은 점 3개와 선 3개로 완성됩니다.
-8. 오른손 주먹을 다시 0.6초 유지하면 그리기가 꺼집니다. 기존 별자리는 유지되고 손을 움직여도 새 점이 생기지 않습니다.
-9. 닫은 뒤 또는 그리기를 다시 켠 뒤 만드는 첫 점은 이전 별자리와 연결되지 않고 새 별자리를 시작합니다.
-10. **초기화**로 모든 별자리의 점과 선을 지울 수 있습니다.
+2. 공간은 안전하게 **그리기 꺼짐** 상태로 시작합니다. 창의 **그리기 켜기** 버튼으로 시작합니다.
+3. 오른손 검지 끝의 흰색 커서를 원하는 위치에 둡니다.
+4. 작은 범위 안에서 약 0.8초 동안 머물면 흰색 점이 생깁니다.
+5. 손가락을 3cm 이상 옮긴 다음 다시 머물면 새 점과 현재 출발점 사이에 흰색 선이 생깁니다.
+6. 원하는 기존 점의 3cm 안에서 머물면 새 점 없이 기존 점까지 선만 연결됩니다.
+7. 연결한 기존 점이 새 출발점이 되므로 그 지점에서 계속 가지를 그릴 수 있습니다.
+8. 자기 자신이나 이미 연결된 점에는 중복 선을 만들지 않고 이유를 안내합니다.
+9. 창의 **그리기 끄기** 버튼으로 입력을 멈춥니다.
+10. 그리기를 다시 켠 뒤 만드는 첫 점은 이전 별자리와 연결되지 않고 새 별자리를 시작합니다.
+11. **초기화**로 모든 별자리의 점과 선을 지울 수 있습니다.
 
 ## 개발 환경
 
@@ -43,13 +44,12 @@ HandConstellation/
 ├── HandConstellationApp.swift        SwiftUI Scene 진입점
 ├── ControlView.swift                 시작·종료·그리기 전환·초기화 창
 ├── ImmersiveView.swift               RealityView와 추적 task
-├── HandTrackingService.swift         권한·ARKitSession·검지 좌표·주먹 판정
+├── HandTrackingService.swift         권한·ARKitSession·검지 좌표
 ├── ConstellationConfiguration.swift  체류·거리·크기 조절 값
 ├── DwellDetector.swift               체류 상태 머신
-├── ClosureDetector.swift             시작점 스냅과 닫기 체류 판정
-├── FistHoldDetector.swift            주먹 유지와 1회 전환 판정
-├── ConstellationModel.swift          점과 선분 규칙
-├── ConstellationRenderer.swift       RealityKit 점·선·커서·닫기 피드백
+├── ExistingPointConnectionDetector.swift  모든 기존 점의 스냅과 연결 체류 판정
+├── ConstellationModel.swift          점 노드·선 엣지 그래프 규칙
+├── ConstellationRenderer.swift       흰색 점·선·커서·연결 피드백
 ├── ImmersiveCoordinator.swift        전체 데이터 흐름 연결
 └── HandConstellation.docc/           DocC 튜토리얼과 참조 문서
 DocumentationTheme/                   확대된 단계·코드 패널용 DocC 렌더 테마
@@ -60,7 +60,7 @@ Scripts/                              코드 스냅샷·튜토리얼 이미지 �
 
 ## 검증하기
 
-호스트 macOS에서 ARKit과 무관한 체류 판정·별자리 모델 테스트를 실행합니다.
+호스트 macOS에서 ARKit과 무관한 체류·기존 점 연결·그래프 모델 테스트 23개를 실행합니다.
 
 ```shell
 swift test
@@ -105,7 +105,7 @@ xcodebuild \
   docbuild
 ```
 
-튜토리얼은 7개 Chapter와 27개의 짧은 페이지로 나뉩니다. Chapter 1~6은 Xcode의 초기 코드에서 시작해 앱을 완성하고, Chapter 7은 Apple Vision Pro에서 권한 허용, 닫힌 삼각형과 별자리 분리를 확인합니다. 새 파일을 만드는 페이지와 기존 파일을 고치는 페이지가 분리되어 있으며, 각 코드 단계에서 새로 추가된 줄만 강조합니다. 아키텍처, 체류 판정, 시작점 스냅, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
+튜토리얼은 7개 Chapter와 25개의 짧은 페이지로 나뉩니다. Chapter 1~6은 Xcode의 초기 코드에서 시작해 앱을 완성하고, Chapter 7은 Apple Vision Pro에서 권한 허용, 임의 기존 점 연결, 버튼 기반 그리기 전환과 별자리 분리를 확인합니다. 새 파일을 만드는 페이지와 기존 파일을 고치는 페이지가 분리되어 있으며, 각 코드 단계에서 새로 추가된 줄만 강조합니다. 아키텍처, 체류 판정, 기존 점 스냅, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
 
 프로젝트의 `DOCC_TEMPLATE_PATH`가 `DocumentationTheme`을 가리키므로 Xcode와 명령줄 빌드 모두 확대된 단계 카드, 파란 현재 단계 표시, 큰 코드 패널 스타일을 동일하게 적용합니다. 테마의 `js/handconstellation-step-sync.js`는 현재 단계가 바뀔 때 오른쪽 코드 패널만 스크롤해 강조된 줄이 보이도록 맞춥니다. 페이지 자체의 스크롤 위치는 건드리지 않고, 좁은 화면에서는 동작하지 않습니다.
 
@@ -137,8 +137,8 @@ python3 Scripts/generate_images.py
 ## 현재 검증 범위
 
 - visionOS SDK 대상 앱과 테스트 번들 컴파일 성공
-- `swift test`: 27개 테스트 통과
+- `swift test`: 23개 테스트 통과
 - DocC 아카이브 경고 없이 빌드 성공
-- 튜토리얼 코드 스냅샷 142개가 모두 Swift 문법 검사를 통과
+- 튜토리얼 코드 스냅샷 82개가 모두 Swift 문법 검사를 통과
 - 각 파일의 마지막 스냅샷이 실제 앱 소스와 일치
 - 실제 기기 손 추적 동작과 Chapter 7의 캡처는 Apple Vision Pro에서 최종 확인 필요

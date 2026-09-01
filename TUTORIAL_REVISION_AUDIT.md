@@ -4,6 +4,10 @@
 > 근거 문서: [TUTORIAL_REVISION_PLAN.md](TUTORIAL_REVISION_PLAN.md) 11장 1단계
 > 대상: 개편 전 `BuildingHandConstellation.tutorial` 1개 페이지, 8개 Section, 78개 Step
 
+> 2026-09-01 후속 개정: 앱 소스와 튜토리얼을 그래프 기반 임의 기존 점 연결, 중간 관절 기반 주먹 1초 끄기, 흰색 단색 렌더링으로 함께 갱신했다. 아래 1~4장은 최초 개편 당시의 감사 기록이며, 5장 이후는 후속 개정 결과를 반영한다.
+
+> 2026-09-01 최종 개정: 주먹 인식과 관련 튜토리얼 2개를 제거하고 제어창 버튼만으로 그리기를 전환한다. 아래 최초 개편 표의 주먹 관련 행은 역사적 기록이다.
+
 ## 1. 개편 전 Step 분류
 
 | 기존 Section | Step 수 | 새 파일 생성 | 기존 파일 수정 | 개념 설명 | 실행 | 검증 |
@@ -73,9 +77,9 @@
 | 전체 22~25개 페이지 | 27개 페이지 | 시작점 스냅과 도형 닫기를 설명하는 페이지가 추가되었다 |
 | `HandConstellationApp`의 씬 연결을 Chapter 6에 배치 | 2회로 분리 | Chapter 2에서 `ContentView`를 `ControlView`로 바꿀 때 진입점도 함께 고쳐야 빌드가 유지된다. `ImmersiveSpace` 씬 추가만 Chapter 6에 남겼다 |
 
-## 5. 실제 앱 소스 변경 없음
+## 5. 실제 앱 소스와 튜토리얼 동시 개정
 
-이 개편에서 `HandConstellation/*.swift`와 `HandConstellation/Info.plist`는 변경하지 않았다. 확인 방법은 다음과 같다.
+후속 개정에서는 `HandConstellation/*.swift`, 테스트, 튜토리얼 스냅샷과 개념 이미지를 함께 변경했다. `Info.plist`와 사용자가 별도로 바꾼 Signing Team은 건드리지 않았다. 확인 방법은 다음과 같다.
 
 ```shell
 git diff --stat -- HandConstellation/*.swift HandConstellation/Info.plist
@@ -96,8 +100,8 @@ git diff --stat -- HandConstellation/*.swift HandConstellation/Info.plist
 | `xcode-file-options.png` | 파일 이름과 Target Membership 화면 | `CreatingTheAppModelFile` |
 | `xcode-run-destination.png` | Apple Vision Pro 실행 대상 선택 | `RunningOnVisionPro` |
 | `device-permission-prompt.png` | 실제 기기의 손 추적 권한 창 | `RunningOnVisionPro` |
-| `device-closed-triangle.png` | 세 점과 세 선으로 닫힌 삼각형 | `DrawingTheFirstConstellation` |
-| `closure-snap-feedback.png` | 시작점 강조, 미리보기와 닫기 완료 | `DetectingTheClosure`, `DrawingTheFirstConstellation` |
+| `device-closed-triangle.png` | 네 점과 다섯 선으로 임의 기존 점을 연결한 그래프 | `DrawingTheFirstConstellation` |
+| `closure-snap-feedback.png` | 임의 기존 점 선택, 미리보기와 연결 완료 | `DetectingTheClosure`, `DrawingTheFirstConstellation` |
 | `device-second-constellation.png` | 분리된 두 번째 별자리 | `DrawingTheSecondConstellation` |
 
 권한 창 이미지는 실제 시스템 화면을 흉내 내지 않고, 대기 상태임을 이미지 안에 표시한 안내 그림을 사용한다.
@@ -109,17 +113,17 @@ git diff --stat -- HandConstellation/*.swift HandConstellation/Info.plist
 | 항목 | 결과 |
 | --- | --- |
 | 목차에 7개 Chapter가 순서대로 표시 | 확인 |
-| 27개 튜토리얼 페이지가 모두 목차에 연결되고 열림 | 확인 |
+| 25개 튜토리얼 페이지가 모두 목차에 연결되고 열림 | 확인 |
 | 기존 `BuildingHandConstellation` 식별자 보존 | 확인, Chapter 1의 첫 페이지로 재사용 |
 | 새 파일 생성 페이지 5개에 `previousFile` 없음 | 확인 |
 | Vision Pro 실행 절차가 Chapter 7에만 존재 | 확인 |
-| 모든 `@Code`, `previousFile`, `@Image` 참조 해결 | 159개 참조, 누락 0 |
+| 모든 `@Code`, `previousFile`, `@Image` 참조 해결 | 검증 스크립트 기준 누락 0 |
 | 참조되지 않는 스냅샷·이미지 | 0개 |
-| 코드 스냅샷 Swift 문법 검사 | 142개 모두 통과 |
+| 코드 스냅샷 Swift 문법 검사 | 검증 스크립트 통과 |
 | 각 파일 마지막 스냅샷과 실제 앱 소스 일치 | 11개 파일 모두 일치 |
 | DocC 빌드 | 오류·경고 없음 |
-| `swift test` | 15개 통과 |
-| 실제 앱 소스 변경 | 없음 |
+| `swift test` | 23개 통과 |
+| 실제 앱 소스 변경 | 그래프 연결·버튼 전환·흰색 렌더링 반영 |
 | 전체 예상 학습 시간 | 210분 |
 
 ### 코드 자동 스크롤 검증

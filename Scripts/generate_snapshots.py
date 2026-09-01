@@ -113,10 +113,7 @@ add("C01-T04-Info-01.plist", T(
 
 A = "AppModel.swift"
 add("C02-T01-AppModel-00.swift", E("C02-T01-AppModel-00.swift"))
-for index in range(1, 11):
-    name = f"C02-T02-AppModel-{index:02d}.swift"
-    add(name, E(name))
-add("C02-T02-AppModel-11.swift", R(A, 1, 119))
+add("C02-T02-AppModel-12.swift", R(A, 1, 119))
 
 # --- Chapter 2: ControlView and the app entry point --------------------------
 
@@ -128,48 +125,28 @@ APP = "HandConstellationApp.swift"
 add("C02-T03-HandConstellationApp-01.swift", R(APP, 1, 10), R(APP, 12, 12), R(APP, 20, 21))
 add("C02-T03-HandConstellationApp-02.swift", R(APP, 1, 13), R(APP, 20, 21))
 
-for index in range(2, 13):
-    name = f"C02-T04-ControlView-{index:02d}.swift"
-    add(name, E(name))
-add("C02-T04-ControlView-13.swift", R(C, 1, 257))
+add("C02-T04-ControlView-14.swift", R(C, 1, 242))
 
 # --- Chapter 3 and 4: HandTrackingService ------------------------------------
 
 H = "HandTrackingService.swift"
-H_END = R(H, 123, 123)
-H_RET_NIL = T("\n        return nil\n    }\n")
-
-add("C03-T01-HandTrackingService-00.swift", T(XCODE_SWIFT_FILE))
-add("C03-T02-HandTrackingService-01.swift", R(H, 1, 17))
-add("C03-T02-HandTrackingService-02.swift", R(H, 1, 23), H_END)
-add("C03-T02-HandTrackingService-03.swift", R(H, 1, 28), T("    }\n"), H_END)
-add("C03-T02-HandTrackingService-04.swift", R(H, 1, 31), T("    }\n"), H_END)
-add("C03-T02-HandTrackingService-05.swift", R(H, 1, 40), T("    }\n"), H_END)
-add("C03-T02-HandTrackingService-06.swift", R(H, 1, 43), H_END)
-add("C03-T02-HandTrackingService-07.swift", R(H, 1, 47), H_END)
-
-add("C03-T03-HandTrackingService-08.swift", R(H, 1, 55), H_RET_NIL, H_END)
-add("C03-T03-HandTrackingService-09.swift", R(H, 1, 58), H_RET_NIL, H_END)
-add("C03-T03-HandTrackingService-10.swift", R(H, 1, 63), H_RET_NIL, H_END)
-add("C03-T03-HandTrackingService-11.swift", R(H, 1, 66), H_END)
-
-add("C04-T05-HandTrackingService-12.swift", R(H, 1, 77), H_RET_NIL, H_END)
-add("C04-T05-HandTrackingService-13.swift", R(H, 1, 80), H_RET_NIL, H_END)
-add("C04-T05-HandTrackingService-14.swift", R(H, 1, 80), H_RET_NIL, R(H, 118, 123))
-add("C04-T05-HandTrackingService-15.swift", R(H, 1, 90), H_RET_NIL, R(H, 118, 123))
-add("C04-T05-HandTrackingService-16.swift", R(H, 1, 93), H_RET_NIL, R(H, 118, 123))
-add("C04-T05-HandTrackingService-17.swift", R(H, 1, 105),
-    T("        }\n\n        return true\n    }\n"), R(H, 118, 123))
-add("C04-T05-HandTrackingService-18.swift", R(H, 1, 123))
+add("C03-T01-HandTrackingService-00.swift", E("C03-T01-HandTrackingService-00.swift"))
+for index in range(1, 8):
+    name = f"C03-T02-HandTrackingService-{index:02d}.swift"
+    add(name, E(name))
+for index in range(8, 12):
+    name = f"C03-T03-HandTrackingService-{index:02d}.swift"
+    add(name, E(name))
+add("C04-T05-HandTrackingService-19.swift", R(H, 1, 68))
 
 # --- Chapter 4: ConstellationConfiguration -----------------------------------
 
 G = "ConstellationConfiguration.swift"
 add("C04-T01-Configuration-00.swift", E("C04-T01-Configuration-00.swift"))
-for index in range(1, 6):
+for index in (1, 2):
     name = f"C04-T02-Configuration-{index:02d}.swift"
     add(name, E(name))
-add("C04-T02-Configuration-06.swift", R(G, 1, 19))
+add("C04-T02-Configuration-07.swift", R(G, 1, 16))
 
 # --- Chapter 4: DwellDetector ------------------------------------------------
 
@@ -180,32 +157,11 @@ for index in range(1, 14):
     add(name, E(name))
 add("C04-T03-DwellDetector-14.swift", R(D, 1, 140))
 
-# --- Chapter 4: ClosureDetector ---------------------------------------------
+# --- Chapter 4: existing-point connection detector --------------------------
 
-L = "ClosureDetector.swift"
-add("C04-T01-ClosureDetector-00.swift", T(XCODE_SWIFT_FILE))
-add("C04-T06-ClosureDetector-01.swift", R(L, 1, 143))
-
-# --- Chapter 4: FistHoldDetector ---------------------------------------------
-
-F = "FistHoldDetector.swift"
-F_END = R(F, 71, 71)
-F_TAIL = R(F, 63, 71)
-F_RETURN_READY = T("\n        return readySnapshot\n    }\n")
-F_DEFAULT = T("\n        default:\n            return readySnapshot\n        }\n    }\n")
-
-add("C04-T01-FistHoldDetector-00.swift", T(XCODE_SWIFT_FILE))
-add("C04-T04-FistHoldDetector-01.swift", R(F, 1, 4), F_END)
-add("C04-T04-FistHoldDetector-02.swift", R(F, 1, 9), F_END)
-add("C04-T04-FistHoldDetector-03.swift", R(F, 1, 15), F_END)
-add("C04-T04-FistHoldDetector-04.swift", R(F, 1, 21), F_END)
-add("C04-T04-FistHoldDetector-05.swift", R(F, 1, 29), F_END)
-add("C04-T04-FistHoldDetector-06.swift", R(F, 1, 29), F_TAIL)
-add("C04-T04-FistHoldDetector-07.swift", R(F, 1, 36), F_RETURN_READY, F_TAIL)
-add("C04-T04-FistHoldDetector-08.swift", R(F, 1, 41), F_RETURN_READY, F_TAIL)
-add("C04-T04-FistHoldDetector-09.swift", R(F, 1, 46), F_DEFAULT, F_TAIL)
-add("C04-T04-FistHoldDetector-10.swift", R(F, 1, 54), F_DEFAULT, F_TAIL)
-add("C04-T04-FistHoldDetector-11.swift", R(F, 1, 71))
+L = "ExistingPointConnectionDetector.swift"
+add("C04-T01-ExistingPointConnectionDetector-00.swift", T(XCODE_SWIFT_FILE))
+add("C04-T06-ExistingPointConnectionDetector-01.swift", R(L, 1, 142))
 
 # --- Chapter 5: ConstellationModel -------------------------------------------
 
@@ -214,7 +170,8 @@ add("C05-T01-ConstellationModel-00.swift", E("C05-T01-ConstellationModel-00.swif
 for index in range(1, 13):
     name = f"C05-T02-ConstellationModel-{index:02d}.swift"
     add(name, E(name))
-add("C05-T02-ConstellationModel-13.swift", R(M, 1, 127))
+add("C05-T02-ConstellationModel-13.swift", E("C05-T02-ConstellationModel-13.swift"))
+add("C05-T02-ConstellationModel-14.swift", R(M, 1, 211))
 
 # --- Chapter 5: ConstellationRenderer ----------------------------------------
 
@@ -223,19 +180,14 @@ add("C05-T01-ConstellationRenderer-00.swift", E("C05-T01-ConstellationRenderer-0
 for index in range(1, 12):
     name = f"C05-T03-ConstellationRenderer-{index:02d}.swift"
     add(name, E(name))
-add("C05-T03-ConstellationRenderer-12.swift", R(N, 1, 222))
+add("C05-T03-ConstellationRenderer-12.swift", E("C05-T03-ConstellationRenderer-12.swift"))
+add("C05-T03-ConstellationRenderer-13.swift", R(N, 1, 198))
 
 # --- Chapter 6: ImmersiveCoordinator -----------------------------------------
 
 I = "ImmersiveCoordinator.swift"
 add("C06-T01-ImmersiveCoordinator-00.swift", E("C06-T01-ImmersiveCoordinator-00.swift"))
-for index in range(1, 12):
-    name = f"C06-T02-ImmersiveCoordinator-{index:02d}.swift"
-    add(name, E(name))
-for index in range(12, 21):
-    name = f"C06-T03-ImmersiveCoordinator-{index:02d}.swift"
-    add(name, E(name))
-add("C06-T03-ImmersiveCoordinator-21.swift", R(I, 1, 357))
+add("C06-T03-ImmersiveCoordinator-22.swift", R(I, 1, 343))
 
 # --- Chapter 6: ImmersiveView and the app scenes -----------------------------
 
@@ -259,17 +211,16 @@ def main() -> None:
 
     # The last snapshot of every file must match the shipping source exactly.
     finals = {
-        "AppModel.swift": "C02-T02-AppModel-11.swift",
-        "ControlView.swift": "C02-T04-ControlView-13.swift",
+        "AppModel.swift": "C02-T02-AppModel-12.swift",
+        "ControlView.swift": "C02-T04-ControlView-14.swift",
         "HandConstellationApp.swift": "C06-T04-HandConstellationApp-03.swift",
-        "HandTrackingService.swift": "C04-T05-HandTrackingService-18.swift",
-        "ConstellationConfiguration.swift": "C04-T02-Configuration-06.swift",
+        "HandTrackingService.swift": "C04-T05-HandTrackingService-19.swift",
+        "ConstellationConfiguration.swift": "C04-T02-Configuration-07.swift",
         "DwellDetector.swift": "C04-T03-DwellDetector-14.swift",
-        "ClosureDetector.swift": "C04-T06-ClosureDetector-01.swift",
-        "FistHoldDetector.swift": "C04-T04-FistHoldDetector-11.swift",
-        "ConstellationModel.swift": "C05-T02-ConstellationModel-13.swift",
-        "ConstellationRenderer.swift": "C05-T03-ConstellationRenderer-12.swift",
-        "ImmersiveCoordinator.swift": "C06-T03-ImmersiveCoordinator-21.swift",
+        "ExistingPointConnectionDetector.swift": "C04-T06-ExistingPointConnectionDetector-01.swift",
+        "ConstellationModel.swift": "C05-T02-ConstellationModel-14.swift",
+        "ConstellationRenderer.swift": "C05-T03-ConstellationRenderer-13.swift",
+        "ImmersiveCoordinator.swift": "C06-T03-ImmersiveCoordinator-22.swift",
         "ImmersiveView.swift": "C06-T04-ImmersiveView-04.swift",
     }
     for source, snapshot in finals.items():

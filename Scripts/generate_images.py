@@ -7,6 +7,7 @@ that a page mixing old and new figures still reads as one set.
 
 import math
 import subprocess
+import tempfile
 from pathlib import Path
 from xml.sax.saxutils import escape
 
@@ -392,8 +393,8 @@ body.append(t(326, 400, ".indexFingerKnuckle", 19, ACCENT, 600, "end", font=MONO
 body.append(t(380, 206, ".indexFingerTip", 21, YELLOW, 650, "middle", font=MONO))
 body.append(card(700, 190, 344, 200, "이 과정에서 쓰는 관절", [
     ".indexFingerTip 은 점 위치",
-    ".wrist 와 4개 knuckle 은",
-    "주먹 판정에 사용",
+    "오른손 검지 끝 하나만",
+    "그리기 입력에 사용",
 ], YELLOW))
 body.append(card(700, 418, 344, 220, "각 관절이 주는 것", [
     "isTracked: 신뢰 가능 여부",
@@ -450,13 +451,9 @@ groups = [
     ]),
     ("점과 선", YELLOW, [
         ("minimumPointDistance", "0.030 m = 3cm"),
-        ("pointRadius", "0.008 m = 8mm"),
-        ("lineRadius", "0.0025 m = 2.5mm"),
-        ("cursorRadius", "0.006 m = 6mm"),
-    ]),
-    ("주먹 손짓", ORANGE, [
-        ("fistHoldDuration", "0.6초"),
-        ("fistFingerExtensionRatio", "1.45 (비율)"),
+        ("pointRadius", "0.006 m = 6mm"),
+        ("lineRadius", "0.0015 m = 1.5mm"),
+        ("cursorRadius", "0.005 m = 5mm"),
     ]),
 ]
 x = 56
@@ -470,15 +467,11 @@ for title, color, rows in groups:
         body.append(t(x + 26, y, key, 17, color, 600, font=MONO))
         body.append(t(x + 26, y + 30, value, 19, BODY))
     x += 336
-body.append(rect(728, 450, 316, 124, 20, PANEL, ACCENT, 2))
-body.append(t(754, 486, "닫기 스냅", 22, INK, 650))
-body.append(t(754, 520, "진입 0.030 m", 17, ACCENT, 600, font=MONO))
-body.append(t(754, 550, "해제 0.040 m", 17, ACCENT, 600, font=MONO))
 body.append(rect(56, 596, 988, 62, 16, "#131b2b", ACCENT, 2))
 body.append(t(88, 634, "ARKit과 RealityKit의 거리 단위는 미터입니다. 0.015는 1.5cm를 뜻합니다.",
               20, BODY))
 figure("tunable-values", "조절 가능한 설정값",
-       "체류 판정, 점과 선, 주먹 손짓 세 묶음으로 나눈 설정값과 미터 단위 환산 표",
+       "체류 판정과 점·선 두 묶음으로 나눈 설정값과 미터 단위 환산 표",
        "".join(body))
 
 # --- 12. 체류 상태 머신 -------------------------------------------------------
@@ -509,43 +502,13 @@ figure("dwell-states", "체류 판정 상태 머신",
        "idle, dwelling, coolingDown 세 상태와 상태를 바꾸는 조건을 화살표로 이은 그림",
        "".join(body))
 
-# --- 13. 주먹 유지 상태 머신 --------------------------------------------------
-
-body = [heading("주먹 유지 상태 머신", "FistHoldDetector.State")]
-states = [("ready", 150, 310, MUTED), ("holding", 520, 310, ORANGE),
-          ("waitingFor", 880, 296, GREEN), ("Release", 880, 330, GREEN)]
-for cx, cy, color in [(150, 310, MUTED), (520, 310, ORANGE), (880, 310, GREEN)]:
-    body.append(f'<circle cx="{cx}" cy="{cy}" r="96" fill="#131b2b" stroke="{color}" stroke-width="4"/>')
-body.append(t(150, 318, "ready", 24, MUTED, 650, "middle", font=MONO))
-body.append(t(520, 318, "holding", 24, ORANGE, 650, "middle", font=MONO))
-body.append(t(880, 302, "waitingFor", 21, GREEN, 650, "middle", font=MONO))
-body.append(t(880, 334, "Release", 21, GREEN, 650, "middle", font=MONO))
-body.append(arrow(250, 310, 418, 310))
-body.append(t(334, 278, "주먹 감지", 18, BODY, anchor="middle"))
-body.append(arrow(620, 310, 778, 310))
-body.append(t(699, 262, "0.6초 도달", 18, BODY, anchor="middle"))
-body.append(t(699, 290, "여기서 한 번만 전환", 18, GREEN, 600, "middle"))
-body.append(f'<path d="M880 406 C 800 528, 300 528, 152 406" fill="none" stroke="{ACCENT}" '
-            f'stroke-width="5" stroke-linecap="round"/>' + head(152, 406, -140, ACCENT))
-body.append(t(516, 522, "손을 다시 펴야 재활성화", 19, BODY, anchor="middle"))
-body.append(f'<path d="M462 226 C 380 158, 250 172, 172 222" fill="none" stroke="{MUTED}" '
-            f'stroke-width="4" stroke-linecap="round"/>' + head(172, 222, 147, MUTED, 13))
-body.append(t(316, 156, "주먹이 풀리면", 18, MUTED, anchor="middle"))
-body.append(rect(56, 566, 988, 96, 18, "#131b2b", ORANGE, 2))
-body.append(t(88, 606, "주먹을 계속 쥐고 있어도 waitingForRelease 에서는 다시 전환하지 않습니다.",
-              20, BODY))
-body.append(t(88, 640, "덕분에 한 번의 주먹 유지가 정확히 한 번의 그리기 전환이 됩니다.", 20, MUTED))
-figure("fist-hold-states", "주먹 유지 상태 머신",
-       "ready, holding, waitingForRelease 세 상태와 한 번만 전환되는 경로를 나타낸 그림",
-       "".join(body))
-
 # --- 14. 별자리 저장 구조 -----------------------------------------------------
 
-body = [heading("여러 별자리를 나누어 저장하기", "constellations: [Constellation]")]
+body = [heading("노드와 간선으로 별자리 저장하기", "constellations: [Constellation]")]
 body.append(rect(56, 168, 988, 300, 24, PANEL, LINE, 2))
 body.append(t(88, 214, "constellations", 24, INK, 650, font=MONO))
 y = 250
-for label, count, color, closed in [("[0]", 3, YELLOW, True), ("[1]", 4, ACCENT, False)]:
+for label, count, color, edge_count in [("[0]", 4, INK, 5), ("[1]", 3, INK, 2)]:
     body.append(rect(88, y, 924, 96, 18, "#0e1524", color, 2))
     body.append(t(116, y + 56, label, 22, color, 650, font=MONO))
     for i in range(count):
@@ -556,21 +519,20 @@ for label, count, color, closed in [("[0]", 3, YELLOW, True), ("[1]", 4, ACCENT,
     for i in range(count):
         cx = 210 + i * 92
         body.append(f'<circle cx="{cx}" cy="{y+48}" r="18" fill="{color}"/>')
-    line_count = count if closed else count - 1
-    body.append(t(650, y + 56, f"점 {count}개 · 선 {line_count}개", 20, BODY))
-    body.append(t(866, y + 56, "닫힘" if closed else "열림", 18,
-                  GREEN if closed else MUTED, 650))
+    body.append(t(650, y + 56, f"노드 {count}개 · 간선 {edge_count}개", 20, BODY))
+    body.append(t(866, y + 56, "현재" if label == "[1]" else "완료", 18,
+                  GREEN if label == "[1]" else MUTED, 650))
     y += 116
 body.append(rect(56, 500, 484, 160, 20, "#131b2b", GREEN, 2))
-body.append(t(88, 546, "선이 생기는 곳", 22, GREEN, 650))
-body.append(t(88, 588, "같은 Constellation 안에서", 19, BODY))
-body.append(t(88, 620, "이전 점 또는 첫 점으로 잇습니다.", 19, BODY))
+body.append(t(88, 546, "간선이 생기는 곳", 22, GREEN, 650))
+body.append(t(88, 588, "현재 Constellation 안의", 19, BODY))
+body.append(t(88, 620, "서로 다른 두 노드를 잇습니다.", 19, BODY))
 body.append(rect(560, 500, 484, 160, 20, "#131b2b", ORANGE, 2))
 body.append(t(592, 546, "선이 생기지 않는 곳", 22, ORANGE, 650))
 body.append(t(592, 588, "[0]의 마지막 점과 [1]의 첫 점", 19, BODY))
 body.append(t(592, 620, "사이에는 선이 없습니다.", 19, BODY))
-figure("constellation-storage", "여러 별자리와 닫힘 상태 저장",
-       "각 Constellation이 점 배열과 열림 또는 닫힘 상태를 가지며 별자리 사이에는 선이 없음을 보여 주는 그림",
+figure("constellation-storage", "여러 별자리의 그래프 저장",
+       "각 Constellation이 ID가 있는 노드와 중복 없는 간선을 가지며 별자리 사이에는 선이 없음을 보여 주는 그림",
        "".join(body))
 
 # --- 15. 엔티티 트리 ----------------------------------------------------------
@@ -580,10 +542,10 @@ body.append(rect(400, 170, 300, 96, 20, PANEL, ACCENT, 3))
 body.append(t(550, 214, "rootEntity", 24, ACCENT, 650, "middle", font=MONO))
 body.append(t(550, 246, "장면에 추가되는 단 하나의 부모", 17, MUTED, anchor="middle"))
 children = [
-    ("lineContainer", "파란 확정 선분", ACCENT, 36),
-    ("pointContainer", "노란 구 점", YELLOW, 292),
-    ("guidanceContainer", "닫기 대상·미리보기", GREEN, 548),
-    ("cursor", "검지 커서", ORANGE, 804),
+    ("lineContainer", "흰 확정 선분", INK, 36),
+    ("pointContainer", "흰 구 점", INK, 292),
+    ("guidanceContainer", "연결 대상·미리보기", INK, 548),
+    ("cursor", "흰 검지 커서", INK, 804),
 ]
 for label, note, color, x in children:
     body.append(f'<path d="M550 266 V 320 H {x+118} V 366" fill="none" stroke="{LINE}" stroke-width="3"/>')
@@ -592,10 +554,10 @@ for label, note, color, x in children:
     body.append(t(x + 118, 448, note, 16, BODY, anchor="middle"))
 body.append(rect(56, 528, 988, 132, 20, "#131b2b", LINE, 2))
 body.append(t(88, 572, "컨테이너를 나누면", 22, INK, 650))
-body.append(t(88, 612, "초기화할 때 확정 점·선과 닫기 안내를 지우고 커서 엔티티는 재사용합니다.", 20, BODY))
-body.append(t(88, 644, "첫 점 강조와 미리보기 선은 guidanceContainer 안에서만 켜고 끕니다.", 20, MUTED))
+body.append(t(88, 612, "초기화할 때 확정 점·선과 연결 안내를 지우고 커서 엔티티는 재사용합니다.", 20, BODY))
+body.append(t(88, 644, "목표 점 강조와 미리보기 선은 guidanceContainer 안에서만 켜고 끕니다.", 20, MUTED))
 figure("entity-tree", "RealityKit 엔티티 트리",
-       "rootEntity 아래에 선, 점, 닫기 안내 컨테이너와 커서가 자식으로 붙은 구조도",
+       "rootEntity 아래에 흰 선, 흰 점, 기존 점 연결 안내 컨테이너와 커서가 자식으로 붙은 구조도",
        "".join(body))
 
 # --- 16. 파일 책임 비교 -------------------------------------------------------
@@ -629,12 +591,12 @@ figure("file-responsibilities", "데이터와 화면의 책임 비교",
 
 body = [heading("한 프레임의 입력 처리 순서", "ImmersiveCoordinator.process(anchor:)")]
 steps = [
-    ("1", "주먹인지 먼저 판정", "제어 손짓이 그리기보다 우선", ORANGE),
-    ("2", "주먹이면 체류 취소 후 반환", "손짓 자체가 점이 되지 않음", ORANGE),
-    ("3", "그리기 꺼짐이면 반환", "꺼진 상태에서는 점이 생기지 않음", MUTED),
-    ("4", "시작점 닫기 후보를 먼저", "스냅 영역이면 일반 점 입력을 멈춤", GREEN),
+    ("1", "버튼 상태를 먼저 반영", "꺼지는 순간 현재 별자리 마침", ORANGE),
+    ("2", "그리기 꺼짐이면 반환", "꺼진 상태에서는 점이 생기지 않음", MUTED),
+    ("3", "오른손 검지 위치 계산", "추적 손실이면 후보 입력 취소", ACCENT),
+    ("4", "모든 기존 점 후보를 먼저", "스냅 영역이면 일반 점 입력을 멈춤", GREEN),
     ("5", "그 밖의 위치는 점 체류로", "진행률로 커서를 키움", ACCENT),
-    ("6", "확정 결과만 모델로", "점 추가 또는 기존 첫 점으로 닫기", YELLOW),
+    ("6", "확정 결과만 모델로", "새 점 또는 기존 노드 간선 추가", YELLOW),
 ]
 y = 136
 for number, title, note, color in steps:
@@ -648,7 +610,7 @@ for number, title, note, color in steps:
                     + head(550, y + 88, 90, LINE, 10))
     y += 88
 figure("input-pipeline", "한 프레임의 입력 처리 순서",
-       "주먹 판정, 그리기 상태 검사, 시작점 닫기, 일반 점 체류, 모델 확정으로 이어지는 여섯 단계 순서도",
+       "버튼 상태, 그리기 상태 검사, 검지 위치, 모든 기존 점 연결, 일반 점 체류와 모델 확정 순서도",
        "".join(body))
 
 # --- 18. 실행 대상 선택 -------------------------------------------------------
@@ -713,7 +675,7 @@ figure("device-permission-prompt", "손 추적 권한 창 안내",
 
 # --- 20. 첫 별자리 -----------------------------------------------------------
 
-def polyline(points, color=ACCENT):
+def polyline(points, color=INK):
     out = []
     for i in range(1, len(points)):
         x1, y1 = points[i - 1]
@@ -721,7 +683,7 @@ def polyline(points, color=ACCENT):
         out.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{color}" '
                    f'stroke-width="9" stroke-linecap="round"/>')
     for x, y in points:
-        out.append(f'<circle cx="{x}" cy="{y}" r="16" fill="{YELLOW}" stroke="#fff1a8" '
+        out.append(f'<circle cx="{x}" cy="{y}" r="16" fill="{INK}" stroke="#ffffff" '
                    f'stroke-width="5"/>')
     return "".join(out)
 
@@ -729,7 +691,7 @@ def polyline(points, color=ACCENT):
 first = [(170, 470), (280, 300), (420, 400), (520, 250), (640, 360)]
 body = [heading("다섯 개의 점으로 만든 첫 별자리", "그리기 켜짐 상태")]
 body.append(rect(56, 160, 700, 420, 26, "#070b15", ACCENT, 2, opacity=0.65))
-body.append(polyline(first))
+body.append(polyline(first, INK))
 for i, (x, y) in enumerate(first):
     body.append(t(x, y - 30, str(i + 1), 20, INK, 700, "middle"))
 body.append(f'<circle cx="694" cy="472" r="20" fill="{ORANGE}" opacity=".9"/>')
@@ -745,16 +707,16 @@ body.append(card(784, 380, 260, 200, "만드는 방법", [
 body.append(rect(56, 606, 988, 62, 16, "#131b2b", LINE, 2))
 body.append(t(88, 644, "창의 표시가 별자리 1개 · 점 5개 가 되면 성공입니다.", 20, BODY))
 figure("device-first-constellation", "다섯 점으로 만든 첫 별자리",
-       "번호가 붙은 다섯 개의 노란 점과 이를 잇는 네 개의 파란 선으로 이루어진 첫 별자리",
+       "번호가 붙은 다섯 개의 흰 점과 이를 잇는 네 개의 흰 선으로 이루어진 첫 별자리",
        "".join(body))
 
-# --- 21. 시작점 스냅과 닫기 피드백 -----------------------------------------
+# --- 21. 모든 기존 점 연결 피드백 -------------------------------------------
 
-body = [heading("처음 점으로 돌아가 도형 닫기", "새 점이 아니라 기존 첫 점을 다시 선택합니다")]
+body = [heading("어느 기존 점으로든 다시 연결", "새 점 대신 저장된 목표 노드를 선택합니다")]
 panels = [
-    (56, "1. 닫기 가능", "첫 점이 크게 빛남"),
-    (392, "2. 첫 점에서 머무르기", "미리보기 선과 진행률"),
-    (728, "3. 닫기 완료", "점 3개 · 선 3개"),
+    (56, "1. 목표 선택", "가까운 기존 점을 고정"),
+    (392, "2. 목표에서 머무르기", "미리보기 선과 진행률"),
+    (728, "3. 연결 완료", "점 수 유지 · 선만 추가"),
 ]
 for x, title, note in panels:
     body.append(rect(x, 158, 316, 420, 24, "#070b15", LINE, 2, opacity=0.72))
@@ -764,58 +726,59 @@ for x, title, note in panels:
 panel_points = [(118, 452), (214, 278), (318, 448)]
 for panel_index, panel_x in enumerate([0, 336, 672]):
     pts = [(x + panel_x, y) for x, y in panel_points]
-    body.append(polyline(pts[:3] if panel_index == 2 else pts[:3], ACCENT))
+    body.append(polyline(pts[:3], INK))
     if panel_index == 2:
         (x1, y1), (x2, y2) = pts[2], pts[0]
         body.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
-                    f'stroke="{ACCENT}" stroke-width="9" stroke-linecap="round"/>')
-    first_x, first_y = pts[0]
-    body.append(f'<circle cx="{first_x}" cy="{first_y}" r="31" fill="none" '
-                f'stroke="{ACCENT}" stroke-width="6" opacity=".8"/>')
+                    f'stroke="{INK}" stroke-width="9" stroke-linecap="round"/>')
+    target_x, target_y = pts[0]
+    body.append(f'<circle cx="{target_x}" cy="{target_y}" r="31" fill="none" '
+                f'stroke="{INK}" stroke-width="6" opacity=".65"/>')
     if panel_index == 1:
         last_x, last_y = pts[2]
-        body.append(f'<line x1="{last_x}" y1="{last_y}" x2="{first_x}" y2="{first_y}" '
-                    f'stroke="{ACCENT}" stroke-width="6" stroke-dasharray="14 10" opacity=".65"/>')
-        body.append(f'<circle cx="{first_x+16}" cy="{first_y-12}" r="16" fill="{ORANGE}"/>')
-        body.append(t(first_x + 52, first_y - 34, "검지 커서", 16, ORANGE, 600))
+        body.append(f'<line x1="{last_x}" y1="{last_y}" x2="{target_x}" y2="{target_y}" '
+                    f'stroke="{INK}" stroke-width="6" stroke-dasharray="14 10" opacity=".45"/>')
+        body.append(f'<circle cx="{target_x+16}" cy="{target_y-12}" r="16" fill="{INK}" opacity=".72"/>')
+        body.append(t(target_x + 52, target_y - 34, "검지 커서", 16, INK, 600))
 body.append(rect(56, 606, 988, 62, 16, "#131b2b", GREEN, 2))
-body.append(t(88, 644, "마지막 선의 끝은 손가락 좌표가 아니라 저장된 첫 점 좌표이므로 정확히 닫힙니다.", 20, BODY))
-figure("closure-snap-feedback", "시작점 스냅으로 도형 닫기",
-       "세 점 이후 첫 점 강조, 시작점 dwell과 미리보기 선, 점 세 개와 선 세 개로 닫힌 완료 상태",
+body.append(t(88, 644, "선의 끝은 손가락 좌표가 아니라 저장된 목표 점 좌표이므로 정확히 만납니다.", 20, BODY))
+figure("closure-snap-feedback", "모든 기존 점으로 다시 연결",
+       "여러 기존 점 중 목표 선택, dwell 미리보기, 점을 추가하지 않는 연결 완료 상태",
        "".join(body))
 
-# --- 22. 닫힌 삼각형 --------------------------------------------------------
+# --- 22. 여러 기존 점을 잇는 그래프 -----------------------------------------
 
-triangle = [(190, 470), (390, 230), (620, 470), (190, 470)]
-body = [heading("세 점으로 완성한 닫힌 삼각형", "처음 점에서 0.8초 머물러 닫기")]
+graph_points = [(170, 470), (350, 230), (590, 300), (640, 500)]
+graph_edges = [(0, 1), (1, 2), (2, 3), (3, 0), (0, 2)]
+body = [heading("기존 점을 다시 이은 첫 별자리", "어느 기존 점에서든 0.8초 머물러 선 추가")]
 body.append(rect(56, 160, 700, 420, 26, "#070b15", ACCENT, 2, opacity=0.65))
-for i in range(1, len(triangle)):
-    x1, y1 = triangle[i - 1]
-    x2, y2 = triangle[i]
+for start, end in graph_edges:
+    x1, y1 = graph_points[start]
+    x2, y2 = graph_points[end]
     body.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" '
-                f'stroke="{ACCENT}" stroke-width="9" stroke-linecap="round"/>')
-for index, (x, y) in enumerate(triangle[:3]):
-    body.append(f'<circle cx="{x}" cy="{y}" r="16" fill="{YELLOW}" stroke="#fff1a8" stroke-width="5"/>')
+                f'stroke="{INK}" stroke-width="7" stroke-linecap="round" opacity=".92"/>')
+for index, (x, y) in enumerate(graph_points):
+    body.append(f'<circle cx="{x}" cy="{y}" r="16" fill="{INK}" stroke="#ffffff" stroke-width="4"/>')
     body.append(t(x, y - 32, str(index + 1), 20, INK, 700, "middle"))
-body.append(f'<circle cx="190" cy="470" r="34" fill="none" stroke="{GREEN}" stroke-width="6"/>')
+body.append(f'<circle cx="590" cy="300" r="34" fill="none" stroke="{INK}" stroke-width="6" opacity=".5"/>')
 body.append(card(784, 160, 260, 200, "완료 상태", [
-    "별자리 1개", "점 3개", "선 3개",
+    "별자리 1개", "점 4개", "선 5개",
 ], GREEN))
 body.append(card(784, 380, 260, 200, "제어창 안내", [
-    "도형이 닫혔어요", "손을 옮기면", "새 별자리 시작",
+    "기존 점에 연결했어요", "이미 있는 선은", "중복 생성하지 않음",
 ], ACCENT))
 body.append(rect(56, 606, 988, 62, 16, "#131b2b", LINE, 2))
-body.append(t(88, 644, "첫 점을 복제하지 않으므로 네 번째 점 없이 세 변이 정확히 만납니다.", 20, BODY))
-figure("device-closed-triangle", "닫힌 삼각형 완성 결과",
-       "노란 점 세 개와 파란 선 세 개로 정확히 닫힌 삼각형, 첫 점 완료 강조와 제어창 안내",
+body.append(t(88, 644, "기존 점을 복제하지 않고 간선만 추가하므로 점 개수는 그대로 유지됩니다.", 20, BODY))
+figure("device-closed-triangle", "모든 기존 점 연결 결과",
+       "흰 점 네 개와 흰 선 다섯 개로 만든 그래프, 기존 점 연결 완료 안내",
        "".join(body))
 
 # --- 23. 두 번째 별자리 ------------------------------------------------------
 
 body = [heading("분리된 두 번째 별자리", "그리기를 끄고 다시 켠 뒤")]
 body.append(rect(56, 160, 988, 420, 26, "#070b15", ACCENT, 2, opacity=0.65))
-body.append(polyline([(120, 470), (270, 250), (480, 470), (120, 470)]))
-body.append(polyline([(700, 470), (800, 320), (910, 420), (985, 272)]))
+body.append(polyline([(120, 470), (270, 250), (480, 470), (120, 470)], INK))
+body.append(polyline([(700, 470), (800, 320), (910, 420), (985, 272)], INK))
 body.append(f'<circle cx="640" cy="418" r="38" fill="none" stroke="{ORANGE}" stroke-width="5"/>')
 body.append(f'<path d="M616 394 l48 48" stroke="{ORANGE}" stroke-width="6" stroke-linecap="round"/>')
 body.append(t(640, 512, "여기에 선이 없어야 합니다", 20, ORANGE, 650, "middle"))
@@ -833,10 +796,37 @@ def main() -> None:
     for name, content in FIGURES.items():
         svg_path = OUT / f"{name}.svg"
         svg_path.write_text(content, encoding="utf-8")
-        subprocess.run(
-            ["sips", "-s", "format", "png", str(svg_path), "--out", str(OUT / f"{name}.png")],
-            check=True, capture_output=True,
+        png_path = OUT / f"{name}.png"
+        direct = subprocess.run(
+            ["sips", "-s", "format", "png", str(svg_path), "--out", str(png_path)],
+            capture_output=True,
         )
+        if direct.returncode != 0:
+            with tempfile.TemporaryDirectory(prefix="hand-constellation-svg-") as temporary_directory:
+                temporary_path = Path(temporary_directory)
+                square_svg = temporary_path / f"{name}.svg"
+                square_svg.write_text(
+                    content.replace(
+                        'height="720" viewBox="0 0 1100 720"',
+                        'height="1100" viewBox="0 0 1100 1100"',
+                        1,
+                    ),
+                    encoding="utf-8",
+                )
+                subprocess.run(
+                    ["qlmanage", "-t", "-s", "1100", "-o", str(temporary_path), str(square_svg)],
+                    check=True,
+                    capture_output=True,
+                )
+                square_png = temporary_path / f"{name}.svg.png"
+                subprocess.run(
+                    [
+                        "sips", "-c", "720", "1100", "--cropOffset", "0", "0",
+                        str(square_png), "--out", str(png_path),
+                    ],
+                    check=True,
+                    capture_output=True,
+                )
     print(f"wrote {len(FIGURES)} figures as SVG and PNG")
 
 

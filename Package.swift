@@ -27,11 +27,10 @@ let package = Package(
                 "Info.plist"
             ],
             sources: [
-                "ClosureDetector.swift",
+                "ExistingPointConnectionDetector.swift",
                 "ConstellationConfiguration.swift",
                 "ConstellationModel.swift",
-                "DwellDetector.swift",
-                "FistHoldDetector.swift"
+                "DwellDetector.swift"
             ]
         ),
         .testTarget(

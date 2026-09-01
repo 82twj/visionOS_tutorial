@@ -67,18 +67,18 @@
 
     @Assessments {
         @MultipleChoice {
-            주먹을 쥐는 순간 별자리 점이 생기지 않는 이유는 무엇인가요?
+            제어창의 그리기 버튼을 눌렀을 때 몰입형 공간이 곧바로 반응하는 이유는 무엇인가요?
 
             @Choice(isCorrect: true) {
-                주먹을 처리하는 갈래에서 진행 중인 체류를 먼저 취소하고 즉시 반환하기 때문입니다.
+                `drawingState` 변화를 `ImmersiveView`가 관찰해 코디네이터에 전달하기 때문입니다.
 
                 @Justification(reaction: "맞습니다!") {
-                    제어 손짓과 그리기 입력의 우선순위를 순서로 분리했습니다.
+                    창과 몰입형 공간이 같은 `AppModel` 상태를 공유합니다.
                 }
             }
 
             @Choice(isCorrect: false) {
-                주먹을 쥐면 ARKit 세션이 자동으로 멈추기 때문입니다.
+                버튼이 ARKit 세션을 매번 새로 만들기 때문입니다.
 
                 @Justification(reaction: "다시 생각해 보세요.") {
                     세션은 계속 실행되고 그리기 상태와 체류 판정만 바뀝니다.

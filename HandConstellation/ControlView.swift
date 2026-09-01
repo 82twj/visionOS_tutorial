@@ -11,15 +11,16 @@ struct ControlView: View {
             Label("Hand Constellation", systemImage: "sparkles")
                 .font(.largeTitle.bold())
 
-            Text("검지를 머물러 점을 만들고, 점을 세 개 이상 만든 뒤 처음 점으로 돌아가 닫힌 도형을 완성하세요.")
+            Text("검지를 머물러 점을 만들고, 원하는 기존 점에 다시 연결해 자유롭게 별자리를 그려 보세요.")
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             VStack(alignment: .leading, spacing: 10) {
                 Label("그리는 방법", systemImage: "questionmark.circle.fill")
                     .font(.headline)
                 Label("0.8초 머물러 점 만들기", systemImage: "1.circle.fill")
                 Label("다음 점을 위해 3cm 이상 이동하기", systemImage: "2.circle.fill")
-                Label("점 3개 이상이면 첫 점에서 머물러 닫기", systemImage: "3.circle.fill")
+                Label("기존 점에 머물러 선 다시 연결하기", systemImage: "3.circle.fill")
             }
             .font(.callout)
             .padding()
@@ -28,7 +29,7 @@ struct ControlView: View {
 
             HStack(spacing: 12) {
                 Label(
-                    "별자리 \(appModel.constellationCount)개 · 점 \(appModel.pointCount)개",
+                    "별자리 \(appModel.constellationCount)개 · 점 \(appModel.pointCount)개 · 선 \(appModel.edgeCount)개",
                     systemImage: "circle.grid.cross"
                 )
                 Spacer()
@@ -48,7 +49,7 @@ struct ControlView: View {
                     .foregroundStyle(guidanceColor)
 
                 if let progress = appModel.drawingGuidance.progress {
-                    ProgressView("도형 닫는 중", value: Double(progress))
+                    ProgressView("기존 점에 연결 중", value: Double(progress))
                 }
             }
             .font(.callout)
@@ -56,21 +57,8 @@ struct ControlView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .glassBackgroundEffect()
 
-            HStack {
-                Label(drawingStatusLabel, systemImage: drawingStatusSymbol)
-                    .foregroundStyle(drawingStatusColor)
-                Spacer()
-                Text("오른손 주먹을 0.6초 유지해 전환")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-
-            if appModel.fistGestureProgress > 0 {
-                ProgressView(
-                    "그리기 상태 전환 손짓 인식 중",
-                    value: Double(appModel.fistGestureProgress)
-                )
-            }
+            Label(drawingStatusLabel, systemImage: drawingStatusSymbol)
+                .foregroundStyle(drawingStatusColor)
 
             HStack(spacing: 12) {
                 Button {
@@ -155,13 +143,11 @@ struct ControlView: View {
             return "pause.circle"
         case .placeFirstPoint, .placeNextPoint:
             return "hand.point.up.left.fill"
-        case .returnToStart:
-            return "circle.dashed.inset.filled"
-        case .closing:
+        case .connecting:
             return "point.3.connected.trianglepath.dotted"
-        case .closed:
+        case .connected:
             return "checkmark.circle.fill"
-        case .tooClose:
+        case .alreadyConnected, .tooClose:
             return "arrow.left.and.right.circle.fill"
         }
     }
@@ -172,12 +158,10 @@ struct ControlView: View {
             return .secondary
         case .placeFirstPoint, .placeNextPoint:
             return .orange
-        case .returnToStart, .closing:
-            return .cyan
-        case .closed:
-            return .green
-        case .tooClose:
-            return .yellow
+        case .connecting, .connected:
+            return .primary
+        case .alreadyConnected, .tooClose:
+            return .secondary
         }
     }
 
@@ -244,6 +228,7 @@ struct ControlView: View {
             appModel.trackingStatus = .idle
             appModel.setDrawingEnabled(false)
             appModel.pointCount = 0
+            appModel.edgeCount = 0
             appModel.constellationCount = 0
         case .transitioning:
             break

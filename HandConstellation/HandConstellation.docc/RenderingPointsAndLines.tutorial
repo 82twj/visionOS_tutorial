@@ -1,17 +1,17 @@
 @Tutorial(time: 12) {
     @Intro(title: "RealityKit으로 점과 선 그리기") {
-        **이번 단계에서 만들 것**: 확정된 점을 노란 구로, 두 점 사이를 파란 원기둥으로 그리는 `ConstellationRenderer`입니다.
+        **이번 단계에서 만들 것**: 확정된 점을 흰 구로, 두 점 사이를 흰 원기둥으로 그리는 `ConstellationRenderer`입니다.
 
         RealityKit은 3D 장면을 **엔티티 트리**로 다룹니다. 코드를 쓰기 전에 이 앱이 만들 트리 모양을 먼저 봅니다.
 
-        @Image(source: entity-tree.png, alt: "rootEntity 아래에 선, 점, 닫기 안내 컨테이너와 커서가 자식으로 붙은 구조도")
+        @Image(source: entity-tree.png, alt: "rootEntity 아래에 선, 점, 기존 점 연결 안내 컨테이너와 커서가 자식으로 붙은 구조도")
     }
 
     @Section(title: "엔티티 트리 이해하기") {
         @ContentAndMedia {
             엔티티는 장면 안의 물체 하나입니다. 엔티티에 mesh와 material을 붙이면 눈에 보이고, 붙이지 않으면 자식들을 담는 빈 그룹이 됩니다.
 
-            @Image(source: entity-tree.png, alt: "루트 엔티티와 선, 점, 닫기 안내 컨테이너 및 커서로 이루어진 트리 그림")
+            @Image(source: entity-tree.png, alt: "루트 엔티티와 선, 점, 연결 안내 컨테이너 및 커서로 이루어진 트리 그림")
         }
 
         @Steps {
@@ -54,7 +54,7 @@
             }
 
             @Step {
-                점 mesh와 두 material을 만드세요. 점은 금속처럼 반사하게, 선은 덜 반사하게 설정해 두 요소를 눈으로 구분합니다.
+                점 mesh와 두 material을 만드세요. 이 중간 단계에서는 모양과 굵기를 먼저 확인하고, 마지막 단계에서 모두 조명에 영향받지 않는 흰색 재질로 통일합니다.
 
                 @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-04.swift, previousFile: C05-T03-ConstellationRenderer-03.swift)
             }
@@ -112,9 +112,15 @@
             }
 
             @Step {
-                닫기 안내 컨테이너를 추가하세요. 세 점 이상이면 첫 점보다 큰 반투명 구로 대상을 강조하고, 스냅 영역에서는 마지막 점부터 첫 점까지 가는 가는 미리보기 선을 표시합니다. 완료할 때는 새 점 없이 실제 선만 추가합니다.
+                기존 점 연결 안내 컨테이너를 추가하세요. 목표 점은 반투명 구로 강조하고, 스냅 영역에서는 현재 점부터 목표 점까지 가는 미리보기 선을 표시합니다. 완료할 때는 새 점 없이 실제 선만 추가합니다.
 
                 @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-12.swift, previousFile: C05-T03-ConstellationRenderer-11.swift)
+            }
+
+            @Step {
+                모든 점·선·커서·연결 피드백을 `UnlitMaterial` 기반 흰색으로 통일하세요. 불투명도와 크기 차이만으로 확정 요소, 미리보기, 목표를 구분합니다.
+
+                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-13.swift, previousFile: C05-T03-ConstellationRenderer-12.swift)
             }
 
             @Step {

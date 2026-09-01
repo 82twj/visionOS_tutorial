@@ -1,64 +1,38 @@
 @Tutorial(time: 6) {
     @Intro(title: "조절 가능한 값을 한곳에 모으기") {
-        **이번 단계에서 만들 것**: 체류 시간, 거리, 점과 선의 크기를 담는 `ConstellationConfiguration` 타입입니다.
+        **이번 단계에서 만들 것**: 체류, 기존 점 연결과 흰색 렌더링 값을 담는 `ConstellationConfiguration`입니다.
 
-        여기서 정한 기본값은 이후 Chapter의 모든 타입이 그대로 사용합니다. 값을 바꾸고 싶을 때 이 파일 하나만 고치면 됩니다.
-
-        @Image(source: tunable-values.png, alt: "체류 판정, 점과 선, 주먹 손짓 세 묶음으로 나눈 설정값과 미터 단위 환산 표")
+        @Image(source: tunable-values.png, alt: "체류, 연결, 흰색 점과 선 설정값 표")
     }
 
-    @Section(title: "단위부터 확인하기") {
+    @Section(title: "완성 설정 확인하기") {
         @ContentAndMedia {
-            ARKit과 RealityKit의 거리 단위는 **미터**입니다. `0.015`는 1.5cm, `0.030`은 3cm입니다.
-
-            시간 단위는 초입니다. `TimeInterval`은 `Double`의 다른 이름이며 초를 나타냅니다.
-
-            @Image(source: tunable-values.png, alt: "설정값을 세 묶음으로 나누고 미터를 센티미터로 환산해 보여 주는 표")
+            ARKit과 RealityKit의 거리 단위는 미터입니다. `0.030`은 3cm이고 시간 단위는 초입니다.
         }
 
         @Steps {
             @Step {
-                `Sendable`을 따르는 `struct`를 선언하세요. 값 타입이면서 `Sendable`이므로 다른 실행 문맥으로 안전하게 넘길 수 있습니다.
-
-                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-01.swift, previousFile: C04-T01-Configuration-00.swift)
-            }
-
-            @Step {
-                체류 판정에 쓰는 세 값을 추가하세요. 0.8초 동안, 1.5cm 반경 안에 머물러야 점이 생기고, 다음 점을 찍으려면 3cm 이상 움직여야 합니다.
+                앞 단계에서 만든 설정 파일에 체류 시간 0.8초, 안정 반경 1.5cm와 재무장 거리 3cm를 추가합니다.
 
                 @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-02.swift, previousFile: C04-T02-Configuration-01.swift)
             }
 
             @Step {
-                점과 선의 모양에 쓰는 값을 추가하세요. 점의 반지름 8mm, 선의 반지름 2.5mm, 커서의 반지름 6mm입니다. 최대 점 개수는 장면이 무한히 무거워지는 것을 막습니다.
-
-                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-03.swift, previousFile: C04-T02-Configuration-02.swift)
+                기존 점 목표는 3cm에서 선택하고 4cm 밖에서 해제합니다. 서로 다른 두 값이 경계 흔들림과 목표 깜빡임을 줄입니다.
             }
 
             @Step {
-                주먹 손짓에 쓰는 두 값을 추가하세요. `fistFingerExtensionRatio`는 거리가 아니라 **비율**입니다. 손가락 끝이 손목에서 얼마나 멀리 있는지를 마디까지의 거리로 나눈 값이며, 손 크기가 달라도 같은 기준을 쓸 수 있게 해 줍니다.
-
-                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-04.swift, previousFile: C04-T02-Configuration-03.swift)
+                흰색 점 반지름은 6mm, 선은 1.5mm, 커서는 5mm로 시작합니다. 점보다 선을 가늘게 만들어 공중에서 덜 무겁게 보이도록 합니다.
             }
 
             @Step {
-                기본 설정을 담은 `standard`를 추가하세요. 다른 타입들이 이 값을 기본 인자로 사용합니다.
+                연결 거리와 흰색 점·선·커서 크기를 추가해 설정 파일을 완성하세요.
 
-                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-05.swift, previousFile: C04-T02-Configuration-04.swift)
+                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-07.swift, previousFile: C04-T02-Configuration-02.swift)
             }
 
             @Step {
-                첫 점 스냅의 진입 반경 3cm와 해제 반경 4cm를 추가하세요. 두 값을 다르게 두면 손이 경계에서 흔들릴 때 닫기 안내가 켜졌다 꺼지는 현상을 줄일 수 있습니다.
-
-                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-06.swift, previousFile: C04-T02-Configuration-05.swift)
-            }
-
-            @Step {
-                **결과 확인**: 이 시점의 `ConstellationConfiguration.swift`는 실제 앱의 완성본과 같습니다. 빌드가 성공하면 됩니다.
-            }
-
-            @Step {
-                **문제가 생겼다면**: 각 속성이 `let`이 아니라 `var`인 점을 확인하세요. `var`이므로 필요할 때 일부 값만 바꾼 설정을 만들 수 있습니다.
+                **결과 확인**: 이 스냅샷은 실제 앱의 설정 파일과 같습니다. 실제 Vision Pro에서는 체류와 연결 반경을 사용 거리와 손 떨림에 맞춰 검증하세요.
             }
         }
     }

@@ -28,9 +28,9 @@ final class AppModel {
         case inactive
         case placeFirstPoint
         case placeNextPoint
-        case returnToStart
-        case closing(progress: Float)
-        case closed
+        case connecting(progress: Float)
+        case connected
+        case alreadyConnected
         case tooClose
 
         var message: String {
@@ -40,20 +40,20 @@ final class AppModel {
             case .placeFirstPoint:
                 return "원하는 위치에서 검지를 0.8초 머물러 첫 점을 만드세요."
             case .placeNextPoint:
-                return "3cm 이상 이동한 뒤 다시 머물러 다음 점을 이어 보세요."
-            case .returnToStart:
-                return "도형을 닫으려면 빛나는 첫 점으로 돌아가세요."
-            case .closing:
-                return "첫 점에 연결 중이에요. 검지를 그대로 유지하세요."
-            case .closed:
-                return "도형이 닫혔어요. 손을 옮기면 새 별자리를 시작할 수 있어요."
+                return "새 위치에 점을 만들거나 기존 점에 머물러 다시 연결하세요."
+            case .connecting:
+                return "기존 점에 연결 중이에요. 검지를 그대로 유지하세요."
+            case .connected:
+                return "기존 점에 연결됐어요. 이 점에서 계속 그릴 수 있어요."
+            case .alreadyConnected:
+                return "이미 연결된 점이에요. 다른 기존 점을 선택해 주세요."
             case .tooClose:
                 return "기존 점과 너무 가까워요. 조금 더 이동한 뒤 머물러 주세요."
             }
         }
 
         var progress: Float? {
-            guard case .closing(let progress) = self else { return nil }
+            guard case .connecting(let progress) = self else { return nil }
             return progress
         }
     }
@@ -64,8 +64,8 @@ final class AppModel {
     var trackingStatus: TrackingStatus = .idle
     var drawingState: DrawingState = .disabled
     var pointCount = 0
+    var edgeCount = 0
     var constellationCount = 0
-    var fistGestureProgress: Float = 0
     var drawingGuidance: DrawingGuidance = .inactive
     private(set) var resetGeneration = 0
 
@@ -79,7 +79,7 @@ final class AppModel {
             if isDrawingEnabled {
                 return "그리기 켜짐: 오른손 검지를 한곳에 잠시 머물러 보세요."
             }
-            return "그리기 꺼짐: 오른손 주먹을 0.6초 유지하거나 버튼으로 켜세요."
+            return "그리기 꺼짐: 다시 시작하려면 그리기 켜기 버튼을 누르세요."
         case .unsupported:
             return "이 실행 환경에서는 ARKit 손 추적을 사용할 수 없습니다."
         case .denied:
@@ -99,7 +99,6 @@ final class AppModel {
 
     func setDrawingEnabled(_ isEnabled: Bool) {
         drawingState = isEnabled ? .enabled : .disabled
-        fistGestureProgress = 0
         if !isEnabled {
             drawingGuidance = .inactive
         }
@@ -113,6 +112,7 @@ final class AppModel {
     func requestReset() {
         resetGeneration += 1
         pointCount = 0
+        edgeCount = 0
         constellationCount = 0
         drawingGuidance = isDrawingEnabled ? .placeFirstPoint : .inactive
     }

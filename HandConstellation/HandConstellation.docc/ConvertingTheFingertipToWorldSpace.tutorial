@@ -68,6 +68,12 @@
             }
 
             @Step {
+                완성 서비스가 손 추적 세션과 오른손 검지 끝 좌표만 담당하는지 확인하세요.
+
+                @Code(name: "HandTrackingService.swift", file: C04-T05-HandTrackingService-19.swift, previousFile: C03-T03-HandTrackingService-11.swift)
+            }
+
+            @Step {
                 **결과 확인**: 빌드가 성공하면 됩니다. `hasFiniteComponents`가 아직 없다는 오류가 난다면 정상입니다. 이 도우미는 Chapter 4에서 `DwellDetector.swift`와 함께 추가합니다.
             }
 

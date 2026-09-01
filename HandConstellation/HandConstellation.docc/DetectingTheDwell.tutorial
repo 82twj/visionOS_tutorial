@@ -134,7 +134,7 @@
             }
 
             @Step {
-                도형 닫기는 일반 점 감지기 밖에서 확정됩니다. 닫은 직후 같은 첫 점에서 새 별자리가 생기지 않도록 외부 확정을 cooldown으로 전달하는 `beginCooldown`을 추가하세요.
+                기존 점 연결은 일반 점 감지기 밖에서 확정됩니다. 연결 직후 같은 점에 일반 점이 생기지 않도록 외부 확정을 cooldown으로 전달하는 `beginCooldown`을 추가하세요.
 
                 @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-14.swift, previousFile: C04-T03-DwellDetector-13.swift)
             }

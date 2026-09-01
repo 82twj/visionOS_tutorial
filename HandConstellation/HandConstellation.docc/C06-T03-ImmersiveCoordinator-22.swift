@@ -2,7 +2,7 @@ import ARKit
 import Foundation
 import Observation
 
-/// Coordinates tracking, dwell recognition, domain state, guidance, and rendering.
+/// Coordinates tracking, graph editing, guidance, and rendering.
 @MainActor
 @Observable
 final class ImmersiveCoordinator {
@@ -11,12 +11,12 @@ final class ImmersiveCoordinator {
     private let configuration: ConstellationConfiguration
     private let handTrackingService = HandTrackingService()
     private var dwellDetector: DwellDetector
-    private var closureDetector: ClosureDetector
-    private var fistHoldDetector: FistHoldDetector
+    private var connectionDetector: ExistingPointConnectionDetector
     private var constellationModel: ConstellationModel
     private var appliedDrawingState: AppModel.DrawingState = .disabled
     private var rejectedPosition: SIMD3<Float>?
-    private var recentlyClosedPosition: SIMD3<Float>?
+    private var rejectionGuidance: AppModel.DrawingGuidance = .tooClose
+    private var recentlyConnectedPosition: SIMD3<Float>?
 
     init(configuration: ConstellationConfiguration = .standard) {
         self.configuration = configuration
@@ -26,14 +26,11 @@ final class ImmersiveCoordinator {
             stabilityRadius: configuration.stabilityRadius,
             rearmDistance: configuration.rearmDistance
         )
-        closureDetector = ClosureDetector(
+        connectionDetector = ExistingPointConnectionDetector(
             dwellDuration: configuration.dwellDuration,
-            snapDistance: configuration.closureSnapDistance,
-            releaseDistance: configuration.closureReleaseDistance,
-            departureDistance: configuration.stabilityRadius
-        )
-        fistHoldDetector = FistHoldDetector(
-            holdDuration: configuration.fistHoldDuration
+            snapDistance: configuration.connectionSnapDistance,
+            releaseDistance: configuration.connectionReleaseDistance,
+            departureDistance: configuration.rearmDistance
         )
         constellationModel = ConstellationModel(
             minimumPointDistance: configuration.minimumPointDistance,
@@ -51,7 +48,6 @@ final class ImmersiveCoordinator {
 
             for await update in handTrackingService.provider.anchorUpdates {
                 guard !Task.isCancelled else { break }
-
                 guard update.anchor.chirality == .right else { continue }
                 process(anchor: update.anchor, appModel: appModel)
             }
@@ -71,8 +67,7 @@ final class ImmersiveCoordinator {
 
         handTrackingService.stop()
         renderer.hideCursor()
-        renderer.hideClosureGuidance()
-        appModel.fistGestureProgress = 0
+        renderer.hideConnectionGuidance()
         appModel.drawingGuidance = .inactive
     }
 
@@ -82,15 +77,14 @@ final class ImmersiveCoordinator {
 
     func reset(appModel: AppModel) {
         dwellDetector.reset()
-        closureDetector.reset()
-        fistHoldDetector.reset()
+        connectionDetector.reset()
         constellationModel.reset()
         renderer.reset()
         rejectedPosition = nil
-        recentlyClosedPosition = nil
+        recentlyConnectedPosition = nil
         appModel.pointCount = 0
+        appModel.edgeCount = 0
         appModel.constellationCount = 0
-        appModel.fistGestureProgress = 0
         appModel.trackingStatus = .tracking
         syncDrawingGuidance(appModel: appModel)
     }
@@ -101,10 +95,11 @@ final class ImmersiveCoordinator {
         constellationModel.reset()
         renderer.reset()
         rejectedPosition = nil
-        recentlyClosedPosition = nil
+        recentlyConnectedPosition = nil
         appModel.setDrawingEnabled(false)
         appliedDrawingState = .disabled
         appModel.pointCount = 0
+        appModel.edgeCount = 0
         appModel.constellationCount = 0
         appModel.trackingStatus = .idle
         appModel.drawingGuidance = .inactive
@@ -112,33 +107,8 @@ final class ImmersiveCoordinator {
 
     private func process(anchor: HandAnchor, appModel: AppModel) {
         let timestamp = ProcessInfo.processInfo.systemUptime
-
-        let isFist = handTrackingService.isRightHandFist(
-            from: anchor,
-            maximumExtensionRatio: configuration.fistFingerExtensionRatio
-        )
-
-        if let isFist {
-            let fistSnapshot = fistHoldDetector.update(isFist: isFist, at: timestamp)
-            appModel.fistGestureProgress = fistSnapshot.phase == .holding
-                ? fistSnapshot.progress
-                : 0
-
-            if isFist {
-                cancelDwell()
-
-                if fistSnapshot.didToggle {
-                    appModel.toggleDrawing()
-                    applyDrawingState(appModel: appModel)
-                }
-                return
-            }
-        } else {
-            fistHoldDetector.reset()
-            appModel.fistGestureProgress = 0
-        }
-
         applyDrawingState(appModel: appModel)
+
         guard appModel.isDrawingEnabled else {
             cancelDwell()
             return
@@ -165,50 +135,59 @@ final class ImmersiveCoordinator {
             return
         }
 
-        let currentPoints = constellationModel.currentConstellationPoints
-        let closureSnapshot = closureDetector.update(
+        let targets = constellationModel.connectionTargets.map {
+            ExistingPointConnectionDetector.Target(
+                nodeID: $0.nodeID,
+                position: $0.position,
+                isAlreadyConnected: $0.isAlreadyConnected
+            )
+        }
+        let connectionSnapshot = connectionDetector.update(
             position: position,
-            firstPoint: currentPoints.first,
-            lastPoint: currentPoints.last,
-            pointCount: currentPoints.count,
+            activePoint: constellationModel.currentActivePosition,
+            targets: targets,
             at: timestamp
         )
 
-        switch closureSnapshot.phase {
-        case .idle:
-            renderer.hideClosureGuidance()
+        switch connectionSnapshot.phase {
+        case .idle, .available:
+            renderer.hideConnectionGuidance()
             syncDrawingGuidance(appModel: appModel)
 
-        case .available:
-            if let firstPoint = currentPoints.first, let lastPoint = currentPoints.last {
-                renderer.showClosureGuidance(
-                    firstPoint: firstPoint,
-                    lastPoint: lastPoint,
-                    progress: 0,
-                    showsPreview: false
-                )
-            }
-            appModel.drawingGuidance = .returnToStart
-
         case .dwelling:
+            guard let target = connectionSnapshot.target,
+                  let sourcePoint = constellationModel.currentActivePosition else {
+                renderer.hideConnectionGuidance()
+                break
+            }
+
             dwellDetector.trackingLost()
             renderer.updateCursor(
                 position: position,
-                progress: closureSnapshot.progress,
-                mode: .closure
+                progress: connectionSnapshot.progress,
+                mode: .connection
             )
-            if let firstPoint = currentPoints.first, let lastPoint = currentPoints.last {
-                renderer.showClosureGuidance(
-                    firstPoint: firstPoint,
-                    lastPoint: lastPoint,
-                    progress: closureSnapshot.progress,
-                    showsPreview: true
-                )
-            }
-            appModel.drawingGuidance = .closing(progress: closureSnapshot.progress)
 
-            if closureSnapshot.didCommit {
-                closeCurrentConstellation(appModel: appModel)
+            if target.isAlreadyConnected {
+                connectionDetector.reset()
+                rejectedPosition = target.position
+                rejectionGuidance = .alreadyConnected
+                renderer.showConnectionCompletion(at: target.position)
+                appModel.drawingGuidance = .alreadyConnected
+                return
+            }
+
+            renderer.showConnectionGuidance(
+                sourcePoint: sourcePoint,
+                targetPoint: target.position,
+                progress: connectionSnapshot.progress
+            )
+            appModel.drawingGuidance = .connecting(
+                progress: connectionSnapshot.progress
+            )
+
+            if connectionSnapshot.didCommit {
+                connectCurrentNode(to: target.nodeID, appModel: appModel)
             }
             return
         }
@@ -225,10 +204,9 @@ final class ImmersiveCoordinator {
                 segment: segment,
                 lineRadius: configuration.lineRadius
             )
-            closureDetector.pointCommitted()
+            connectionDetector.pointCommitted()
             rejectedPosition = nil
-            appModel.pointCount = constellationModel.pointCount
-            appModel.constellationCount = constellationModel.constellationCount
+            syncCounts(appModel: appModel)
             syncDrawingGuidance(appModel: appModel)
 
         case .rejectedLimitReached:
@@ -238,33 +216,41 @@ final class ImmersiveCoordinator {
 
         case .rejectedTooClose:
             rejectedPosition = committedPosition
+            rejectionGuidance = .tooClose
             appModel.drawingGuidance = .tooClose
 
         case .rejectedInvalidPosition:
             trackingLost(appModel: appModel)
 
-        case .closed, .rejectedNotClosable:
+        case .connected, .rejectedAlreadyConnected, .rejectedTargetUnavailable:
             break
         }
     }
 
-    private func closeCurrentConstellation(appModel: AppModel) {
-        switch constellationModel.closeCurrentConstellation() {
-        case .closed(let segment):
-            renderer.closeConstellation(
+    private func connectCurrentNode(to targetNodeID: Int, appModel: AppModel) {
+        switch constellationModel.connectCurrentNode(to: targetNodeID) {
+        case .connected(let targetPosition, let segment):
+            renderer.connectExistingPoint(
                 with: segment,
                 lineRadius: configuration.lineRadius
             )
-            recentlyClosedPosition = segment.end
+            recentlyConnectedPosition = targetPosition
             rejectedPosition = nil
-            dwellDetector.beginCooldown(at: segment.end)
-            closureDetector.reset()
-            appModel.pointCount = constellationModel.pointCount
-            appModel.constellationCount = constellationModel.constellationCount
-            appModel.drawingGuidance = .closed
+            dwellDetector.beginCooldown(at: targetPosition)
+            connectionDetector.reset()
+            syncCounts(appModel: appModel)
+            appModel.drawingGuidance = .connected
 
-        case .rejectedNotClosable:
-            renderer.hideClosureGuidance()
+        case .rejectedAlreadyConnected:
+            rejectedPosition = constellationModel.connectionTargets
+                .first(where: { $0.nodeID == targetNodeID })?.position
+            rejectionGuidance = .alreadyConnected
+            connectionDetector.reset()
+            appModel.drawingGuidance = .alreadyConnected
+
+        case .rejectedTargetUnavailable:
+            renderer.hideConnectionGuidance()
+            connectionDetector.reset()
             syncDrawingGuidance(appModel: appModel)
 
         case .added, .rejectedTooClose, .rejectedLimitReached, .rejectedInvalidPosition:
@@ -276,19 +262,19 @@ final class ImmersiveCoordinator {
         at position: SIMD3<Float>,
         appModel: AppModel
     ) -> Bool {
-        guard let recentlyClosedPosition else { return false }
+        guard let recentlyConnectedPosition else { return false }
 
-        guard simd_distance(position, recentlyClosedPosition)
-                < configuration.closureReleaseDistance else {
-            self.recentlyClosedPosition = nil
-            renderer.hideClosureGuidance()
+        guard simd_distance(position, recentlyConnectedPosition)
+                < configuration.connectionReleaseDistance else {
+            self.recentlyConnectedPosition = nil
+            renderer.hideConnectionGuidance()
             syncDrawingGuidance(appModel: appModel)
             return false
         }
 
-        renderer.updateCursor(position: position, progress: 1, mode: .closure)
-        renderer.showClosureCompletion(at: recentlyClosedPosition)
-        appModel.drawingGuidance = .closed
+        renderer.updateCursor(position: position, progress: 1, mode: .connection)
+        renderer.showConnectionCompletion(at: recentlyConnectedPosition)
+        appModel.drawingGuidance = .connected
         return true
     }
 
@@ -300,12 +286,13 @@ final class ImmersiveCoordinator {
 
         guard simd_distance(position, rejectedPosition) < configuration.rearmDistance else {
             self.rejectedPosition = nil
+            renderer.hideConnectionGuidance()
             syncDrawingGuidance(appModel: appModel)
             return false
         }
 
         renderer.updateCursor(position: position, progress: 0)
-        appModel.drawingGuidance = .tooClose
+        appModel.drawingGuidance = rejectionGuidance
         return true
     }
 
@@ -315,15 +302,21 @@ final class ImmersiveCoordinator {
         appliedDrawingState = appModel.drawingState
         cancelDwell()
         rejectedPosition = nil
-        recentlyClosedPosition = nil
+        recentlyConnectedPosition = nil
 
         if appModel.isDrawingEnabled {
             syncDrawingGuidance(appModel: appModel)
         } else {
             constellationModel.finishCurrentConstellation()
-            closureDetector.reset()
+            connectionDetector.reset()
             appModel.drawingGuidance = .inactive
         }
+    }
+
+    private func syncCounts(appModel: AppModel) {
+        appModel.pointCount = constellationModel.pointCount
+        appModel.edgeCount = constellationModel.edgeCount
+        appModel.constellationCount = constellationModel.constellationCount
     }
 
     private func syncDrawingGuidance(appModel: AppModel) {
@@ -332,26 +325,19 @@ final class ImmersiveCoordinator {
             return
         }
 
-        switch constellationModel.currentConstellationPoints.count {
-        case 0:
-            appModel.drawingGuidance = .placeFirstPoint
-        case 1, 2:
-            appModel.drawingGuidance = .placeNextPoint
-        default:
-            appModel.drawingGuidance = .returnToStart
-        }
+        appModel.drawingGuidance = constellationModel.currentConstellationPoints.isEmpty
+            ? .placeFirstPoint
+            : .placeNextPoint
     }
 
     private func cancelDwell() {
         dwellDetector.trackingLost()
-        closureDetector.trackingLost()
+        connectionDetector.trackingLost()
         renderer.hideCursor()
-        renderer.hideClosureGuidance()
+        renderer.hideConnectionGuidance()
     }
 
     private func trackingLost(appModel: AppModel) {
         cancelDwell()
-        fistHoldDetector.reset()
-        appModel.fistGestureProgress = 0
     }
 }

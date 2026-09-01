@@ -1,22 +1,22 @@
 @Tutorial(time: 10) {
     @Intro(title: "여러 별자리를 나누어 저장하기") {
-        **이번 단계에서 만들 것**: 확정된 점을 받아 별자리 단위로 저장하고, 이전 점과의 선분을 알려 주는 `ConstellationModel`입니다.
+        **이번 단계에서 만들 것**: 확정된 점과 점 사이의 연결을 별자리 단위로 저장하는 `ConstellationModel`입니다.
 
-        점을 배열 하나에 모두 넣으면 그리기를 껐다 켠 뒤에 찍은 점이 이전 별자리와 이어져 버립니다. 그래서 각 별자리가 자기 점 배열과 닫힘 상태를 갖게 합니다.
+        단순한 점 배열만으로는 임의의 기존 점을 다시 연결하거나 같은 선의 중복을 판별하기 어렵습니다. 그래서 각 별자리가 안정적인 ID를 가진 노드와 중복 없는 간선 집합을 갖게 합니다.
 
-        @Image(source: constellation-storage.png, alt: "각 별자리가 점 배열과 열림 또는 닫힘 상태를 가지며 별자리 사이에는 선이 없음을 보여 주는 그림")
+        @Image(source: constellation-storage.png, alt: "각 별자리가 노드와 간선 집합을 가지며 별자리 사이에는 선이 없음을 보여 주는 그림")
     }
 
     @Section(title: "저장 구조 이해하기") {
         @ContentAndMedia {
-            `[Constellation]`에서 원소 하나가 별자리 하나입니다. 각 원소는 `[SIMD3<Float>]` 점 배열과 `isClosed` 상태를 가집니다.
+            `[Constellation]`에서 원소 하나가 별자리 하나입니다. 각 원소는 ID가 있는 노드 배열, 중복 없는 간선 집합, 현재 활성 노드 ID를 가집니다.
 
-            @Image(source: constellation-storage.png, alt: "점 배열과 닫힘 상태로 두 별자리를 저장한 구조 그림")
+            @Image(source: constellation-storage.png, alt: "노드와 간선으로 두 별자리를 저장한 구조 그림")
         }
 
         @Steps {
             @Step {
-                오른쪽 그림의 첫 번째 줄이 `constellations[0]`입니다. 점 세 개가 순서대로 이어지고 첫 점으로 닫혀 선 세 개가 됩니다.
+                오른쪽 그림의 첫 번째 줄이 `constellations[0]`입니다. 노드는 좌표와 ID를 보관하고, 간선은 두 노드 ID의 정규화된 쌍을 보관합니다.
             }
 
             @Step {
@@ -24,7 +24,7 @@
             }
 
             @Step {
-                아래 오른쪽 카드를 보세요. `[0]`의 마지막 점과 `[1]`의 첫 점 사이에는 선이 생기지 않습니다. 선분은 **같은 배열 안의 이전 점**이 있을 때만 만듭니다.
+                아래 오른쪽 카드를 보세요. `[0]`과 `[1]` 사이에는 간선이 생기지 않습니다. 다시 연결할 수 있는 후보도 **현재 별자리의 노드**로 제한합니다.
             }
         }
     }
@@ -116,13 +116,13 @@
             }
 
             @Step {
-                별자리를 점 배열과 `isClosed` 상태를 가진 값으로 바꾸고 `closeCurrentConstellation()`을 추가하세요. 일반 점은 현재 별자리의 모든 기존 점과 최소 거리를 검사합니다. 닫기는 새 점을 넣지 않고 마지막 점에서 저장된 첫 점까지의 선분만 반환합니다.
+                마지막으로 별자리를 노드와 간선의 그래프로 바꾸세요. 모든 기존 노드를 연결 후보로 제공하고, `connectCurrentNode(to:)`는 새 점 없이 저장된 목표 노드까지 간선을 추가합니다. 정규화된 간선 집합이 자기 연결과 같은 선의 중복을 거절합니다.
 
-                @Code(name: "ConstellationModel.swift", file: C05-T02-ConstellationModel-13.swift, previousFile: C05-T02-ConstellationModel-12.swift)
+                @Code(name: "ConstellationModel.swift", file: C05-T02-ConstellationModel-14.swift, previousFile: C05-T02-ConstellationModel-13.swift)
             }
 
             @Step {
-                **결과 확인**: `swift test`에서 삼각형을 닫아도 점이 세 개로 유지되고, 닫힌 뒤의 다음 점이 선 없이 새 별자리를 시작하면 성공입니다.
+                **결과 확인**: `swift test`에서 임의의 기존 점 연결이 점 개수를 늘리지 않고, 같은 간선을 두 번 만들지 않으며, 그리기를 다시 켠 뒤 첫 점이 새 별자리를 시작하면 성공입니다.
             }
 
             @Step {

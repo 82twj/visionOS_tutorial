@@ -13,11 +13,10 @@ HandTrackingProvider
 HandTrackingService ── 월드 검지 위치
         ▼
 ImmersiveCoordinator
-        ├── FistHoldDetector ── 그리기 켜기/끄기
         ├── DwellDetector ── 확정 위치
-        ├── ClosureDetector ── 첫 점 스냅 + 닫기 확정
-        ├── ConstellationModel ── 별자리별 점 + 열림/닫힘 + 선분
-        └── ConstellationRenderer ── 점·선·커서·닫기 안내 엔티티
+        ├── ExistingPointConnectionDetector ── 모든 기존 점 스냅
+        ├── ConstellationModel ── 별자리별 노드 + 엣지 + 활성 노드
+        └── ConstellationRenderer ── 흰색 점·선·커서·연결 안내
 ```
 
 ## 계층별 책임
@@ -30,28 +29,27 @@ ImmersiveCoordinator
 
 ### 입력 어댑터
 
-`HandTrackingService`는 ARKit API에만 집중합니다. 지원 여부와 권한을 확인하고, 오른손 검지 끝 관절을 월드 좌표로 변환합니다. 다른 계층에는 `HandAnchor` 대신 `SIMD3<Float>` 위치를 전달합니다.
+`HandTrackingService`는 ARKit API에만 집중합니다. 지원 여부와 권한을 확인하고 오른손 검지 끝을 월드 좌표로 변환합니다.
 
 ### 순수 도메인 로직
 
-`FistHoldDetector`, `DwellDetector`, `ClosureDetector`, `ConstellationModel`은 ARKit이나 RealityKit에 의존하지 않습니다. 그래서 호스트 macOS에서도 Swift Package 테스트를 실행해 손짓의 1회 전환과 재활성화, 체류 경계값, 시작점 스냅과 히스테리시스, 추적 손실, 별자리 분리와 닫기, 최소 거리, 최대 점 개수를 검증할 수 있습니다.
+`DwellDetector`, `ExistingPointConnectionDetector`, `ConstellationModel`은 ARKit이나 RealityKit에 의존하지 않습니다. 그래서 호스트 macOS에서도 체류 경계값, 최근접 목표 고정, 중복 엣지 차단과 별자리 분리를 검증할 수 있습니다.
 
 ### 장면 출력
 
-`ConstellationRenderer`는 커서, 점 컨테이너, 선 컨테이너와 닫기 안내 컨테이너를 소유합니다. 세 점 이상이면 첫 점에 큰 반투명 대상을 표시하고, 사용자가 가까이 오면 마지막 점에서 첫 점까지 미리보기 선을 보여 줍니다. 모델이 전달한 값만 확정 렌더링하며 ARKit 세션을 알지 못합니다.
+`ConstellationRenderer`는 커서, 점 컨테이너, 선 컨테이너와 연결 안내 컨테이너를 소유합니다. 사용자가 기존 점 가까이에 오면 해당 목표 하나에 흰색 반투명 대상을 표시하고 현재 출발점부터 목표까지 미리보기 선을 보여 줍니다. 모델이 전달한 값만 확정 렌더링하며 ARKit 세션을 알지 못합니다.
 
 ## 데이터 흐름
 
 1. provider가 오른손 `HandAnchor`를 방출합니다.
-2. service가 손가락 관절의 접힘 비율로 주먹 여부를 판정하고 검지 끝을 월드 위치로 변환합니다.
-3. coordinator가 주먹 상태와 단조 증가 시각을 `FistHoldDetector`에 전달합니다.
-4. 주먹을 0.6초 유지하면 그리기 상태가 한 번 전환됩니다. 그리기를 끌 때 진행 중인 체류를 취소하고 현재 별자리를 마칩니다.
-5. 그리기가 켜진 동안 coordinator가 검지 위치를 `DwellDetector`에 전달합니다.
-6. detector가 체류 완료 위치를 한 번만 방출합니다.
-7. 세 점 이상이면 closure detector가 첫 점의 스냅 영역과 닫기 dwell을 검사합니다.
-8. 닫기가 확정되면 model은 새 점 없이 마지막 점에서 정확한 첫 점까지의 선분을 만들고 별자리를 닫습니다.
-9. 일반 입력이면 model이 서로 겹치지 않는 점을 현재 별자리에 저장하고 이전 점과의 선분을 계산합니다.
-10. renderer가 확정 점과 선, 첫 점 강조와 미리보기 상태를 루트 엔티티 아래에 반영합니다.
+2. service가 검지 끝을 월드 위치로 바꿉니다.
+3. 창의 버튼 상태가 그리기 꺼짐이면 입력을 중단합니다.
+4. 그리기가 켜진 동안 기존 점 연결 감지기가 가장 가까운 목표를 먼저 검사합니다.
+5. 연결이 확정되면 model은 새 점 없이 현재 활성 노드와 기존 노드 사이에 엣지를 추가합니다.
+6. 선택한 기존 노드는 새 활성 노드가 되어 다음 가지의 출발점이 됩니다.
+7. 기존 점 목표가 없으면 일반 dwell detector가 새 점 위치를 한 번만 방출합니다.
+8. model은 새 노드와 활성 노드 사이의 엣지를 계산하며 자기 연결과 중복 엣지를 거부합니다.
+9. renderer가 흰색 점과 선, 선택 목표와 미리보기 상태를 루트 엔티티 아래에 반영합니다.
 
 추적이 손실되면 3단계의 진행 상태와 커서만 취소합니다. 이미 확정한 별자리 데이터는 사용자가 초기화하거나 몰입형 공간을 닫기 전까지 유지합니다.
 
@@ -64,11 +62,9 @@ ImmersiveCoordinator
 | `dwellDuration` | 0.8초 | 점을 확정하기 위한 체류 시간 |
 | `stabilityRadius` | 0.015m | 같은 체류로 인정하는 흔들림 반경 |
 | `rearmDistance` | 0.03m | 다음 체류를 허용하기 위한 이동 거리 |
-| `closureSnapDistance` | 0.03m | 첫 점을 닫기 대상으로 선택하는 진입 반경 |
-| `closureReleaseDistance` | 0.04m | 닫기 진행을 유지하는 해제 반경 |
+| `connectionSnapDistance` | 0.03m | 기존 점을 연결 목표로 선택하는 진입 반경 |
+| `connectionReleaseDistance` | 0.04m | 목표 고정과 진행을 유지하는 해제 반경 |
 | `minimumPointDistance` | 0.03m | 너무 가까운 점을 모델에서 거부하는 거리 |
 | `maximumPointCount` | 100 | 한 장면에서 허용하는 최대 점 개수 |
-| `fistHoldDuration` | 0.6초 | 그리기 상태 전환에 필요한 주먹 유지 시간 |
-| `fistFingerExtensionRatio` | 1.45 | 손가락이 손목 쪽으로 접힌 것으로 판단하는 비율 |
 
 실제 기기에서 손 떨림과 사용 거리를 관찰한 뒤 `stabilityRadius`와 `dwellDuration`을 함께 튜닝하세요.
