@@ -22,6 +22,7 @@
   var DESKTOP_QUERY = "(min-width: 736px)";
   var REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
   var STEPS_SELECTOR = ".steps";
+  var STEP_SELECTOR = ".step[data-index]";
   var CODE_PANEL_SELECTOR = ".code-preview";
   var CODE_LINE_SELECTOR = ".code-line-container";
   var HIGHLIGHTED_SELECTOR = ".code-line-container.highlighted";
@@ -33,6 +34,63 @@
   var pendingCheck = false;
   var pendingGroups = [];
   var pendingFrame = null;
+  var activeStepFrame = null;
+
+  /// Finds the Vue component that owns a rendered steps column. Swift-DocC's
+  /// production renderer attaches the component instance to its root node.
+  function sectionController(group) {
+    var candidates = [group, group.querySelector(STEP_SELECTOR)];
+    for (var i = 0; i < candidates.length; i += 1) {
+      var component = candidates[i] && candidates[i].__vue__;
+      while (component) {
+        if (typeof component.onFocus === "function") {
+          return component;
+        }
+        component = component.$parent;
+      }
+    }
+    return null;
+  }
+
+  /// IntersectionObserver can miss a short step when a browser jumps across
+  /// the renderer's narrow activation band. Pick the card nearest the reading
+  /// line as a reliable fallback for wheel, trackpad, keyboard, and scrollbar
+  /// scrolling.
+  function updateActiveSteps() {
+    activeStepFrame = null;
+    var readingLine = window.innerHeight / 3;
+    var groups = document.querySelectorAll(STEPS_SELECTOR);
+
+    for (var i = 0; i < groups.length; i += 1) {
+      var group = groups[i];
+      var controller = sectionController(group);
+      if (!controller) {
+        continue;
+      }
+
+      var steps = group.querySelectorAll(STEP_SELECTOR);
+      var closestIndex = null;
+      var closestDistance = Infinity;
+      for (var j = 0; j < steps.length; j += 1) {
+        var box = steps[j].getBoundingClientRect();
+        var distance = Math.abs((box.top + box.bottom) / 2 - readingLine);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = Number(steps[j].getAttribute("data-index"));
+        }
+      }
+
+      if (Number.isFinite(closestIndex) && controller.activeStep !== closestIndex) {
+        controller.onFocus(closestIndex);
+      }
+    }
+  }
+
+  function scheduleActiveStepUpdate() {
+    if (activeStepFrame === null) {
+      activeStepFrame = window.requestAnimationFrame(updateActiveSteps);
+    }
+  }
 
   function matches(query) {
     return typeof window.matchMedia === "function" && window.matchMedia(query).matches;
@@ -187,6 +245,9 @@
       attributes: true,
       attributeFilter: ["class"]
     });
+    window.addEventListener("scroll", scheduleActiveStepUpdate, true);
+    window.addEventListener("resize", scheduleActiveStepUpdate);
+    scheduleActiveStepUpdate();
     checkFocusedSteps();
   }
 
