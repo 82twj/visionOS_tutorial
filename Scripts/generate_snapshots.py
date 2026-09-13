@@ -113,6 +113,10 @@ add("C01-T04-Info-01.plist", T(
 
 A = "AppModel.swift"
 add("C02-T01-AppModel-00.swift", E("C02-T01-AppModel-00.swift"))
+add("C02-T02-AppModel-01.swift", R(A, 1, 6), T("}\n"))
+add("C02-T02-AppModel-02.swift", R(A, 1, 25), T("}\n"))
+add("C02-T02-AppModel-03.swift", R(A, 1, 59), T("}\n"))
+add("C02-T02-AppModel-04.swift", R(A, 1, 98), T("}\n"))
 add("C02-T02-AppModel-12.swift", R(A, 1, 119))
 
 # --- Chapter 2: ControlView and the app entry point --------------------------
@@ -120,6 +124,14 @@ add("C02-T02-AppModel-12.swift", R(A, 1, 119))
 C = "ControlView.swift"
 add("C02-T03-ControlView-00.swift", E("C02-T03-ControlView-00.swift"))
 add("C02-T03-ControlView-01.swift", E("C02-T03-ControlView-01.swift"))
+add("C02-T04-ControlView-02.swift", R(C, 1, 29), R(C, 97, 103), T("}\n\n"), R(C, 239, 242))
+add("C02-T04-ControlView-03.swift", R(C, 1, 62), R(C, 97, 103), R(C, 128, 205), T("}\n\n"), R(C, 239, 242))
+add("C02-T04-ControlView-04.swift", R(C, 1, 205), T(
+    """
+    private func toggleImmersiveSpace() async {}
+}
+
+"""), R(C, 239, 242))
 
 APP = "HandConstellationApp.swift"
 add("C02-T03-HandConstellationApp-01.swift", R(APP, 1, 10), R(APP, 12, 12), R(APP, 20, 21))
@@ -161,7 +173,16 @@ add("C04-T03-DwellDetector-14.swift", R(D, 1, 140))
 
 L = "ExistingPointConnectionDetector.swift"
 add("C04-T01-ExistingPointConnectionDetector-00.swift", T(XCODE_SWIFT_FILE))
-add("C04-T06-ExistingPointConnectionDetector-01.swift", R(L, 1, 142))
+add("C04-T06-ExistingPointConnectionDetector-01.swift", R(L, 1, 23), T("}\n"))
+add("C04-T06-ExistingPointConnectionDetector-02.swift", R(L, 1, 48), T("}\n"))
+add("C04-T06-ExistingPointConnectionDetector-03.swift", R(L, 1, 71), T(
+    """        return availableSnapshot
+    }
+
+"""), R(L, 115, 142))
+add("C04-T06-ExistingPointConnectionDetector-04.swift", R(L, 1, 71), R(L, 98, 113), T("\n"), R(L, 115, 142))
+add("C04-T06-ExistingPointConnectionDetector-05.swift", R(L, 1, 113), T("\n"), R(L, 125, 142))
+add("C04-T06-ExistingPointConnectionDetector-06.swift", R(L, 1, 142))
 
 # --- Chapter 5: ConstellationModel -------------------------------------------
 
@@ -187,6 +208,14 @@ add("C05-T03-ConstellationRenderer-13.swift", R(N, 1, 198))
 
 I = "ImmersiveCoordinator.swift"
 add("C06-T01-ImmersiveCoordinator-00.swift", E("C06-T01-ImmersiveCoordinator-00.swift"))
+add("C06-T02-ImmersiveCoordinator-01.swift", R(I, 1, 107), T("""
+    // Temporary hooks. The next tutorial implements the input pipeline.
+    private func process(anchor: HandAnchor, appModel: AppModel) {}
+    private func applyDrawingState(appModel: AppModel) {}
+    private func syncDrawingGuidance(appModel: AppModel) {}
+    private func trackingLost(appModel: AppModel) {}
+}
+"""))
 add("C06-T03-ImmersiveCoordinator-22.swift", R(I, 1, 343))
 
 # --- Chapter 6: ImmersiveView and the app scenes -----------------------------
@@ -217,7 +246,7 @@ def main() -> None:
         "HandTrackingService.swift": "C04-T05-HandTrackingService-19.swift",
         "ConstellationConfiguration.swift": "C04-T02-Configuration-07.swift",
         "DwellDetector.swift": "C04-T03-DwellDetector-14.swift",
-        "ExistingPointConnectionDetector.swift": "C04-T06-ExistingPointConnectionDetector-01.swift",
+        "ExistingPointConnectionDetector.swift": "C04-T06-ExistingPointConnectionDetector-06.swift",
         "ConstellationModel.swift": "C05-T02-ConstellationModel-14.swift",
         "ConstellationRenderer.swift": "C05-T03-ConstellationRenderer-13.swift",
         "ImmersiveCoordinator.swift": "C06-T03-ImmersiveCoordinator-22.swift",

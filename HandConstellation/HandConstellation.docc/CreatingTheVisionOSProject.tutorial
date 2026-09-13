@@ -1,5 +1,7 @@
 @Tutorial(time: 8) {
     @Intro(title: "visionOS 프로젝트 만들기") {
+        **시작 상태**: Xcode 16 이상과 visionOS 2.0 이상 SDK·Simulator runtime이 설치되어 있습니다.
+
         **이번 단계에서 만들 것**: `HandConstellation`이라는 이름의 새 visionOS App 프로젝트입니다. 코드는 아직 한 줄도 쓰지 않습니다.
 
         이 페이지는 Xcode 화면 조작만 다룹니다. 여기서 정한 이름과 설정이 이후 모든 Chapter의 파일 위치와 타깃 이름이 됩니다.

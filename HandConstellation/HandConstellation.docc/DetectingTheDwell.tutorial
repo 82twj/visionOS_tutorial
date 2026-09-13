@@ -1,5 +1,7 @@
 @Tutorial(time: 12) {
     @Intro(title: "검지가 머무르면 한 번만 점 확정하기") {
+        **시작 상태**: 설정 파일이 빌드되고 `DwellDetector.swift`에는 `import Foundation`만 있습니다.
+
         **이번 단계에서 만들 것**: 위치의 흐름을 받아 **한 번의 점 입력**으로 바꾸는 `DwellDetector`입니다.
 
         손 추적은 1초에 수십 번 위치를 보냅니다. 그대로 점을 찍으면 손이 지나간 자리마다 점이 생깁니다. 그래서 "한곳에 충분히 오래 머물렀는가"를 판단하는 상태 머신이 필요합니다.
@@ -7,35 +9,13 @@
         @Image(source: dwell-states.png, alt: "idle, dwelling, coolingDown 세 상태와 상태를 바꾸는 조건을 화살표로 이은 그림")
     }
 
-    @Section(title: "상태 머신 먼저 이해하기") {
-        @ContentAndMedia {
-            상태 머신은 "현재 상태"와 "들어온 입력"으로 다음 상태를 정하는 방식입니다. 조건문을 늘어놓는 대신 상태를 명시하면, 지금 무엇을 기다리고 있는지가 코드에 그대로 드러납니다.
-
-            @Image(source: dwell-states.png, alt: "체류 판정의 세 상태와 전환 조건 그림")
-        }
-
-        @Steps {
-            @Step {
-                왼쪽 원 `idle`은 아직 체류 후보가 없는 상태입니다. 위치가 들어오면 그 자리를 후보로 삼고 `dwelling`으로 넘어갑니다.
-            }
-
-            @Step {
-                가운데 원 `dwelling`은 시간을 재는 중입니다. 손이 1.5cm 반경을 벗어나면 새 자리에서 타이머를 다시 시작합니다. 위쪽으로 되돌아오는 화살표가 그 경로입니다.
-            }
-
-            @Step {
-                0.8초를 채우면 오른쪽 `coolingDown`으로 넘어갑니다. **점이 확정되는 순간은 이 전환이 일어나는 한 프레임뿐**입니다.
-            }
-
-            @Step {
-                `coolingDown`에서는 아무리 오래 머물러도 점이 더 생기지 않습니다. 3cm 이상 움직여야 다시 `dwelling`이 됩니다. 같은 위치에서 점이 반복되는 것을 이 상태가 막습니다.
-            }
-        }
-    }
-
     @Section(title: "타입과 상태 정의하기") {
         @ContentAndMedia {
+            상태 머신은 현재 상태와 들어온 입력으로 다음 상태를 정합니다. `idle`에서 후보를 받고, `dwelling`에서 0.8초를 재며, 완료 뒤 `coolingDown`에서 3cm 이동을 기다립니다. 1.5cm 안정 반경을 벗어나면 새 자리에서 시간을 다시 잽니다.
+
             바깥에 보여 줄 상태(`Phase`)와 내부에서만 쓰는 상태(`State`)를 나눕니다. 화면은 "지금 머무는 중"인지만 알면 되고, 후보 위치와 시작 시각까지 알 필요는 없습니다.
+
+            @Image(source: dwell-states.png, alt: "체류 판정의 세 상태와 전환 조건 그림")
         }
 
         @Steps {
@@ -99,6 +79,12 @@
                 이 검사가 없으면 추적이 끊긴 프레임의 시간이 다음 체류 계산에 그대로 섞여 들어갑니다.
 
                 @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-08.swift, previousFile: C04-T03-DwellDetector-07.swift)
+            }
+
+            @Step {
+                이제 `HandTrackingService.swift`의 마지막 좌표 검사도 방금 만든 `hasFiniteComponents`를 사용하도록 바꾸세요. Chapter 3의 세 성분 검사를 같은 의미의 공통 도우미로 교체합니다.
+
+                @Code(name: "HandTrackingService.swift", file: C04-T05-HandTrackingService-19.swift, previousFile: C03-T03-HandTrackingService-11.swift)
             }
 
             @Step {

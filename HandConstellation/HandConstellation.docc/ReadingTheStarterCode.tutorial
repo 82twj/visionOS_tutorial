@@ -1,5 +1,7 @@
 @Tutorial(time: 7) {
     @Intro(title: "Xcode 기본 코드 읽고 실행하기") {
+        **시작 상태**: 앞 페이지에서 만든 `HandConstellation` 프로젝트가 열려 있고 visionOS Simulator를 선택할 수 있습니다.
+
         **이번 단계에서 만들 것**: 없습니다. Xcode가 자동으로 넣어 준 두 Swift 파일을 읽고, Simulator에서 기본 앱이 실행되는지 확인합니다.
 
         완성 코드를 붙여 넣기 전에 시작점을 이해해 두면, 다음 Chapter부터 오른쪽 코드에서 파란색으로 강조되는 줄이 왜 그 자리에 들어가는지 알 수 있습니다.

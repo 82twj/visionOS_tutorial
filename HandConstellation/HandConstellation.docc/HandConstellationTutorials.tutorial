@@ -23,9 +23,7 @@
 
         @Image(source: scene-structure.png, alt: "SwiftUI 제어 창에서 혼합 몰입형 공간의 RealityKit 장면을 여는 구조")
 
-        @TutorialReference(tutorial: "doc:CreatingTheAppModelFile")
         @TutorialReference(tutorial: "doc:BuildingTheAppModel")
-        @TutorialReference(tutorial: "doc:RenamingContentViewToControlView")
         @TutorialReference(tutorial: "doc:BuildingTheControlWindow")
     }
 
@@ -34,7 +32,6 @@
 
         @Image(source: hand-skeleton-joints.png, alt: "오른손 골격에서 검지 끝 관절이 강조된 도해")
 
-        @TutorialReference(tutorial: "doc:CreatingTheHandTrackingServiceFile")
         @TutorialReference(tutorial: "doc:StartingTheHandTrackingSession")
         @TutorialReference(tutorial: "doc:ConvertingTheFingertipToWorldSpace")
     }
@@ -44,7 +41,6 @@
 
         @Image(source: dwell-states.png, alt: "idle, dwelling, coolingDown 세 상태를 화살표로 이은 체류 판정 상태 머신")
 
-        @TutorialReference(tutorial: "doc:CreatingTheInputDetectorFiles")
         @TutorialReference(tutorial: "doc:CollectingTunableValues")
         @TutorialReference(tutorial: "doc:DetectingTheDwell")
         @TutorialReference(tutorial: "doc:DetectingTheClosure")
@@ -55,7 +51,6 @@
 
         @Image(source: constellation-storage.png, alt: "각 별자리가 ID가 있는 노드와 중복 없는 간선을 가지는 저장 구조 그림")
 
-        @TutorialReference(tutorial: "doc:CreatingTheConstellationFiles")
         @TutorialReference(tutorial: "doc:StoringMultipleConstellations")
         @TutorialReference(tutorial: "doc:RenderingPointsAndLines")
     }
@@ -65,7 +60,6 @@
 
         @Image(source: input-pipeline.png, alt: "그리기 상태 검사부터 기존 점 연결과 일반 점 확정까지 이어지는 입력 처리 순서도")
 
-        @TutorialReference(tutorial: "doc:CreatingTheImmersiveFiles")
         @TutorialReference(tutorial: "doc:BuildingTheCoordinatorLifecycle")
         @TutorialReference(tutorial: "doc:ConnectingTheInputPipeline")
         @TutorialReference(tutorial: "doc:ConnectingTheRealityViewAndAppScenes")

@@ -1,6 +1,8 @@
 @Tutorial(time: 10) {
     @Intro(title: "여러 별자리를 나누어 저장하기") {
-        **이번 단계에서 만들 것**: 확정된 점과 점 사이의 연결을 별자리 단위로 저장하는 `ConstellationModel`입니다.
+        **시작 상태**: Chapter 4의 설정과 두 감지기가 빌드됩니다.
+
+        **이번 단계에서 만들 것**: 새 `ConstellationModel.swift` 파일과, 확정된 점과 연결을 별자리 단위로 저장하는 그래프 모델입니다.
 
         단순한 점 배열만으로는 임의의 기존 점을 다시 연결하거나 같은 선의 중복을 판별하기 어렵습니다. 그래서 각 별자리가 안정적인 ID를 가진 노드와 중복 없는 간선 집합을 갖게 합니다.
 
@@ -15,6 +17,12 @@
         }
 
         @Steps {
+            @Step {
+                앱 그룹에서 **New File from Template > Swift File**을 골라 `ConstellationModel.swift`를 만드세요. 앱 target membership을 확인합니다.
+
+                @Code(name: "ConstellationModel.swift", file: C05-T01-ConstellationModel-00.swift, reset: true)
+            }
+
             @Step {
                 오른쪽 그림의 첫 번째 줄이 `constellations[0]`입니다. 노드는 좌표와 ID를 보관하고, 간선은 두 노드 ID의 정규화된 쌍을 보관합니다.
             }
@@ -122,7 +130,7 @@
             }
 
             @Step {
-                **결과 확인**: `swift test`에서 임의의 기존 점 연결이 점 개수를 늘리지 않고, 같은 간선을 두 번 만들지 않으며, 그리기를 다시 켠 뒤 첫 점이 새 별자리를 시작하면 성공입니다.
+                **결과 확인**: 앱 target을 빌드하세요. 코드를 따라가며 기존 점 연결은 `pointCount`를 늘리지 않고, 정규화된 `Edge`가 같은 간선을 거절하며, `finishCurrentConstellation()` 뒤의 첫 점은 선분 없이 시작하는지 확인합니다. 다운로드한 저장소의 별도 테스트 구성을 사용하는 경우에만 해당 테스트도 실행할 수 있습니다.
             }
 
             @Step {

@@ -105,7 +105,14 @@ xcodebuild \
   docbuild
 ```
 
-튜토리얼은 7개 Chapter와 25개의 짧은 페이지로 나뉩니다. Chapter 1~6은 Xcode의 초기 코드에서 시작해 앱을 완성하고, Chapter 7은 Apple Vision Pro에서 권한 허용, 임의 기존 점 연결, 버튼 기반 그리기 전환과 별자리 분리를 확인합니다. 새 파일을 만드는 페이지와 기존 파일을 고치는 페이지가 분리되어 있으며, 각 코드 단계에서 새로 추가된 줄만 강조합니다. 아키텍처, 체류 판정, 기존 점 스냅, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
+튜토리얼은 7개 Chapter와 19개 실습 페이지로 나뉩니다. Chapter 1~6은 Xcode의 초기 코드에서 시작해 앱을 완성하고, Chapter 7은 Apple Vision Pro에서 권한 허용, 임의 기존 점 연결, 버튼 기반 그리기 전환과 별자리 분리를 확인합니다. 파일 생성은 해당 기능을 구현하는 첫 단계에 포함하고, AppModel·제어창·기존 점 연결은 작은 코드 변경으로 나누어 설명합니다. 각 코드 단계에서 이전 코드와 달라진 줄을 강조합니다. 아키텍처, 체류 판정, 기존 점 스냅, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
+
+빌드한 아카이브에는 아래 후처리를 실행해야 합니다. 한국어 Chapter 이름의 DocC 경로 충돌로 생기는 다음 링크와 소속 Chapter 오류를 목차 기준으로 바로잡고, 삭제된 파일 준비 페이지 6개의 이전 주소도 연결합니다. GitHub Actions는 이 절차를 자동 실행합니다.
+
+```shell
+python3 Scripts/normalize_docc_navigation.py /path/to/HandConstellation.doccarchive
+python3 Scripts/verify_tutorial.py --archive /path/to/HandConstellation.doccarchive
+```
 
 프로젝트의 `DOCC_TEMPLATE_PATH`가 `DocumentationTheme`을 가리키므로 Xcode와 명령줄 빌드 모두 확대된 단계 카드, 파란 현재 단계 표시, 큰 코드 패널 스타일을 동일하게 적용합니다. 테마의 `js/handconstellation-step-sync.js`는 현재 단계가 바뀔 때 오른쪽 코드 패널만 스크롤해 강조된 줄이 보이도록 맞춥니다. 페이지 자체의 스크롤 위치는 건드리지 않고, 좁은 화면에서는 동작하지 않습니다.
 
@@ -116,17 +123,19 @@ xcodebuild \
 1. GitHub 저장소 Settings > Pages에서 Source를 **GitHub Actions**로 선택합니다.
 2. 프로젝트를 `main` 브랜치에 push합니다.
 3. Actions 탭에서 **Deploy DocC to GitHub Pages**가 완료될 때까지 기다립니다.
-4. [배포된 Hand Constellation 튜토리얼](https://82twj.github.io/visionOS_tutorial/documentation/handconstellation/)을 엽니다.
+4. [배포된 Hand Constellation 튜토리얼](https://82twj.github.io/visionOS_tutorial/tutorials/handconstellationtutorials/)을 엽니다.
 
 workflow는 저장소 이름을 `DOCC_HOSTING_BASE_PATH`로 자동 설정합니다. 사용자/조직 Pages처럼 도메인 루트에 배포할 때는 이 값을 빈 문자열로 바꾸세요.
 
 ## 튜토리얼 자료 다시 만들기
 
-튜토리얼의 코드 스냅샷과 그림은 스크립트로 생성합니다. 앱 소스를 고친 뒤에는 다음을 실행해 스냅샷을 다시 만들고 참조를 검사하세요.
+튜토리얼의 코드 스냅샷과 개념 그림은 스크립트로 생성합니다. `xcode-info-actual.png`와 `control-window-simulator.png`는 실제 화면 캡처이며 그림 생성기가 덮어쓰지 않습니다. 앱 소스를 고친 뒤에는 다음을 실행해 스냅샷을 다시 만들고 참조를 검사하세요.
 
 ```shell
-./Scripts/verify-snapshots.sh
+./Scripts/verify-snapshots.sh --generate
 ```
+
+`./Scripts/verify-snapshots.sh`를 옵션 없이 실행하면 파일을 수정하지 않고 검사만 합니다.
 
 각 파일의 마지막 스냅샷은 실제 앱 소스와 바이트 단위로 같아야 하며, 스크립트가 이를 검사합니다. 그림을 다시 만들려면 다음을 실행합니다.
 
@@ -139,6 +148,10 @@ python3 Scripts/generate_images.py
 - visionOS SDK 대상 앱과 테스트 번들 컴파일 성공
 - `swift test`: 23개 테스트 통과
 - DocC 아카이브 경고 없이 빌드 성공
-- 튜토리얼 코드 스냅샷 82개가 모두 Swift 문법 검사를 통과
+- 코드 스냅샷 95개를 재현하며 모든 Swift 스냅샷이 문법 검사를 통과
 - 각 파일의 마지막 스냅샷이 실제 앱 소스와 일치
+- 생성된 19개 페이지의 본문·자료 참조·18개 다음 링크·7개 Chapter와 이전 주소 6개를 검사
+- 실제 Xcode 26.6 권한 설정과 visionOS 26.5 Simulator 대기 화면을 문서에 포함
 - 실제 기기 손 추적 동작과 Chapter 7의 캡처는 Apple Vision Pro에서 최종 확인 필요
+
+2026-09-12 피드백 대응의 범위와 순서는 [상세 수정 계획](TUTORIAL_FEEDBACK_IMPLEMENTATION_PLAN.md), 실제 확인 결과는 [수정 검증 기록](TUTORIAL_FEEDBACK_VERIFICATION.md)을 참고하세요.

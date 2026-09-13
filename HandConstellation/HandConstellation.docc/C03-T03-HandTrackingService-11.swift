@@ -62,6 +62,6 @@ final class HandTrackingService {
         let translation = originFromIndexFingerTip.columns.3
         let position = SIMD3<Float>(translation.x, translation.y, translation.z)
 
-        return position.hasFiniteComponents ? position : nil
+        return position.x.isFinite && position.y.isFinite && position.z.isFinite ? position : nil
     }
 }

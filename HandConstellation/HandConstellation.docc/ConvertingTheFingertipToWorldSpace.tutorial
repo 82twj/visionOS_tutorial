@@ -1,5 +1,7 @@
 @Tutorial(time: 10) {
     @Intro(title: "오른손 검지 끝을 월드 좌표로 바꾸기") {
+        **시작 상태**: `HandTrackingService.start()`와 `stop()`이 빌드됩니다.
+
         **이번 단계에서 만들 것**: 손 앵커 하나를 받아 오른손 검지 끝의 월드 위치를 돌려주는 메서드입니다.
 
         ARKit이 주는 관절 위치는 **손 앵커를 기준으로 한** 좌표입니다. RealityKit 장면에 점을 놓으려면 이를 월드 기준으로 바꿔야 합니다. 코드를 쓰기 전에 그 계산이 무엇인지 먼저 봅니다.
@@ -62,19 +64,13 @@
             }
 
             @Step {
-                마지막으로 세 성분이 모두 유한한 수인지 확인하고 돌려주세요. 추적이 끊기는 순간 무한대나 `NaN`이 섞여 들어올 수 있고, 그 값이 그대로 흘러가면 이후 거리 계산이 전부 어긋납니다.
+                마지막으로 x, y, z 각각의 `isFinite`를 확인하고 돌려주세요. 무한대나 `NaN`이 이후 거리 계산에 들어가는 것을 막습니다. Chapter 4에서 같은 검사를 공통 도우미로 정리합니다.
 
                 @Code(name: "HandTrackingService.swift", file: C03-T03-HandTrackingService-11.swift, previousFile: C03-T03-HandTrackingService-10.swift)
             }
 
             @Step {
-                완성 서비스가 손 추적 세션과 오른손 검지 끝 좌표만 담당하는지 확인하세요.
-
-                @Code(name: "HandTrackingService.swift", file: C04-T05-HandTrackingService-19.swift, previousFile: C03-T03-HandTrackingService-11.swift)
-            }
-
-            @Step {
-                **결과 확인**: 빌드가 성공하면 됩니다. `hasFiniteComponents`가 아직 없다는 오류가 난다면 정상입니다. 이 도우미는 Chapter 4에서 `DwellDetector.swift`와 함께 추가합니다.
+                **결과 확인**: 빌드가 성공하고 서비스가 손 추적 세션과 오른손 검지 끝 좌표를 담당하면 됩니다. 아직 공간과 연결하지 않았으므로 커서는 보이지 않습니다.
             }
 
             @Step {

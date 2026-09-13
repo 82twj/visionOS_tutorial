@@ -26,6 +26,9 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+      - name: Verify authored tutorial
+        run: Scripts/verify-snapshots.sh
+
       - name: Build DocC archive
         run: |
           xcodebuild \
@@ -38,7 +41,14 @@ jobs:
             SYMROOT="$RUNNER_TEMP/Build" \
             OBJROOT="$RUNNER_TEMP/Intermediates" \
             DOCC_HOSTING_BASE_PATH="${{ github.event.repository.name }}" \
+            OTHER_DOCC_FLAGS="--warnings-as-errors" \
             docbuild
+
+      - name: Normalize and verify generated tutorial
+        run: |
+          archive="$RUNNER_TEMP/Build/Release-xros/HandConstellation.doccarchive"
+          python3 Scripts/normalize_docc_navigation.py "$archive"
+          python3 Scripts/verify_tutorial.py --archive "$archive"
 
       - name: Prepare static site
         run: |

@@ -1,44 +1,64 @@
-@Tutorial(time: 8) {
+@Tutorial(time: 14) {
     @Intro(title: "버튼과 장면이 공유할 상태 만들기") {
-        **이번 단계에서 만들 것**: 제어창과 몰입형 공간이 함께 읽고 쓰는 `AppModel`입니다.
+        **시작 상태**: Chapter 1의 기본 프로젝트가 빌드되고 `ContentView.swift`가 남아 있습니다.
+
+        **이번 단계에서 만들 것**: 새 `AppModel.swift` 파일과, 제어창과 몰입형 공간이 함께 읽고 쓰는 상태 모델입니다.
 
         @Image(source: drawing-toggle.png, alt: "그리기 꺼짐과 켜짐 상태를 하나의 앱 모델에서 공유하는 구조")
     }
 
-    @Section(title: "상태의 책임 이해하기") {
+    @Section(title: "파일과 상태 뼈대 만들기") {
         @ContentAndMedia {
             `@Observable`은 값이 바뀌면 그 값을 읽는 SwiftUI 화면을 다시 그립니다. `@MainActor`는 화면 상태 변경을 메인 스레드에 모읍니다.
         }
 
         @Steps {
             @Step {
-                몰입형 공간은 닫힘, 전환 중, 열림을 구분합니다. 전환 중 상태가 시작 버튼의 중복 요청을 막습니다.
+                Project navigator에서 앱 그룹을 보조 클릭하고 **New File from Template > Swift File**을 골라 `AppModel.swift`를 만드세요. 앱 target membership이 켜져 있는지 확인합니다.
+
+                @Code(name: "AppModel.swift", file: C02-T01-AppModel-00.swift, reset: true)
             }
 
             @Step {
-                손 추적 상태는 대기, 권한 확인, 추적 중, 미지원, 거부와 오류를 구분합니다. 제어창은 이 값을 사용자 문장으로 바꿉니다.
+                `Foundation` 대신 `Observation`을 import하고 메인 액터에서 관찰되는 참조 타입을 선언하세요.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-01.swift, previousFile: C02-T01-AppModel-00.swift)
             }
 
             @Step {
-                `DrawingState`는 켜짐과 꺼짐 두 상태만 가집니다. 제어창 버튼이 `toggleDrawing()`을 호출하고, 몰입형 공간은 같은 값을 관찰합니다.
+                몰입형 공간, 손 추적, 그리기 상태를 나타내는 enum을 추가하세요. 전환 중 상태는 시작 버튼의 중복 요청을 막고, 추적 실패는 화면에서 원인을 구분하게 합니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-02.swift, previousFile: C02-T02-AppModel-01.swift)
             }
 
             @Step {
-                점·선·별자리 개수와 기존 점 연결 안내를 공유 상태에 둡니다. 주먹 인식이나 손짓 진행률 상태는 사용하지 않습니다.
+                점을 놓는 단계와 기존 점 연결 진행을 나타내는 `DrawingGuidance`를 추가하세요. 연결 진행률만 `Float?`로 노출하므로 제어창은 필요할 때만 진행 막대를 표시할 수 있습니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-03.swift, previousFile: C02-T02-AppModel-02.swift)
             }
         }
     }
 
-    @Section(title: "완성 모델 추가하기") {
+    @Section(title: "화면이 읽을 값과 동작 추가하기") {
+        @ContentAndMedia {
+            `@Observable`은 화면이 읽은 값이 바뀌었을 때 SwiftUI를 다시 계산합니다. 한 모델에 공간 상태, 추적 상태, 그리기 안내와 결과 개수를 모으면 두 씬이 같은 사실을 보여 줄 수 있습니다.
+        }
+
         @Steps {
             @Step {
-                버튼 기반 그리기 전환, 상황별 안내, 개수와 초기화 신호가 포함된 완성 모델을 추가하세요.
+                공유 속성과 상태 문장을 추가하세요. 초기값은 공간 닫힘, 추적 대기, 그리기 꺼짐입니다.
 
-                @Code(name: "AppModel.swift", file: C02-T02-AppModel-12.swift, previousFile: C02-T01-AppModel-00.swift)
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-04.swift, previousFile: C02-T02-AppModel-03.swift)
             }
 
             @Step {
-                **결과 확인**: `drawingState`의 초기값이 `.disabled`이고 `toggleDrawing()`이 버튼에서 사용할 유일한 사용자 전환 통로인지 확인하세요.
+                그리기 전환과 초기화 요청 메서드를 추가해 모델을 완성하세요. `resetGeneration`은 값이 바뀔 때마다 몰입형 화면에 새 초기화 요청이 왔음을 알립니다.
+
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-12.swift, previousFile: C02-T02-AppModel-04.swift)
+            }
+
+            @Step {
+                **결과 확인**: 빌드가 성공하고 `drawingState`의 초기값이 `.disabled`이며 `requestReset()`이 세 개의 개수를 0으로 되돌리는지 확인하세요. 이 타입은 아직 화면에 연결하지 않았으므로 Simulator 모습은 Chapter 1과 같습니다.
             }
 
             @Step {

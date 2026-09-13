@@ -141,6 +141,20 @@ def figure(name, title, desc, body, w=W, h=H):
 
 # --- 1. 시작하기 전에 ---------------------------------------------------------
 
+body = [heading("버튼으로 공유 상태 바꾸기", "개념도 · 제어창과 몰입형 공간이 같은 AppModel을 읽습니다")]
+body.append(card(56, 170, 450, 280, "그리기 꺼짐", [
+    "drawingState = .disabled", "손을 움직여도 새 점을 만들지 않습니다.", "기존 별자리는 화면에 남습니다.",
+], MUTED))
+body.append(card(594, 170, 450, 280, "그리기 켜짐", [
+    "drawingState = .enabled", "검지를 0.8초 머물러 점을 만듭니다.", "기존 점에 머물러 선을 연결합니다.",
+], GREEN))
+body.append(arrow(300, 500, 800, 500, GREEN))
+body.append(t(550, 484, "제어창에서 ‘그리기 켜기’ 버튼", 23, INK, 600, "middle"))
+body.append(arrow(800, 570, 300, 570, MUTED))
+body.append(t(550, 609, "제어창에서 ‘그리기 끄기’ 버튼", 23, INK, 600, "middle"))
+body.append(t(550, 671, "꺼진 뒤 다시 켜면 다음 첫 점은 새 별자리를 시작합니다.", 21, BODY, 400, "middle"))
+figure("drawing-toggle", "버튼으로 그리기 상태 전환", "그리기 켜기와 끄기 버튼이 공유 AppModel의 상태를 변경하는 개념도", "".join(body))
+
 body = [heading("이 과정을 시작하기 전에", "필요한 사전 지식과 확인 환경")]
 body.append(card(56, 160, 320, 300, "이미 알고 있어야 함", [
     "Swift 문법과 옵셔널", "struct와 class의 차이", "SwiftUI View와 상태", "Xcode 프로젝트 만들기",
@@ -267,91 +281,6 @@ body.append(t(812, 386, "Hello, world!", 26, INK, 650, "middle"))
 body.append(t(803, 560, "기본 창이 보이면 성공입니다.", 20, MUTED, anchor="middle"))
 figure("xcode-simulator-hello", "Simulator의 기본 앱 실행 결과",
        "실행 대상으로 Apple Vision Pro Simulator를 고르고 Hello, world! 창을 확인하는 화면",
-       "".join(body))
-
-# --- 6. Info 탭 ---------------------------------------------------------------
-
-body = [heading("손 추적 권한 설명 추가", "TARGETS > HandConstellation > Info"), pending_badge()]
-body.append(window_chrome(72, 168, 956, 470, "Custom visionOS Target Properties"))
-tabs = ["General", "Signing & Capabilities", "Resource Tags", "Info", "Build Settings"]
-tx = 108
-for tab in tabs:
-    focused = tab == "Info"
-    w = len(tab) * 11 + 34
-    body.append(t(tx + w / 2, 258, tab, 18, INK if focused else MUTED,
-                  650 if focused else 400, "middle"))
-    if focused:
-        body.append(f'<path d="M{tx} 274 h{w}" stroke="{FOCUS}" stroke-width="4"/>')
-    tx += w + 18
-body.append(f'<path d="M108 288 h884" stroke="{LINE}" stroke-width="2"/>')
-rows = [
-    ("Application Scene Manifest", "Dictionary", "(2 items)", False),
-    ("Privacy - Hand Tracking Usage Description", "String", "검지 끝의 움직임을…", True),
-    ("Supported interface orientations", "Array", "(1 item)", False),
-]
-for i, (key, kind, value, focused) in enumerate(rows):
-    y = 330 + i * 76
-    if focused:
-        body.append(rect(108, y - 30, 884, 62, 12, FOCUS, None, opacity=0.24))
-        body.append(rect(108, y - 30, 884, 62, 12, "none", FOCUS, 3))
-    body.append(t(136, y + 8, key, 19, INK if focused else BODY, 650 if focused else 400))
-    body.append(t(660, y + 8, kind, 18, MUTED))
-    body.append(t(790, y + 8, value, 18, ACCENT if focused else MUTED))
-body.append(f'<circle cx="128" cy="588" r="17" fill="{FOCUS}"/>')
-body.append(t(128, 597, "+", 26, "#fff", 700, "middle"))
-body.append(t(164, 596, "+ 를 눌러 항목을 추가하고 Value에 설명 문장을 입력합니다.", 20, BODY))
-figure("xcode-info-tab", "Target Info 탭의 권한 항목",
-       "Target Info 탭에서 Privacy - Hand Tracking Usage Description 항목이 파란색으로 강조된 표",
-       "".join(body))
-
-# --- 7. New File 메뉴 ---------------------------------------------------------
-
-body = [heading("새 Swift 파일 만들기", "File > New > File from Template"), pending_badge()]
-body.append(window_chrome(72, 168, 956, 470, "Choose a template for your new file"))
-body.append(rect(108, 246, 250, 360, 16, "#0e1524", LINE, 2))
-for i, group in enumerate(["visionOS", "iOS", "macOS", "Other"]):
-    focused = i == 0
-    y = 290 + i * 46
-    if focused:
-        body.append(rect(116, y - 26, 234, 38, 9, FOCUS, None, opacity=0.28))
-    body.append(t(140, y, group, 18, INK if focused else MUTED, 650 if focused else 400))
-templates = [("Swift File", True), ("SwiftUI View", False), ("Unit Test Case", False)]
-ix = 392
-for label, focused in templates:
-    color = FOCUS if focused else LINE
-    body.append(rect(ix, 300, 190, 190, 18, "#131b2b", color, 4 if focused else 2))
-    body.append(rect(ix + 60, 336, 70, 88, 12, "none", color, 3))
-    body.append(t(ix + 95, 462, label, 19, INK if focused else MUTED,
-                  650 if focused else 400, "middle"))
-    ix += 214
-body.append(t(392, 556, "Swift File을 선택하면 빈 파일에 import 한 줄만 들어갑니다.", 20, BODY))
-figure("xcode-new-file", "New File 템플릿 선택",
-       "새 파일 만들기 창에서 visionOS 그룹과 Swift File 템플릿이 파란색으로 강조된 화면",
-       "".join(body))
-
-# --- 8. 파일 이름과 Target Membership ----------------------------------------
-
-body = [heading("파일 이름과 Target Membership", "Save as"), pending_badge()]
-body.append(window_chrome(72, 168, 956, 470, "Save As"))
-body.append(field(132, 268, 560, "Save As", "AppModel.swift", focused=True, mono=True))
-body.append(field(132, 378, 560, "Where", "HandConstellation"))
-body.append(t(132, 480, "Targets", 17, MUTED))
-body.append(rect(132, 496, 560, 108, 12, "#131b2b", FOCUS, 3))
-body.append(f'<rect x="158" y="518" width="28" height="28" rx="7" fill="{FOCUS}"/>')
-body.append('<path d="M164 532 l6 7 l12 -14" stroke="#fff" stroke-width="4" fill="none" '
-            'stroke-linecap="round" stroke-linejoin="round"/>')
-body.append(t(202, 540, "HandConstellation", 20, INK, 650, font=MONO))
-body.append(f'<rect x="158" y="560" width="28" height="28" rx="7" fill="none" '
-            f'stroke="{LINE}" stroke-width="2"/>')
-body.append(t(202, 582, "HandConstellationTests", 20, MUTED, font=MONO))
-body.append(rect(736, 268, 256, 336, 18, "#131b2b", LINE, 2))
-body.append(t(764, 312, "체크가 빠지면", 20, INK, 650))
-body.append(t(764, 352, "파일이 앱에 포함되지", 19, BODY))
-body.append(t(764, 384, "않아 빌드에서", 19, BODY))
-body.append(t(764, 416, "찾을 수 없다는 오류가", 19, BODY))
-body.append(t(764, 448, "납니다.", 19, BODY))
-figure("xcode-file-options", "파일 이름과 Target Membership",
-       "파일 이름을 AppModel.swift로 입력하고 HandConstellation 타깃에 체크한 저장 화면",
        "".join(body))
 
 # --- 9. 손 골격과 indexFingerTip ---------------------------------------------
@@ -558,33 +487,6 @@ body.append(t(88, 612, "초기화할 때 확정 점·선과 연결 안내를 지
 body.append(t(88, 644, "목표 점 강조와 미리보기 선은 guidanceContainer 안에서만 켜고 끕니다.", 20, MUTED))
 figure("entity-tree", "RealityKit 엔티티 트리",
        "rootEntity 아래에 흰 선, 흰 점, 기존 점 연결 안내 컨테이너와 커서가 자식으로 붙은 구조도",
-       "".join(body))
-
-# --- 16. 파일 책임 비교 -------------------------------------------------------
-
-body = [heading("데이터와 화면의 책임 나누기", "ConstellationModel 과 ConstellationRenderer")]
-body.append(card(56, 180, 470, 300, "ConstellationModel", [
-    "무엇을 저장할지 결정",
-    "너무 가까운 점 거절",
-    "최대 개수 검사",
-    "새 별자리 시작 여부 판단",
-    "RealityKit을 import 하지 않음",
-], YELLOW))
-body.append(card(574, 180, 470, 300, "ConstellationRenderer", [
-    "무엇을 보여 줄지 결정",
-    "구와 원기둥 mesh 생성",
-    "선분의 위치와 회전 계산",
-    "커서 크기 갱신",
-    "규칙을 스스로 판단하지 않음",
-], ACCENT))
-body.append(arrow(532, 330, 568, 330))
-body.append(t(550, 300, "확정된 점만 전달", 16, MUTED, anchor="middle"))
-body.append(rect(56, 512, 988, 148, 20, "#131b2b", GREEN, 2))
-body.append(t(88, 556, "이렇게 나누면 좋은 점", 22, GREEN, 650))
-body.append(t(88, 598, "모델은 ARKit과 RealityKit 없이 macOS에서 그대로 테스트할 수 있습니다.", 20, BODY))
-body.append(t(88, 630, "화면 표현을 바꿔도 별자리 규칙은 손대지 않습니다.", 20, MUTED))
-figure("file-responsibilities", "데이터와 화면의 책임 비교",
-       "ConstellationModel과 ConstellationRenderer가 각각 맡는 일을 나란히 비교한 표",
        "".join(body))
 
 # --- 17. 입력 처리 순서 -------------------------------------------------------

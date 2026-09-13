@@ -1,5 +1,7 @@
 @Tutorial(time: 7) {
     @Intro(title: "Vision Pro에서 실행하고 손 추적 권한 허용하기") {
+        **시작 상태**: Chapter 6의 완성 앱이 오류 없이 빌드되고 서명에 사용할 Apple Developer 팀과 Apple Vision Pro가 준비되어 있습니다.
+
         **이번 단계에서 만들 것**: 코드는 만들지 않습니다. Chapter 6까지 완성한 앱을 Apple Vision Pro에 설치하고 손 추적 권한을 허용합니다.
 
         여기서부터는 실기기가 필요합니다. ARKit 손 추적은 Simulator에서 동작하지 않습니다.
@@ -62,7 +64,7 @@
             }
 
             @Step {
-                **문제가 생겼다면**: 권한 창이 아예 나타나지 않고 곧바로 "확인 필요"가 된다면 Chapter 1의 Info 항목이 빠졌을 가능성이 큽니다. Target의 Info 탭에서 Privacy - Hand Tracking Usage Description을 다시 확인하세요.
+                **문제가 생겼다면**: 권한 창이 아예 나타나지 않고 곧바로 "확인 필요"가 된다면 Chapter 1의 Info 항목이 빠졌을 가능성이 큽니다. Target의 Info 탭에서 Privacy - Hands Tracking Usage Description을 다시 확인하세요.
             }
         }
     }

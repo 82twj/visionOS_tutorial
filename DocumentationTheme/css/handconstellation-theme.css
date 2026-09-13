@@ -71,7 +71,107 @@ body .router-content .code-preview .runtime-preview {
   margin: 1rem;
 }
 
+/* Keep diagram labels visible beside the hero copy instead of underneath it. */
+body .router-content .tutorial-hero .hero {
+  overflow: hidden;
+}
+
+body .router-content .tutorial-hero .hero .bg {
+  background-position: center right;
+  opacity: 0.46;
+}
+
+body .router-content .tutorial-hero .hero::after {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.96) 0%,
+    rgba(0, 0, 0, 0.88) 42%,
+    rgba(0, 0, 0, 0.34) 72%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+body .router-content .tutorial-hero .hero .row {
+  position: relative;
+  z-index: 1;
+}
+
+/* Preserve a consistent explanation column and reserve space for the code pane. */
+@media only screen and (min-width: 736px) {
+  /* Use the published tutorial's original column dimensions and gutter. */
+  body .router-content .steps > .content-container {
+    width: 37.5%;
+    margin-right: 4.1666666667%;
+  }
+
+  body .router-content .steps > .asset-container {
+    display: grid;
+    flex: none;
+    min-width: 0;
+    max-width: 921px;
+    width: calc(50vw + 8.33333%);
+  }
+
+  body .router-content .code-preview {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* Scroll the code independently so its Preview control stays reachable. */
+  body .router-content .code-preview > div:first-child {
+    height: 100%;
+    overflow: auto;
+  }
+
+  body .router-content .code-preview .runtime-preview {
+    max-width: calc(100% - 2rem);
+  }
+}
+
+/* Wrap long source lines inside the pane while keeping line numbers aligned. */
+body .router-content .code-preview .container-general,
+body .router-content .code-preview pre,
+body .router-content .code-preview pre > code {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+body .router-content .code-preview pre > code {
+  white-space: normal;
+}
+
+body .router-content .code-preview .code-line-container {
+  display: flex;
+  align-items: flex-start;
+  min-height: 1.7em;
+}
+
+body .router-content .code-preview .code-number {
+  flex: 0 0 2.6rem;
+}
+
+body .router-content .code-preview .code-line {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 @media only screen and (max-width: 735px) {
+  body .router-content .tutorial-hero .hero .bg {
+    background-position: center;
+    opacity: 0.34;
+  }
+
+  body .router-content .tutorial-hero .hero::after {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
   body .router-content .step {
     border-radius: 18px;
     padding: 1.35rem 1.55rem;

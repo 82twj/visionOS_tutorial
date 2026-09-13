@@ -1,26 +1,28 @@
 @Tutorial(time: 7) {
     @Intro(title: "손 추적 권한 설명 추가하기") {
+        **시작 상태**: 기본 앱이 Simulator에서 빌드되고 native visionOS 앱 target을 선택할 수 있습니다.
+
         **이번 단계에서 만들 것**: 앱이 손 추적을 요청할 때 시스템이 사용자에게 보여 줄 설명 문장입니다.
 
         `<key>`를 외워서 입력하지 않습니다. Xcode의 Info 화면에서 사람이 읽는 항목을 고르고, 마지막에만 그 설정이 `Info.plist`에 어떻게 저장되는지 확인합니다.
 
-        @Image(source: xcode-info-tab.png, alt: "Target Info 탭에서 Privacy - Hand Tracking Usage Description 항목이 파란색으로 강조된 표")
+        @Image(source: xcode-info-actual.png, alt: "Xcode 26.6의 native visionOS target Info 탭에서 Custom iOS Target Properties와 Privacy - Hands Tracking Usage Description 항목이 보이는 화면")
     }
 
     @Section(title: "Info 화면에서 항목 추가하기") {
         @ContentAndMedia {
             visionOS는 손 관절 데이터를 민감한 정보로 다룹니다. 앱이 이 데이터를 쓰려면 사용 목적을 미리 등록해야 하고, 등록하지 않으면 권한 요청 자체가 실패합니다.
 
-            @Image(source: xcode-info-tab.png, alt: "Target Info 탭에서 Privacy - Hand Tracking Usage Description 항목이 파란색으로 강조된 표")
+            @Image(source: xcode-info-actual.png, alt: "Xcode 26.6의 native visionOS target Info 탭에서 Custom iOS Target Properties와 Privacy - Hands Tracking Usage Description 항목이 보이는 화면")
         }
 
         @Steps {
             @Step {
-                Project navigator 맨 위의 파란 프로젝트 아이콘을 선택하고 TARGETS에서 **HandConstellation**을 고르세요.
+                Project navigator 맨 위의 파란 프로젝트 아이콘을 선택하고 TARGETS에서 **HandConstellation**을 고르세요. General 탭의 Supported Destinations나 빌드 실행 대상에서 visionOS 앱 target임을 먼저 확인합니다. 실제 iOS 앱 target을 선택하면 안 됩니다.
             }
 
             @Step {
-                **Info** 탭을 여세요. **Custom visionOS Target Properties** 표가 나타납니다.
+                **Info** 탭을 여세요. 표 제목은 Xcode 버전에 따라 달라질 수 있습니다. Xcode 26.6에서는 native visionOS target을 골라도 **Custom iOS Target Properties**라고 표시되며 정상입니다.
             }
 
             @Step {
@@ -28,7 +30,7 @@
             }
 
             @Step {
-                목록에서 **Privacy - Hand Tracking Usage Description**을 선택하세요. 목록이 길면 `Hand`를 입력해 검색할 수 있습니다.
+                목록에서 **Privacy - Hands Tracking Usage Description**을 선택하세요. 일부 Xcode 버전은 표시 문구가 조금 다를 수 있으므로 `Hands`를 입력해 검색하고, 저장 키가 `NSHandsTrackingUsageDescription`인지 확인합니다.
             }
 
             @Step {
@@ -41,12 +43,12 @@
 
     @Section(title: "저장된 형태 확인하기") {
         @ContentAndMedia {
-            Xcode의 Info 화면은 `Info.plist`를 사람이 읽기 쉽게 보여 주는 편집기입니다. 실제 저장 형태를 한 번 보고 넘어가면 다른 프로젝트의 설정 파일도 읽을 수 있습니다.
+            Xcode는 Info 값을 생성된 설정으로 관리할 수도 있고 실제 `Info.plist` 파일에 저장할 수도 있습니다. Project navigator에 파일이 있을 때만 XML을 열어 확인하세요. 파일이 없어도 target의 Info 표에 값이 있으면 설정은 유효합니다.
         }
 
         @Steps {
             @Step {
-                Project navigator에서 `Info.plist`를 보조 클릭하고 **Open As > Source Code**를 선택하세요. 아래 코드는 항목을 추가하기 전의 상태입니다.
+                Project navigator에 `Info.plist`가 보이면 보조 클릭하고 **Open As > Source Code**를 선택하세요. 파일이 없다면 이 선택 단계는 건너뛰고 아래 코드를 저장 형식의 참고 예로 읽습니다.
 
                 @Code(name: "Info.plist", file: C01-T04-Info-00.plist, reset: true)
             }
@@ -58,7 +60,7 @@
             }
 
             @Step {
-                **결과 확인**: Info 탭의 표에 Privacy - Hand Tracking Usage Description 줄이 보이고, Source Code 보기에 `NSHandsTrackingUsageDescription` 키가 있으면 성공입니다.
+                **결과 확인**: 선택한 native visionOS 앱 target의 Info 표에 **Privacy - Hands Tracking Usage Description** 값이 보이면 성공입니다. 실제 plist 파일이 있는 프로젝트에서는 Source Code의 `NSHandsTrackingUsageDescription`도 확인합니다.
             }
 
             @Step {
@@ -72,7 +74,7 @@
             손 추적 권한 설명을 추가하는 첫 번째 행동은 무엇인가요?
 
             @Choice(isCorrect: true) {
-                Target의 Info 탭에서 Privacy - Hand Tracking Usage Description 항목을 추가합니다.
+                Target의 Info 탭에서 Privacy - Hands Tracking Usage Description 항목을 추가합니다.
 
                 @Justification(reaction: "맞습니다!") {
                     Xcode 화면에서 사람이 읽는 항목을 먼저 추가하고, 필요할 때만 XML 저장 형태를 확인합니다.

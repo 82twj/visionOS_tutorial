@@ -1,5 +1,7 @@
 # 튜토리얼 개편 감사와 대응표
 
+> 2026-09-13 피드백 후속 수정: 현재 19개 실습 페이지 구성과 권한·순서·본문 표시·Preview 수정 결과는 [수정 검증 기록](TUTORIAL_FEEDBACK_VERIFICATION.md)을 참고하세요. 아래 내용은 이전 개편 당시의 기록입니다.
+
 > 작성일: 2026-08-31
 > 근거 문서: [TUTORIAL_REVISION_PLAN.md](TUTORIAL_REVISION_PLAN.md) 11장 1단계
 > 대상: 개편 전 `BuildingHandConstellation.tutorial` 1개 페이지, 8개 Section, 78개 Step

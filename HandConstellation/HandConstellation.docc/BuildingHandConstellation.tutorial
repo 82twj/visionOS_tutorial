@@ -7,52 +7,20 @@
         @Image(source: constellation-hero.png, alt: "오른손 검지로 두 개의 빛나는 별자리를 그리고 그리기 상태를 제어하는 Hand Constellation 앱")
     }
 
-    @Section(title: "이 과정의 난이도와 준비물") {
+    @Section(title: "완성 앱의 동작 미리 보기") {
         @ContentAndMedia {
-            이 과정은 **중급 이상** 난이도입니다. Swift와 SwiftUI 지식은 이미 있다고 가정하고, 공간 컴퓨팅 프레임워크는 처음이라고 가정합니다.
+            이 과정은 **중급 이상** 난이도입니다. Swift의 옵셔널, `struct`와 `class`, SwiftUI의 `View`와 상태 개념은 이미 안다고 가정합니다. ARKit 손 추적과 좌표 변환은 Chapter 3, 상태 머신은 Chapter 4, RealityKit 엔티티는 Chapter 5에서 설명합니다.
+
+            Xcode 16 이상과 visionOS 2.0 이상 SDK가 필요합니다. Chapter 1부터 6까지는 Simulator에서 빌드할 수 있고, Chapter 7의 손 추적 검증에는 Apple Vision Pro가 필요합니다. 코드를 쓰기 전에 아래 동작을 읽어 각 Chapter의 목적을 확인하세요.
 
             @Image(source: prerequisites.png, alt: "필요한 사전 지식, 과정에서 설명하는 개념, 확인 환경, Simulator 제한을 정리한 표")
         }
 
         @Steps {
             @Step {
-                오른쪽 표의 첫 번째 칸을 확인하세요. Swift의 옵셔널, `struct`와 `class`의 차이, SwiftUI의 `View`와 상태 개념은 이 과정에서 다시 설명하지 않습니다.
-
-                이 내용이 낯설다면 SwiftUI 입문 과정을 먼저 마치고 돌아오는 편이 빠릅니다.
-            }
-
-            @Step {
-                두 번째 칸의 네 가지는 이 과정 안에서 처음 사용하기 전에 설명합니다. ARKit 손 추적은 Chapter 3, `simd` 좌표 변환도 Chapter 3, 상태 머신은 Chapter 4, RealityKit 엔티티는 Chapter 5에서 다룹니다.
-
-                모르는 용어가 나오면 그 자리에서 설명이 나오므로 미리 공부하지 않아도 됩니다.
-            }
-
-            @Step {
-                Xcode 16 이상과 visionOS 2.0 이상 SDK가 필요합니다. Xcode의 **Settings > Components**에서 visionOS 플랫폼과 Simulator runtime을 먼저 설치하세요.
-            }
-
-            @Step {
-                Chapter 1부터 Chapter 6까지는 Simulator만으로 진행할 수 있습니다. 코드를 쓰고 빌드하는 과정에는 실기기가 필요하지 않습니다.
-            }
-
-            @Step {
-                다만 ARKit 손 추적은 Apple Vision Pro에서만 동작합니다. 점을 찍고 선을 잇는 최종 동작 검증은 Chapter 7에서 실기기로 진행합니다.
-
-                실기기가 없다면 Chapter 6까지 완성한 뒤 나중에 Chapter 7만 이어서 진행해도 됩니다.
-            }
-        }
-    }
-
-    @Section(title: "완성 앱의 동작 미리 보기") {
-        @ContentAndMedia {
-            코드를 쓰기 전에 어떤 손동작이 어떤 결과를 만드는지 알아 두면, 각 Chapter가 왜 필요한지 이해하기 쉽습니다.
-
-            @Image(source: complete-experience.png, alt: "그리기가 꺼진 상태에서 연결선 없이 분리된 두 별자리가 남아 있는 완성 화면")
-        }
-
-        @Steps {
-            @Step {
                 창의 **별자리 그리기 시작**을 누르면 혼합 몰입형 공간이 열립니다. 이때 앱은 안전하게 **그리기 꺼짐** 상태로 시작합니다.
+
+                @Image(source: complete-experience.png, alt: "그리기가 꺼진 상태에서 연결선 없이 분리된 두 별자리가 남아 있는 완성 화면")
             }
 
             @Step {

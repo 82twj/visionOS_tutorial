@@ -1,5 +1,7 @@
-@Tutorial(time: 9) {
+@Tutorial(time: 14) {
     @Intro(title: "모든 기존 점에 다시 연결하기") {
+        **시작 상태**: 설정 파일과 `DwellDetector`가 빌드되고 `ExistingPointConnectionDetector.swift`에는 `import Foundation`만 있습니다.
+
         **이번 단계에서 만들 것**: 현재 별자리의 어느 기존 점에든 새 점 없이 선을 연결하는 `ExistingPointConnectionDetector`입니다.
 
         첫 점만 특별 취급하지 않습니다. 감지기는 여러 목표 중 가장 가까운 하나를 고정하고, 모델은 그 목표의 저장 좌표를 재사용합니다.
@@ -7,36 +9,54 @@
         @Image(source: closure-snap-feedback.png, alt: "여러 기존 점 중 하나를 선택해 미리보기 선과 연결 완료를 보여 주는 세 단계")
     }
 
-    @Section(title: "연결 목표를 안정적으로 고르기") {
-        @Steps {
-            @Step {
-                현재 출발점은 자기 연결을 막기 위해 후보에서 제외합니다. 다른 별자리의 점도 후보로 전달하지 않습니다.
-            }
-
-            @Step {
-                출발점에서 3cm 이상 떠난 뒤 손가락에서 3cm 이내인 기존 점 중 가장 가까운 점을 고릅니다.
-            }
-
-            @Step {
-                체류가 시작되면 목표 ID를 고정합니다. 다른 점이 더 가까워져도 4cm 해제 반경을 벗어나기 전에는 바꾸지 않습니다.
-            }
-
-            @Step {
-                0.8초를 채우면 `didCommit`을 한 번만 내보냅니다. 결과에는 목표 ID, 정확한 저장 위치와 중복 연결 여부가 포함됩니다.
-            }
-        }
-    }
-
     @Section(title: "연결 감지기 완성하기") {
+        @ContentAndMedia {
+            감지기의 입력 계약은 호출자가 활성 점과 다른 별자리의 점을 후보에서 제외하는 것입니다. Chapter 5의 모델과 Chapter 6의 코디네이터가 이 계약을 구현합니다. 감지기는 출발점에서 3cm 떠난 뒤 3cm 이내의 최근접 후보를 잠급니다. 4cm 해제 반경을 벗어나기 전에는 목표를 바꾸지 않는 히스테리시스로 경계 깜빡임을 줄입니다.
+
+            연결 판정은 데이터 형태, 설정과 기억할 상태, 출발점 이탈, 잠긴 목표 유지, 새 목표 선택 순서로 구현합니다. 각 스냅샷은 앞 단계에서 한 책임만 더합니다.
+
+            @Image(source: closure-snap-feedback.png, alt: "출발점 이탈, 최근접 목표 고정, 체류 완료 뒤 저장된 점으로 선을 잇는 흐름")
+        }
+
         @Steps {
             @Step {
-                최근접 선택, 목표 잠금, 진입·해제 히스테리시스와 추적 손실 처리를 한 타입에 모읍니다.
+                목표와 외부에 전달할 스냅샷 타입을 정의하세요. 목표에는 노드 ID, 저장 위치와 이미 연결되었는지가 함께 들어갑니다.
 
                 @Code(name: "ExistingPointConnectionDetector.swift", file: C04-T06-ExistingPointConnectionDetector-01.swift, previousFile: C04-T01-ExistingPointConnectionDetector-00.swift)
             }
 
             @Step {
-                **결과 확인**: `swift test`에서 출발점 이탈, 최근접 선택, 목표 잠금, 0.8초 완료, 경계 흔들림과 해제 시나리오가 통과하면 성공입니다.
+                체류 시간, 진입·해제·출발 거리와 잠긴 목표를 저장하고 설정값의 관계를 검사하세요. 해제 거리는 진입 거리보다 작을 수 없습니다.
+
+                @Code(name: "ExistingPointConnectionDetector.swift", file: C04-T06-ExistingPointConnectionDetector-02.swift, previousFile: C04-T06-ExistingPointConnectionDetector-01.swift)
+            }
+
+            @Step {
+                입력과 후보를 검증한 뒤 활성 점에서 충분히 떠날 때까지 기다리세요. 새 점 직후 같은 점이 곧바로 연결 후보가 되는 것을 막습니다.
+
+                @Code(name: "ExistingPointConnectionDetector.swift", file: C04-T06-ExistingPointConnectionDetector-03.swift, previousFile: C04-T06-ExistingPointConnectionDetector-02.swift)
+            }
+
+            @Step {
+                잠긴 목표가 없을 때 3cm 안의 후보를 거리순으로 골라 체류를 시작하세요. 아직 목표 잠금 유지 로직은 없으므로 다음 단계에서 이 간단한 흐름을 확장합니다.
+
+                @Code(name: "ExistingPointConnectionDetector.swift", file: C04-T06-ExistingPointConnectionDetector-04.swift, previousFile: C04-T06-ExistingPointConnectionDetector-03.swift)
+            }
+
+            @Step {
+                목표 ID를 잠그고 4cm 해제 반경 안에서 유지하세요. 진행률을 계산해 0.8초 완료 프레임에만 `didCommit`을 참으로 반환하고, 완료하면 다시 출발점 이탈을 기다리도록 reset합니다.
+
+                @Code(name: "ExistingPointConnectionDetector.swift", file: C04-T06-ExistingPointConnectionDetector-05.swift, previousFile: C04-T06-ExistingPointConnectionDetector-04.swift)
+            }
+
+            @Step {
+                새 점 확정, 추적 손실과 전체 초기화가 후보 잠금과 출발 상태를 함께 지우도록 공개 reset 경로를 완성하세요.
+
+                @Code(name: "ExistingPointConnectionDetector.swift", file: C04-T06-ExistingPointConnectionDetector-06.swift, previousFile: C04-T06-ExistingPointConnectionDetector-05.swift)
+            }
+
+            @Step {
+                **결과 확인**: 앱 target을 빌드하세요. 코드에서 후보 없음 → 출발점 이탈 → 최근접 목표 잠금 → 해제 반경 유지 → 한 번의 commit → 이탈 상태 reset 순서를 확인하면 성공입니다. 다운로드한 저장소의 별도 테스트 구성을 사용하는 경우에만 시나리오 테스트를 추가로 실행할 수 있습니다.
             }
 
             @Step {

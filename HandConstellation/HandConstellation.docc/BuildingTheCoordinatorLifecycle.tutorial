@@ -1,30 +1,48 @@
-@Tutorial(time: 7) {
-    @Intro(title: "코디네이터의 생명주기 설계하기") {
-        **이번 단계에서 만들 것**: 다음 페이지에서 완성할 `ImmersiveCoordinator`가 시작, 상태 변경, 초기화와 종료를 어떻게 책임지는지 설계합니다.
+@Tutorial(time: 12) {
+    @Intro(title: "코디네이터의 생명주기 만들기") {
+        **시작 상태**: Chapter 5의 그래프 모델과 RealityKit 렌더러가 빌드됩니다.
+
+        **이번 단계에서 만들 것**: 새 `ImmersiveCoordinator.swift`와 `ImmersiveView.swift` 파일을 만들고, 코디네이터의 소유 객체, 실행, 상태 변경, 초기화와 종료 경로를 구현합니다.
 
         @Image(source: scene-structure.png, alt: "SwiftUI 제어창과 혼합 몰입형 공간이 AppModel을 공유하는 구조")
     }
 
-    @Section(title: "구성 요소와 수명 이해하기") {
+    @Section(title: "두 파일의 책임 나누기") {
+        @ContentAndMedia {
+            코디네이터는 손 추적, 두 감지기, 그래프 모델과 렌더러를 소유하고 한 프레임의 처리 순서를 정합니다. 이후 「RealityView와 앱 진입점 연결하기」에서 이 객체의 수명을 SwiftUI 화면에 묶습니다.
+        }
+
         @Steps {
             @Step {
-                코디네이터는 손 추적 서비스, 점 체류 감지기, 기존 점 연결 감지기, 그래프 모델과 렌더러를 소유합니다.
+                앱 그룹에서 Swift 파일 `ImmersiveCoordinator.swift`와 `ImmersiveView.swift`를 만드세요. 두 파일의 앱 target membership을 확인합니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T01-ImmersiveCoordinator-00.swift, reset: true)
             }
 
             @Step {
-                `run`은 권한을 확인하고 오른손 앵커 업데이트를 순회합니다. 화면 task가 취소되면 반복을 끝내고 세션과 커서를 정리합니다.
+                `ImmersiveView.swift`도 `import Foundation`만 있는지 확인하세요. RealityView를 연결하는 페이지까지 이 파일은 비워 둡니다.
+
+                @Code(name: "ImmersiveView.swift", file: C06-T01-ImmersiveView-00.swift, reset: true)
             }
 
             @Step {
-                제어창 버튼으로 `drawingState`가 바뀌면 진행 중인 체류를 취소합니다. 꺼질 때는 현재 별자리를 마쳐 다음 시작을 분리합니다.
+                코디네이터에 서비스, 감지기, 모델과 렌더러를 선언하고 같은 설정값으로 초기화하세요. 모든 공간 객체를 한 소유자가 관리하므로 초기화와 종료 순서가 한곳에 남습니다.
             }
 
             @Step {
-                초기화는 감지기, 모델, 렌더러와 화면 개수를 모두 되돌립니다. 종료는 여기에 세션 중단과 그리기 꺼짐을 더합니다.
+                `run`에서 권한과 추적 상태를 반영하고 오른손 앵커만 순회하세요. task 취소, 미지원, 권한 거부와 일반 오류를 서로 다른 상태로 기록합니다.
             }
 
             @Step {
-                **결과 확인**: 손짓 감지기 없이 버튼 상태만으로 시작과 종료 경로를 설명할 수 있으면 다음 페이지로 이동하세요.
+                그리기 상태 변경, 전체 초기화와 종료의 공개 메서드를 추가하세요. 초기화는 감지기·모델·렌더러와 화면 개수를 되돌리고, 종료는 세션 중단과 그리기 꺼짐까지 수행합니다.
+
+                맨 아래 네 개의 비공개 메서드는 이번 단계의 빌드를 위한 임시 연결 지점입니다. 아직 입력을 처리하지 않으며, 다음 페이지에서 실제 처리 코드로 교체합니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-01.swift, previousFile: C06-T01-ImmersiveCoordinator-00.swift)
+            }
+
+            @Step {
+                **결과 확인**: 앱 target이 빌드되고 `run`, `drawingStateChanged`, `reset`, `stop` 네 진입점이 보이면 성공입니다. 앵커를 점과 선으로 처리하는 코드는 다음 페이지에서 추가합니다.
             }
         }
     }

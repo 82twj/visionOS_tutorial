@@ -1,6 +1,8 @@
 @Tutorial(time: 10) {
     @Intro(title: "ARKit 손 추적 세션 시작하기") {
-        **이번 단계에서 만들 것**: 손 추적을 시작하고 멈추는 `HandTrackingService` 타입입니다.
+        **시작 상태**: Chapter 2의 제어창이 Simulator에서 빌드됩니다.
+
+        **이번 단계에서 만들 것**: 새 `HandTrackingService.swift` 파일과 손 추적을 시작하고 멈추는 서비스 타입입니다.
 
         시작하기 전에 세 가지를 확인해야 합니다. 실행 환경이 손 추적을 **지원**하는지, 사용자가 **권한**을 허용했는지, 그리고 세션이 실제로 **실행**되는지입니다. 이 셋은 서로 다른 문제이므로 코드에서도 따로 다룹니다.
 
@@ -17,6 +19,12 @@
         }
 
         @Steps {
+            @Step {
+                Project navigator에서 앱 그룹을 보조 클릭하고 **New File from Template > Swift File**을 골라 `HandTrackingService.swift`를 만드세요. 앱 target membership을 확인합니다.
+
+                @Code(name: "HandTrackingService.swift", file: C03-T01-HandTrackingService-00.swift, reset: true)
+            }
+
             @Step {
                 `ARKit`과 `simd`를 import하고, 지원하지 않는 환경과 권한 거부를 구분할 오류 타입을 추가하세요. `LocalizedError`를 따르면 오류를 화면에 그대로 보여 줄 수 있습니다.
 
@@ -72,7 +80,7 @@
             }
 
             @Step {
-                **결과 확인**: 빌드가 성공하면 됩니다. 이 타입을 아직 아무도 사용하지 않으므로 앱 동작은 달라지지 않습니다.
+                **결과 확인**: 빌드가 성공하고 `start()`가 지원 확인 → 권한 확인과 요청 → `session.run` 순서인지 확인하세요. 이 타입을 아직 아무도 사용하지 않으므로 앱 동작은 달라지지 않습니다.
             }
 
             @Step {
