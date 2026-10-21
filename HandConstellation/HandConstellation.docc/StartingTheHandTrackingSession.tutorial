@@ -1,5 +1,9 @@
 @Tutorial(time: 10) {
     @Intro(title: "ARKit 손 추적 세션 시작하기") {
+        **확인 환경**: Xcode에서 서비스 코드를 빌드합니다. 아직 서비스를 실행하는 화면이 없어 권한 창이나 커서가 나타나지 않습니다.
+
+        > Note: 아래 조작 화면은 Xcode 27.1에서 이 페이지를 직접 진행하며 캡처했습니다. 파일 생성·두 타입의 준비 결과·빌드 확인을 사진으로 비교하고, 코드 내용은 기존 코드 패널에서 확인하세요. 권한 창과 실제 손 추적은 실기기 단계에서 확인합니다.
+
         **시작 상태**: Chapter 2의 제어창이 Simulator에서 빌드됩니다.
 
         **이번 단계에서 만들 것**: 새 `HandTrackingService.swift` 파일과 손 추적을 시작하고 멈추는 서비스 타입입니다.
@@ -20,7 +24,87 @@
 
         @Steps {
             @Step {
-                Project navigator에서 앱 그룹을 보조 클릭하고 **New File from Template > Swift File**을 골라 `HandTrackingService.swift`를 만드세요. 앱 target membership을 확인합니다.
+                Project navigator에서 `HandConstellation` 앱의 소스 폴더를 선택하세요. 테스트 폴더와 구별합니다.
+
+                @Image(source: capture-c03-ht-f01.png, alt: "Xcode 27.1: HandTrackingService 생성 전 앱 소스 폴더 선택")
+
+                [capture-ht-f01]: # "CAPTURE_LINKED: HT-F01 | xcode | HT-F01"
+            }
+
+            @Step {
+                선택한 소스 폴더를 보조 클릭해 메뉴를 여세요.
+
+                @Image(source: capture-c03-ht-f02.png, alt: "Xcode 27.1: 앱 소스 폴더의 새 파일 보조 클릭 메뉴")
+
+                [capture-ht-f02]: # "CAPTURE_LINKED: HT-F02 | xcode | HT-F02"
+            }
+
+            @Step {
+                메뉴의 **New File from Template**을 선택하세요. Xcode 버전에 따라 **New File** 안에 해당 항목이 있을 수 있습니다.
+
+                @Image(source: capture-c03-ht-f03.png, alt: "Xcode 27.1: New File from Template 선택 후 템플릿 창")
+
+                [capture-ht-f03]: # "CAPTURE_LINKED: HT-F03 | xcode | HT-F03"
+            }
+
+            @Step {
+                파일 템플릿 목록에서 **Swift File**을 선택하세요.
+
+                @Image(source: capture-c03-ht-f04.png, alt: "Xcode 27.1: visionOS의 Swift File 템플릿 선택")
+
+                [capture-ht-f04]: # "CAPTURE_LINKED: HT-F04 | xcode | HT-F04"
+            }
+
+            @Step {
+                **Next**를 눌러 파일 이름과 저장 위치를 정하는 창을 여세요.
+
+                @Image(source: capture-c03-ht-f05.png, alt: "Xcode 27.1: Next 후 서비스 파일 저장 창")
+
+                [capture-ht-f05]: # "CAPTURE_LINKED: HT-F05 | xcode | HT-F05"
+            }
+
+            @Step {
+                파일 이름에 `HandTrackingService.swift`를 입력하세요.
+
+                @Image(source: capture-c03-ht-f06.png, alt: "Xcode 27.1: 파일 이름 HandTrackingService.swift 입력")
+
+                [capture-ht-f06]: # "CAPTURE_LINKED: HT-F06 | xcode | HT-F06"
+            }
+
+            @Step {
+                **Where**가 `HandConstellation` 앱의 소스 폴더인지 확인하세요. 소스 폴더에서 파일 생성을 시작했다면 이 위치가 기본으로 지정됩니다.
+
+                @Image(source: capture-c03-ht-f07.png, alt: "Xcode 27.1: Where가 HandConstellation 앱 소스 폴더인지 확인")
+
+                [capture-ht-f07]: # "CAPTURE_LINKED: HT-F07 | xcode | HT-F07"
+            }
+
+            @Step {
+                **Targets** 선택란이 있다면 **HandConstellation** 앱에 체크되어 있는지 확인하세요. 폴더가 자동으로 target에 포함되는 구성에서는 이 선택란이 없을 수 있습니다. 이 경우 생성 후 파일이 앱 소스 폴더 안에 있는지 확인합니다.
+
+                @Image(source: capture-c03-ht-f08.png, alt: "Xcode 27.1: HandConstellation 앱 target 체크 확인")
+
+                [capture-ht-f08]: # "CAPTURE_LINKED: HT-F08 | xcode | HT-F08"
+            }
+
+            @Step {
+                **Create**를 누르세요. Project navigator에 방금 입력한 이름의 파일이 나타나야 합니다.
+
+                @Image(source: capture-c03-ht-f09.png, alt: "Xcode 27.1: Create 후 HandTrackingService.swift 생성 결과")
+
+                [capture-ht-f09]: # "CAPTURE_LINKED: HT-F09 | xcode | HT-F09"
+            }
+
+            @Step {
+                Project navigator에서 `HandTrackingService.swift`를 여세요. 새 파일에 기본 import가 들어 있는지 확인하고 다음 코드 단계로 진행합니다.
+
+                @Image(source: capture-c03-ht-f10.png, alt: "Xcode 27.1: 새 HandTrackingService.swift 파일 열기 및 시작 코드 확인")
+
+                [capture-ht-f10]: # "CAPTURE_LINKED: HT-F10 | xcode | HT-F10"
+            }
+
+            @Step {
+                오른쪽 코드 패널에서 시작 내용인 `import Foundation`을 확인하세요. Xcode가 붙인 파일 머리말은 있어도 됩니다.
 
                 @Code(name: "HandTrackingService.swift", file: C03-T01-HandTrackingService-00.swift, reset: true)
             }
@@ -36,6 +120,14 @@
 
                 @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-02.swift, previousFile: C03-T02-HandTrackingService-01.swift)
             }
+
+            @Step {
+                **Expected Result · 두 타입 확인** — `HandTrackingService.swift` 안에 `provider = HandTrackingProvider()`와 `session = ARKitSession()`이 준비되어야 합니다. 지금은 서비스의 속성만 만들었으므로 권한 요청이나 손 앵커 수신이 시작되지는 않습니다.
+
+                @Image(source: capture-c03-ht-types.png, alt: "Xcode 27.1: ARKitSession과 HandTrackingProvider를 속성으로 둔 서비스 뼈대")
+
+                [capture-ht-types]: # "CAPTURE_LINKED: HT-TYPES | xcode | HT-TYPES"
+            }
         }
     }
 
@@ -50,7 +142,7 @@
 
         @Steps {
             @Step {
-                첫 줄에서 현재 실행 환경이 손 추적을 지원하는지 검사하세요. Simulator처럼 지원하지 않는 환경이면 여기서 멈춥니다. 이 검사를 빼면 Simulator에서 권한 창이 뜨는 이상한 흐름이 됩니다.
+                첫 줄에서 현재 실행 환경이 손 추적을 지원하는지 검사하세요. Simulator처럼 지원하지 않는 환경이면 여기서 멈춥니다. 권한 요청 전에 지원 여부를 구분해야 미지원 환경을 권한 거부로 잘못 안내하지 않습니다.
 
                 @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-03.swift, previousFile: C03-T02-HandTrackingService-02.swift)
             }
@@ -80,7 +172,27 @@
             }
 
             @Step {
-                **결과 확인**: 빌드가 성공하고 `start()`가 지원 확인 → 권한 확인과 요청 → `session.run` 순서인지 확인하세요. 이 타입을 아직 아무도 사용하지 않으므로 앱 동작은 달라지지 않습니다.
+                작성한 `HandTrackingService.swift`를 저장하고, Xcode 도구 막대의 실행 대상이 Apple Vision Pro Simulator인지 확인하세요.
+
+                @Image(source: capture-c03-ht-build-ready.png, alt: "Xcode 27.1: 지원·권한·세션 시작과 stop 작성 후 빌드 준비")
+
+                [capture-ht-build-ready]: # "CAPTURE_LINKED: HT-BUILD-READY | xcode | HT-BUILD-READY"
+            }
+
+            @Step {
+                **Command+B**로 Build를 실행하세요. 빌드가 끝날 때까지 기다립니다. 이 확인은 해당 페이지의 코드를 모두 작성한 뒤 진행합니다.
+
+                @Image(source: capture-c03-ht-build.png, alt: "Xcode 27.1: Command B로 손 추적 서비스 코드 빌드")
+
+                [capture-ht-build]: # "CAPTURE_LINKED: HT-BUILD | xcode | HT-BUILD"
+            }
+
+            @Step {
+                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없어야 합니다. `start()` 안에서 지원 확인 → 현재 권한 조회 → 필요한 경우 권한 요청 → `session.run` 순서를 찾으세요. `stop()`은 세션을 멈춥니다. 이 서비스는 아직 호출되지 않으므로 앱은 제어창의 대기 상태를 유지합니다. 권한 팝업이 안 뜨거나 커서가 안 보이는 것을 이 단계의 실패로 판단하지 않습니다. 실제 권한 허용 후 상태는 <doc:RunningOnVisionPro>에서 확인합니다.
+
+                @Image(source: capture-c03-ht-build-result.png, alt: "Xcode 27.1: 손 추적 서비스 start·stop 작성 후 Build Succeeded 확인")
+
+                [capture-ht-build-result]: # "CAPTURE_LINKED: HT-BUILD-RESULT | xcode | HT-BUILD-RESULT"
             }
 
             @Step {

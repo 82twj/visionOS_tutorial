@@ -1,70 +1,145 @@
 @Tutorial(time: 7) {
     @Intro(title: "손 추적 권한 설명 추가하기") {
+        **확인 환경**: Xcode에서 권한 설명이 저장됐는지 확인합니다. 실제 권한 창은 Chapter 7에서 Vision Pro로 확인합니다.
+
+        > Note: 아래는 Chapter 1의 새 프로젝트에 권한 설명을 추가하며 캡처한 Xcode 27.1 화면입니다. 이 단계에서는 권한 요청을 실행하지 않습니다.
+
         **시작 상태**: 기본 앱이 Simulator에서 빌드되고 native visionOS 앱 target을 선택할 수 있습니다.
 
         **이번 단계에서 만들 것**: 앱이 손 추적을 요청할 때 시스템이 사용자에게 보여 줄 설명 문장입니다.
 
-        `<key>`를 외워서 입력하지 않습니다. Xcode의 Info 화면에서 사람이 읽는 항목을 고르고, 마지막에만 그 설정이 `Info.plist`에 어떻게 저장되는지 확인합니다.
+        `<key>`를 외워서 입력하지 않습니다. Xcode의 Info 화면에서 사람이 읽는 항목을 고르고, 마지막에만 그 설정이 앱의 `Info.plist`에 어떻게 반영되는지 알아봅니다.
 
-        @Image(source: xcode-info-actual.png, alt: "Xcode 26.6의 native visionOS target Info 탭에서 Custom iOS Target Properties와 Privacy - Hands Tracking Usage Description 항목이 보이는 화면")
+        @Image(source: capture-c01-a-result.png, alt: "새 프로젝트의 Info 탭에 손 추적 사용 목적이 저장된 실제 Xcode 27.1 화면")
     }
 
     @Section(title: "Info 화면에서 항목 추가하기") {
         @ContentAndMedia {
             visionOS는 손 관절 데이터를 민감한 정보로 다룹니다. 앱이 이 데이터를 쓰려면 사용 목적을 미리 등록해야 하고, 등록하지 않으면 권한 요청 자체가 실패합니다.
 
-            @Image(source: xcode-info-actual.png, alt: "Xcode 26.6의 native visionOS target Info 탭에서 Custom iOS Target Properties와 Privacy - Hands Tracking Usage Description 항목이 보이는 화면")
+            @Image(source: capture-c01-a-result.png, alt: "새 프로젝트의 Info 탭에 손 추적 사용 목적이 저장된 실제 Xcode 27.1 화면")
         }
 
         @Steps {
             @Step {
-                Project navigator 맨 위의 파란 프로젝트 아이콘을 선택하고 TARGETS에서 **HandConstellation**을 고르세요. General 탭의 Supported Destinations나 빌드 실행 대상에서 visionOS 앱 target임을 먼저 확인합니다. 실제 iOS 앱 target을 선택하면 안 됩니다.
+                Project navigator 맨 위의 파란 프로젝트 아이콘을 선택하세요.
+
+                @Image(source: capture-c01-a01.png, alt: "손 추적 권한 설명 설정: 프로젝트 선택")
+
+                [capture-a01]: # "CAPTURE_LINKED: A01 | xcode | A01"
             }
 
             @Step {
-                **Info** 탭을 여세요. 표 제목은 Xcode 버전에 따라 달라질 수 있습니다. Xcode 26.6에서는 native visionOS target을 골라도 **Custom iOS Target Properties**라고 표시되며 정상입니다.
+                **TARGETS** 목록에서 **HandConstellation** 앱을 선택하세요. 프로젝트 수준의 설정과 구별합니다.
+
+                @Image(source: capture-c01-a02.png, alt: "HandConstellation 앱 target 선택")
+
+                [capture-a02]: # "CAPTURE_LINKED: A02 | xcode | A02"
             }
 
             @Step {
-                표의 아무 줄에 마우스를 올리고 `+` 를 누르세요. 새 줄이 생기고 키 이름을 고를 수 있는 목록이 열립니다.
+                **General** 탭에서 선택한 target이 visionOS 앱인지 확인하세요.
+
+                @Image(source: capture-c01-a03.png, alt: "앱 target의 General 탭 확인")
+
+                [capture-a03]: # "CAPTURE_LINKED: A03 | xcode | A03"
             }
 
             @Step {
-                목록에서 **Privacy - Hands Tracking Usage Description**을 선택하세요. 일부 Xcode 버전은 표시 문구가 조금 다를 수 있으므로 `Hands`를 입력해 검색하고, 저장 키가 `NSHandsTrackingUsageDescription`인지 확인합니다.
+                **Info** 탭을 여세요. Xcode 27.1에서도 visionOS target의 표 제목이 Custom iOS Target Properties로 표시됩니다. 제목보다 선택한 앱 target과 실제 저장 키를 기준으로 확인합니다.
+
+                @Image(source: capture-c01-a04.png, alt: "Info 탭의 기본 target 속성")
+
+                [capture-a04]: # "CAPTURE_LINKED: A04 | xcode | A04"
+            }
+
+            @Step {
+                Info 표의 기존 행을 선택해 새 항목을 추가하는 **+** 버튼을 찾으세요. 캡처에서는 Bundle version 행을 선택했습니다.
+
+                @Image(source: capture-c01-a05.png, alt: "기존 Bundle version 행 선택 후 나타난 추가(+) 버튼")
+
+                [capture-a05]: # "CAPTURE_LINKED: A05 | xcode | A05"
+            }
+
+            @Step {
+                **+** 버튼을 눌러 새 행의 키 선택 목록을 여세요.
+
+                @Image(source: capture-c01-a06-retake.png, alt: "기존 행 추가 버튼으로 새 속성 행 생성")
+
+                [capture-a06]: # "CAPTURE_LINKED: A06 | xcode | A06-RETAKE"
+            }
+
+            @Step {
+                새 행의 Key 칸에 `Privacy - Hands Tracking Usage Description`을 입력해 해당 항목을 찾으세요.
+
+                @Image(source: capture-c01-a07.png, alt: "Hands Tracking Usage Description 검색 결과")
+
+                [capture-a07]: # "CAPTURE_LINKED: A07 | xcode | A07"
+            }
+
+            @Step {
+                **Privacy - Hands Tracking Usage Description**을 선택하세요. 저장 키는 `NSHandsTrackingUsageDescription`입니다.
+
+                @Image(source: capture-c01-a08.png, alt: "Hands Tracking Usage Description 키 확정")
+
+                [capture-a08]: # "CAPTURE_LINKED: A08 | xcode | A08"
             }
 
             @Step {
                 Value 칸에 `검지 끝의 움직임을 감지해 공중에 별자리 점과 선을 그리기 위해 손 추적을 사용합니다.`를 입력하세요.
 
-                이 문장은 권한 창에 그대로 나타납니다. 기능과 목적을 사용자가 이해할 수 있게 쓰는 것이 중요합니다.
+                @Image(source: capture-c01-a09.png, alt: "손 추적 사용 목적 문장 입력")
+
+                [capture-a09]: # "CAPTURE_LINKED: A09 | xcode | A09"
+            }
+
+            @Step {
+                입력을 확정하세요. 권한 항목과 사용 목적 값이 표에 남아 있는지 확인합니다. 이 문장이 실제 권한 요청에서 사용자에게 표시됩니다.
+
+                @Image(source: capture-c01-a10.png, alt: "손 추적 설명 문장 저장 완료")
+
+                [capture-a10]: # "CAPTURE_LINKED: A10 | xcode | A10"
             }
         }
     }
 
     @Section(title: "저장된 형태 확인하기") {
         @ContentAndMedia {
-            Xcode는 Info 값을 생성된 설정으로 관리할 수도 있고 실제 `Info.plist` 파일에 저장할 수도 있습니다. Project navigator에 파일이 있을 때만 XML을 열어 확인하세요. 파일이 없어도 target의 Info 표에 값이 있으면 설정은 유효합니다.
+            Xcode는 Info 값을 프로젝트의 생성 설정으로 관리할 수도 있고 실제 `Info.plist` 파일에 저장할 수도 있습니다. 이번 템플릿은 손 추적 설명을 프로젝트 설정에 저장한 뒤 빌드할 때 앱의 `Info.plist`에 합칩니다. navigator에 파일이 있어도 같은 키가 없을 수 있으므로, 앞에서 확인한 target의 Info 표를 성공 기준으로 삼습니다.
         }
 
         @Steps {
             @Step {
-                Project navigator에 `Info.plist`가 보이면 보조 클릭하고 **Open As > Source Code**를 선택하세요. 파일이 없다면 이 선택 단계는 건너뛰고 아래 코드를 저장 형식의 참고 예로 읽습니다.
+                **선택 사항**: navigator에 `Info.plist`가 있다면 열어보세요. 캡처의 파일에는 Application Scene Manifest만 있습니다. 손 추적 키가 이 파일에 없더라도 target의 Info 표에 값이 저장되어 있으면 정상입니다.
+
+                @Image(source: capture-c01-a11.png, alt: "물리 Info.plist 열기: Scene Manifest만 포함")
+
+                [capture-a11]: # "CAPTURE_LINKED: A11 | xcode | A11"
+            }
+
+
+            @Step {
+                아래 코드 패널은 XML 저장 형식을 설명하는 참고 예시입니다. 먼저 설명 키가 추가되기 전의 형태를 읽어보세요. 자신의 파일을 이 예시로 덮어쓰지는 않습니다.
 
                 @Code(name: "Info.plist", file: C01-T04-Info-00.plist, reset: true)
             }
 
             @Step {
-                방금 Info 화면에서 한 설정이 두 줄로 저장되어 있습니다. `<key>`는 시스템이 찾는 이름이고, `<string>`은 사용자에게 보여 줄 문장입니다.
+                다음 예시에서 `NSHandsTrackingUsageDescription`과 설명 문장을 찾으세요. `<key>`는 시스템이 읽는 이름이고 `<string>`은 사용자에게 보여 줄 값입니다. 직접 파일에 저장하든 Xcode가 빌드 중 생성하든, 최종 앱에는 이 키와 값이 포함되어야 합니다.
 
                 @Code(name: "Info.plist", file: C01-T04-Info-01.plist, previousFile: C01-T04-Info-00.plist)
             }
 
             @Step {
-                **결과 확인**: 선택한 native visionOS 앱 target의 Info 표에 **Privacy - Hands Tracking Usage Description** 값이 보이면 성공입니다. 실제 plist 파일이 있는 프로젝트에서는 Source Code의 `NSHandsTrackingUsageDescription`도 확인합니다.
+                **Expected Result · 결과 확인** — 앱 target의 Info 표에 권한 항목과 사용 목적 문장이 저장되어야 합니다. 이 페이지는 설명을 등록하는 단계이므로 앱 화면은 기본 창 그대로이고, 권한 요청 팝업은 아직 뜨지 않습니다. 실제 요청은 <doc:RunningOnVisionPro>에서 확인합니다.
+
+                @Image(source: capture-c01-a-result.png, alt: "Info 탭에 손 추적 키와 설명 문장이 저장된 결과")
+
+                [capture-a-result]: # "CAPTURE_LINKED: A-RESULT | xcode | A-RESULT"
             }
 
             @Step {
-                **문제가 생겼다면**: 목록에서 항목을 찾을 수 없다면 왼쪽에서 프로젝트가 아니라 **TARGETS**의 HandConstellation을 선택했는지 확인하세요. 프로젝트 수준의 Info 탭에는 이 항목이 없습니다.
+                **문제가 생겼다면**: 항목을 추가할 표가 없다면 TARGETS에서 앱을 골랐는지 확인하세요. plist 파일이 없는 것만으로 설정 실패라고 판단하지 않습니다. Info 표의 키와 값이 성공 기준입니다.
             }
         }
     }

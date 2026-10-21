@@ -1,5 +1,9 @@
 @Tutorial(time: 16) {
     @Intro(title: "버튼 중심 제어창 완성하기") {
+        **확인 환경**: Xcode Canvas 또는 Simulator에서 제어창을 확인합니다. 몰입형 공간과 손 추적은 Chapter 6에서 연결합니다.
+
+        > Note: **조작 화면 첨부 대기** — 각 조작 Step의 실제 Xcode·Simulator 화면을 다음 캡처 작업에서 하나씩 추가합니다. 현재 있는 구조 그림은 실제 조작 화면과 구분해 읽으세요.
+
         **시작 상태**: `AppModel.swift`가 빌드되고, 템플릿의 `ContentView.swift`와 `HandConstellationApp.swift`가 남아 있습니다.
 
         **이번 단계에서 만들 것**: 템플릿 화면을 `ControlView`로 이름 바꾸고 공통 모델을 앱 진입점에 연결한 뒤, 상태와 조작 버튼을 단계적으로 추가합니다.
@@ -14,15 +18,41 @@
 
         @Steps {
             @Step {
-                Project navigator에서 `ContentView.swift`를 `ControlView.swift`로 바꾸고, 타입과 Preview 이름도 `ControlView`로 바꾸세요.
+                Project navigator에서 `ContentView.swift`를 선택하세요.
+
+                [capture-c01]: # "CAPTURE_PENDING: C01 | xcode"
+            }
+
+            @Step {
+                선택한 파일의 이름을 편집할 수 있도록 **Return**을 누르세요.
+
+                [capture-c02]: # "CAPTURE_PENDING: C02 | xcode"
+            }
+
+            @Step {
+                파일 이름을 `ControlView.swift`로 입력하고 확정하세요. navigator에서 바뀐 이름을 확인합니다.
+
+                [capture-c03]: # "CAPTURE_PENDING: C03 | xcode"
+            }
+
+            @Step {
+                `ControlView.swift`를 여세요. 다음 코드에서 타입과 `#Preview` 안의 화면 이름도 `ControlView`로 맞춥니다. 앱 진입점은 뒤 Step에서 함께 바꿉니다.
 
                 @Code(name: "ControlView.swift", file: C02-T03-ControlView-00.swift, previousFile: C01-T03-ContentView-00.swift)
+
+                [capture-c04]: # "CAPTURE_PENDING: C04 | xcode"
             }
 
             @Step {
                 `AppModel`, `openImmersiveSpace`, `dismissImmersiveSpace` 환경 값을 추가하고 Preview에 모델을 전달하세요.
 
                 @Code(name: "ControlView.swift", file: C02-T03-ControlView-01.swift, previousFile: C02-T03-ControlView-00.swift)
+            }
+
+            @Step {
+                Project navigator에서 `HandConstellationApp.swift`를 여세요.
+
+                [capture-c05]: # "CAPTURE_PENDING: C05 | xcode"
             }
 
             @Step {
@@ -38,7 +68,27 @@
             }
 
             @Step {
-                **중간 확인**: 빌드하고 Simulator를 실행하세요. 창에는 여전히 `Hello, world!`가 보여야 합니다. `ContentView`를 찾을 수 없다는 오류가 나면 프로젝트 전체 검색으로 남은 이름을 찾으세요.
+                Xcode 도구 막대의 실행 대상 메뉴를 여세요.
+
+                [capture-c06-menu]: # "CAPTURE_PENDING: C06-MENU | xcode"
+            }
+
+            @Step {
+                Apple Vision Pro **Simulator**를 선택하세요.
+
+                [capture-c06]: # "CAPTURE_PENDING: C06 | xcode"
+            }
+
+            @Step {
+                **Run**을 누르세요. 이 시점에는 파일 이름과 모델 연결만 바꾸었으므로, 화면은 기본 창을 유지해야 합니다.
+
+                [capture-c07-run]: # "CAPTURE_PENDING: C07-RUN | xcode"
+            }
+
+            @Step {
+                **Expected Result · 중간 확인** — Simulator에 여전히 `Hello, world!`가 보이고 Xcode에 빌드 오류가 없으면 성공입니다. `ContentView`를 찾을 수 없다는 오류가 나면 앱 진입점과 `#Preview`에 옛 이름이 남아 있는지 확인하세요.
+
+                [capture-c07]: # "CAPTURE_PENDING: C07 | simulator"
             }
         }
     }
@@ -50,9 +100,39 @@
 
         @Steps {
             @Step {
+                Project navigator에서 `ControlView.swift`로 돌아오세요.
+
+                [capture-c-return]: # "CAPTURE_PENDING: C-RETURN | xcode"
+            }
+
+            @Step {
                 제목과 세 단계 조작 안내 카드를 먼저 만드세요. 이 단계는 model 값을 아직 읽지 않으므로 바로 Preview에서 모양을 확인할 수 있습니다.
 
                 @Code(name: "ControlView.swift", file: C02-T04-ControlView-02.swift, previousFile: C02-T03-ControlView-01.swift)
+            }
+
+            @Step {
+                Xcode의 **Editor** 메뉴를 여세요.
+
+                [capture-c08-menu]: # "CAPTURE_PENDING: C08-MENU | xcode"
+            }
+
+            @Step {
+                **Canvas**를 선택해 Preview 영역을 표시하세요.
+
+                [capture-c08]: # "CAPTURE_PENDING: C08 | xcode"
+            }
+
+            @Step {
+                Preview 영역에 **Resume** 또는 재생 버튼이 보이면 선택하세요. 버전에 따라 Preview가 자동 실행될 수도 있습니다.
+
+                [capture-c09]: # "CAPTURE_PENDING: C09 | xcode"
+            }
+
+            @Step {
+                **Expected Result · 중간 확인** — Canvas에서 제목과 세 단계 조작 안내 카드가 보이면 성공입니다. 아직 상태 카드와 버튼을 넣지 않았으므로 완성 제어창과 다르게 보이는 것이 정상입니다.
+
+                [capture-c10]: # "CAPTURE_PENDING: C10 | xcode"
             }
 
             @Step {
@@ -76,11 +156,23 @@
             }
 
             @Step {
-                **결과 확인**: Simulator에서 세 단계 조작법, 상태 카드, 그리기 상태와 버튼 세 개가 보이면 성공입니다. 몰입형 씬과 손 추적은 Chapter 6에서 연결하므로 지금은 그리기와 초기화 버튼이 비활성화되는 것이 정상입니다.
+                Xcode 도구 막대에서 Apple Vision Pro Simulator가 선택되어 있는지 확인하세요.
 
-                오른쪽 코드의 Preview는 실제 Simulator에서 캡처한 대기 화면입니다. 웹에서는 결과 이미지를 비교하고, 자신의 코드를 실행해 보려면 Xcode Canvas의 `#Preview` 또는 Simulator를 사용하세요. 이 캡처는 손 추적 동작을 검증한 화면이 아닙니다.
+                [capture-c11-destination]: # "CAPTURE_PENDING: C11-DESTINATION | xcode"
+            }
+
+            @Step {
+                **Run**을 눌러 완성한 제어창을 Simulator에서 실행하세요.
+
+                [capture-c11]: # "CAPTURE_PENDING: C11 | xcode"
+            }
+
+            @Step {
+                **Expected Result · 결과 확인** — Simulator에서 조작 안내, 상태 카드와 버튼 세 개가 보이면 성공입니다. 별자리·점·선은 모두 0개, 추적 상태는 **대기**, 그리기는 **꺼짐**이어야 합니다. 그리기와 초기화 버튼은 비활성화됩니다. **별자리 그리기 시작** 버튼은 보이지만 아직 몰입형 씬을 등록하지 않았으므로 이 페이지에서는 실행 결과의 외형까지만 확인합니다. 오른쪽 코드 패널의 Preview는 실제 Simulator에서 캡처한 대기 화면 이미지입니다. 웹에서는 결과 이미지를 비교하고, 자신의 코드를 실행해 보려면 Xcode Canvas의 `#Preview` 또는 Simulator를 사용하세요. 이 캡처는 손 추적 동작을 검증한 화면이 아닙니다.
 
                 @Image(source: control-window-simulator.png, alt: "실제 Simulator의 초기 제어창. 별자리·점·선은 모두 0개이며 그리기 꺼짐 상태입니다.")
+
+                [capture-c12]: # "CAPTURE_PENDING: C12 | simulator"
             }
 
             @Step {

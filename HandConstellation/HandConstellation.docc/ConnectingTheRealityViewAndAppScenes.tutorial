@@ -1,5 +1,9 @@
 @Tutorial(time: 8) {
     @Intro(title: "RealityView와 앱 진입점 연결하기") {
+        **확인 환경**: Simulator에서 공간 열기와 미지원 안내까지 확인합니다. 검지 추적과 그리기는 Vision Pro가 필요합니다.
+
+        > Note: Xcode 27.1과 visionOS 27.0 Simulator에서 파일 연결·빌드·공간 열기·미지원 안내·종료까지 직접 진행한 화면입니다. 검지 추적과 점·선 그리기의 실제 결과는 Vision Pro에서 확인합니다.
+
         **시작 상태**: 입력 파이프라인까지 구현한 `ImmersiveCoordinator`가 빌드되고 `ImmersiveView.swift`는 빈 Swift 파일입니다.
 
         **이번 단계에서 만들 것**: 코디네이터를 SwiftUI 화면의 생명주기에 묶는 `ImmersiveView`와, 몰입형 공간 씬을 추가한 앱 진입점입니다.
@@ -17,6 +21,14 @@
         }
 
         @Steps {
+            @Step {
+                Project navigator에서 `ImmersiveView.swift`를 여세요. 다음 코드 변경은 이 파일에 적용합니다.
+
+                @Image(source: capture-next-rv-open.png, alt: "실제 화면: ImmersiveView.swift 파일 열기 및 다음 코드 변경 준비")
+
+                [capture-rv-open]: # "CAPTURE_LINKED: RV-OPEN | xcode | RV-OPEN"
+            }
+
             @Step {
                 RealityKit과 SwiftUI를 import하고 뷰를 선언한 뒤, 렌더러의 루트 엔티티를 장면에 추가하세요. Chapter 5에서 트리를 하나로 모아 둔 덕분에 이 한 줄이면 충분합니다.
 
@@ -40,6 +52,14 @@
 
                 @Code(name: "ImmersiveView.swift", file: C06-T04-ImmersiveView-04.swift, previousFile: C06-T04-ImmersiveView-03.swift)
             }
+
+            @Step {
+                **Expected Result · 화면 연결 코드 확인** — `RealityView`가 렌더러 루트를 추가하고, `.task`·상태 변경·화면 종료를 코디네이터에 전달해야 합니다. 다음 Section에서 이 화면을 앱의 씬으로 등록합니다.
+
+                @Image(source: capture-next-rv-view.png, alt: "실제 화면: C06-T04-ImmersiveView-04.swift 코드 작성 결과")
+
+                [capture-rv-view]: # "CAPTURE_LINKED: RV-VIEW | xcode | RV-VIEW"
+            }
         }
     }
 
@@ -52,13 +72,117 @@
 
         @Steps {
             @Step {
+                Project navigator에서 `HandConstellationApp.swift`를 여세요. 다음 코드 변경은 이 파일에 적용합니다.
+
+                @Image(source: capture-next-rv-app.png, alt: "실제 화면: HandConstellationApp.swift 파일 열기 및 다음 코드 변경 준비")
+
+                [capture-rv-app]: # "CAPTURE_LINKED: RV-APP | xcode | RV-APP"
+            }
+
+            @Step {
                 `WindowGroup` 아래에 `ImmersiveSpace`를 추가하고 같은 `appModel`을 전달하세요. Chapter 2에서 정한 `immersiveSpaceID`를 `ControlView`와 여기서 함께 사용하므로 두 곳의 문자열이 어긋날 수 없습니다.
 
                 @Code(name: "HandConstellationApp.swift", file: C06-T04-HandConstellationApp-03.swift, previousFile: C02-T03-HandConstellationApp-02.swift)
             }
 
             @Step {
-                **결과 확인**: 전체 프로젝트가 오류 없이 빌드되면 성공입니다. Simulator에서 창의 **별자리 그리기 시작**을 누르면 몰입형 공간이 열리고, 창의 상태가 "이 실행 환경에서는 ARKit 손 추적을 사용할 수 없습니다"로 바뀝니다. Simulator에서는 이것이 정상입니다.
+                **Expected Result · 씬 등록 확인** — `WindowGroup`과 `ImmersiveSpace`가 같은 `appModel`을 전달하고, 공간 ID가 `AppModel.immersiveSpaceID`여야 합니다.
+
+                @Image(source: capture-next-rv-scene.png, alt: "실제 화면: C06-T04-HandConstellationApp-03.swift 코드 작성 결과")
+
+                [capture-rv-scene]: # "CAPTURE_LINKED: RV-SCENE | xcode | RV-SCENE"
+            }
+
+            @Step {
+                작성한 앱 진입점을 저장하고 Simulator 실행 대상을 확인하세요.
+
+                @Image(source: capture-next-rv-build-ready.png, alt: "실제 화면: 현재 페이지 코드 작성 완료 및 Simulator 빌드 준비")
+
+                [capture-rv-build-ready]: # "CAPTURE_LINKED: RV-BUILD-READY | xcode | RV-BUILD-READY"
+            }
+
+            @Step {
+                **Command+B**로 전체 연결 코드를 빌드하세요.
+
+                @Image(source: capture-next-rv-build.png, alt: "실제 화면: Command B로 현재 페이지 코드 빌드")
+
+                [capture-rv-build]: # "CAPTURE_LINKED: RV-BUILD | xcode | RV-BUILD"
+            }
+
+            @Step {
+                **Expected Result · 전체 빌드 확인** — Xcode에 Build Succeeded가 표시되어야 합니다. 이제 앱을 실행해 제어창과 공간 열기를 확인합니다.
+
+                @Image(source: capture-next-rv-build-result.png, alt: "실제 화면: 해당 페이지 코드의 Build Succeeded 확인")
+
+                [capture-rv-build-result]: # "CAPTURE_LINKED: RV-BUILD-RESULT | xcode | RV-BUILD-RESULT"
+            }
+
+            @Step {
+                Xcode 도구 막대의 실행 대상 메뉴를 여세요.
+
+                @Image(source: capture-next-rv-destination-menu.png, alt: "실제 화면: 앱 진입점 연결 후 Simulator 실행 대상 메뉴")
+
+                [capture-rv-destination-menu]: # "CAPTURE_LINKED: RV-DESTINATION-MENU | xcode | RV-DESTINATION-MENU"
+            }
+
+            @Step {
+                runtime 버전이 붙은 Apple Vision Pro **Simulator**를 선택하세요. 캡처에서는 Apple Vision Pro 27.0이 선택되어 있습니다. 이미 같은 대상이면 그대로 사용합니다.
+
+                @Image(source: capture-next-rv-destination.png, alt: "실제 화면: Apple Vision Pro 27.0 Simulator 선택 확인")
+
+                [capture-rv-destination]: # "CAPTURE_LINKED: RV-DESTINATION | xcode | RV-DESTINATION"
+            }
+
+            @Step {
+                **Run**을 눌러 앱을 실행하세요.
+
+                @Image(source: capture-next-rv-run.png, alt: "실제 화면: Simulator 대상과 Run 버튼 실행 직전")
+
+                [capture-rv-run]: # "CAPTURE_LINKED: RV-RUN | xcode | RV-RUN"
+            }
+
+            @Step {
+                Simulator에 제어창이 나타나는지 확인하세요. 처음에는 대기·그리기 꺼짐·개수 0입니다.
+
+                @Image(source: capture-next-rv-window.png, alt: "실제 화면: Simulator 제어창의 대기·그리기 꺼짐·개수 0 결과")
+
+                [capture-rv-window]: # "CAPTURE_LINKED: RV-WINDOW | simulator | RV-WINDOW"
+            }
+
+            @Step {
+                제어창의 **별자리 그리기 시작**을 선택하세요. 이제 앱에 등록한 몰입형 공간을 엽니다.
+
+                @Image(source: capture-next-rv-open-space.png, alt: "실제 화면: 제어창의 별자리 그리기 시작 버튼 선택 직전")
+
+                [capture-rv-open-space]: # "CAPTURE_LINKED: RV-OPEN-SPACE | simulator | RV-OPEN-SPACE"
+            }
+
+            @Step {
+                **Expected Result · 결과 확인** — 공간이 열리고 제어창에 **확인 필요**, **이 실행 환경에서는 ARKit 손 추적을 사용할 수 없습니다.**가 표시되어야 합니다. 그리기는 꺼짐이고 점·선은 0개입니다. Simulator에서는 손 추적을 지원하지 않아 그리기 버튼을 사용할 수 없는 것이 정상입니다.
+
+                @Image(source: capture-next-rv-unsupported.png, alt: "실제 화면: 공간을 연 Simulator의 확인 필요·ARKit 손 추적 미지원 안내")
+
+                [capture-rv-unsupported]: # "CAPTURE_LINKED: RV-UNSUPPORTED | simulator | RV-UNSUPPORTED"
+            }
+
+            @Step {
+                제어창의 **체험 종료** 버튼을 선택하세요. 공간이 닫힐 때까지 기다립니다.
+
+                @Image(source: capture-next-rv-close-action.png, alt: "실제 화면: 체험 종료 버튼을 선택하기 직전")
+
+                [capture-rv-close-action]: # "CAPTURE_LINKED: RV-CLOSE-ACTION | simulator | RV-CLOSE-ACTION"
+            }
+
+            @Step {
+                **Expected Result · 종료 확인** — 제어창이 대기·그리기 꺼짐·개수 0으로 돌아오고 **별자리 그리기 시작** 버튼이 다시 나타나야 합니다.
+
+                @Image(source: capture-next-rv-close.png, alt: "실제 화면: 체험 종료 후 대기·그리기 꺼짐·개수 0과 시작 버튼 복귀")
+
+                [capture-rv-close]: # "CAPTURE_LINKED: RV-CLOSE | simulator | RV-CLOSE"
+            }
+
+            @Step {
+                **다음 확인 순서**: Vision Pro를 준비했을 때 <doc:RunningOnVisionPro>에서 권한 허용을 확인하고, <doc:DrawingTheFirstConstellation>에서 커서 추적 → Dwell → 새 점·선 → 기존 점 연결 순으로 확인합니다. <doc:DrawingTheSecondConstellation>에서 분리와 초기화를 확인합니다. 지금은 실기기 촬영 대기이며 Simulator에서 커서가 안 보이는 원인을 코드 오류로 판단하지 않습니다.
             }
 
             @Step {

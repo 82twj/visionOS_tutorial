@@ -1,5 +1,9 @@
 @Tutorial(time: 12) {
     @Intro(title: "RealityKit으로 점과 선 그리기") {
+        **확인 환경**: Xcode에서 렌더러를 빌드합니다. Chapter 6에서 RealityView에 붙인 뒤 실제 장면을 확인합니다.
+
+        > Note: 이 페이지의 파일 생성·파일 전환·빌드 조작은 Xcode 27.1에서 직접 캡처한 화면으로 확인합니다. 코드 내용은 기존 코드 패널을 따라가세요. 개념 설명에는 도해를 함께 표시하며, 실제 손 추적 결과는 Vision Pro 촬영 후 추가합니다.
+
         **시작 상태**: `ConstellationModel.swift`가 빌드되고 점과 선분 결과를 반환합니다.
 
         **이번 단계에서 만들 것**: 새 `ConstellationRenderer.swift` 파일과, 확정된 점을 흰 구로 두 점 사이를 흰 원기둥으로 그리는 렌더러입니다.
@@ -18,21 +22,107 @@
 
         @Steps {
             @Step {
-                앱 그룹에서 **New File from Template > Swift File**을 골라 `ConstellationRenderer.swift`를 만드세요. 앱 target membership을 확인합니다.
+                Project navigator에서 `HandConstellation` 앱의 소스 폴더를 선택하세요. 테스트 폴더와 구별합니다.
+
+                @Image(source: capture-next-cr-f01.png, alt: "실제 화면: ConstellationRenderer.swift 생성 전 앱 소스 폴더 선택")
+
+                [capture-cr-f01]: # "CAPTURE_LINKED: CR-F01 | xcode | CR-F01"
+            }
+
+            @Step {
+                선택한 소스 폴더를 보조 클릭해 메뉴를 여세요.
+
+                @Image(source: capture-next-cr-f02.png, alt: "실제 화면: ConstellationRenderer.swift 생성 위치의 보조 클릭 메뉴")
+
+                [capture-cr-f02]: # "CAPTURE_LINKED: CR-F02 | xcode | CR-F02"
+            }
+
+            @Step {
+                메뉴의 **New File from Template**을 선택하세요. Xcode 버전에 따라 **New File** 안에 해당 항목이 있을 수 있습니다.
+
+                @Image(source: capture-next-cr-f03.png, alt: "실제 화면: New File from Template 선택 후 ConstellationRenderer.swift 템플릿 창")
+
+                [capture-cr-f03]: # "CAPTURE_LINKED: CR-F03 | xcode | CR-F03"
+            }
+
+            @Step {
+                파일 템플릿 목록에서 **Swift File**을 선택하세요.
+
+                @Image(source: capture-next-cr-f04.png, alt: "실제 화면: ConstellationRenderer.swift용 Swift File 선택")
+
+                [capture-cr-f04]: # "CAPTURE_LINKED: CR-F04 | xcode | CR-F04"
+            }
+
+            @Step {
+                **Next**를 눌러 파일 이름과 저장 위치를 정하는 창을 여세요.
+
+                @Image(source: capture-next-cr-f05.png, alt: "실제 화면: Next 후 ConstellationRenderer.swift 저장 창")
+
+                [capture-cr-f05]: # "CAPTURE_LINKED: CR-F05 | xcode | CR-F05"
+            }
+
+            @Step {
+                파일 이름에 `ConstellationRenderer.swift`를 입력하세요.
+
+                @Image(source: capture-next-cr-f06.png, alt: "실제 화면: 파일 이름 ConstellationRenderer.swift 입력")
+
+                [capture-cr-f06]: # "CAPTURE_LINKED: CR-F06 | xcode | CR-F06"
+            }
+
+            @Step {
+                **Where**가 `HandConstellation` 앱의 소스 폴더인지 확인하세요. 소스 폴더에서 파일 생성을 시작했다면 이 위치가 기본으로 지정됩니다.
+
+                @Image(source: capture-next-cr-f07.png, alt: "실제 화면: ConstellationRenderer.swift 저장 폴더 확인")
+
+                [capture-cr-f07]: # "CAPTURE_LINKED: CR-F07 | xcode | CR-F07"
+            }
+
+            @Step {
+                **Targets** 선택란이 있다면 **HandConstellation** 앱에 체크되어 있는지 확인하세요. 폴더가 자동으로 target에 포함되는 구성에서는 이 선택란이 없을 수 있습니다. 이 경우 생성 후 파일이 앱 소스 폴더 안에 있는지 확인합니다.
+
+                @Image(source: capture-next-cr-f08.png, alt: "실제 화면: ConstellationRenderer.swift 앱 target 체크 확인")
+
+                [capture-cr-f08]: # "CAPTURE_LINKED: CR-F08 | xcode | CR-F08"
+            }
+
+            @Step {
+                **Create**를 누르세요. Project navigator에 방금 입력한 이름의 파일이 나타나야 합니다.
+
+                @Image(source: capture-next-cr-f09.png, alt: "실제 화면: Create 후 ConstellationRenderer.swift 생성 결과")
+
+                [capture-cr-f09]: # "CAPTURE_LINKED: CR-F09 | xcode | CR-F09"
+            }
+
+            @Step {
+                생성 후 자동으로 열린 `ConstellationRenderer.swift`의 시작 내용을 확인하세요. 다른 파일이 보이면 Project navigator에서 이 파일을 선택합니다.
+
+                @Image(source: capture-next-cr-f10.png, alt: "실제 화면: 자동으로 열린 ConstellationRenderer.swift 시작 내용 확인")
+
+                [capture-cr-f10]: # "CAPTURE_LINKED: CR-F10 | xcode | CR-F10"
+            }
+
+            @Step {
+                오른쪽 코드 패널에서 시작 내용인 `import Foundation`을 확인하세요. Xcode가 추가한 파일 머리말은 있어도 됩니다.
 
                 @Code(name: "ConstellationRenderer.swift", file: C05-T01-ConstellationRenderer-00.swift, reset: true)
             }
 
             @Step {
                 맨 위 `rootEntity`는 장면에 딱 한 번 추가할 부모입니다. Chapter 6에서 `RealityView`에 이 하나만 넘깁니다.
+
+                @Image(source: entity-tree.png, alt: "개념도: rootEntity 아래의 점·선·연결 안내 컨테이너와 커서")
             }
 
             @Step {
-                아래의 세 자식을 보세요. 선, 점, 커서를 나누어 두면 초기화할 때 점과 선의 자식만 지우고 커서는 그대로 둘 수 있습니다.
+                루트 아래의 컨테이너와 커서를 보세요. 선, 점, 연결 안내와 커서를 나누어 두면 초기화할 때 점과 선의 자식만 지우고 커서는 그대로 둘 수 있습니다.
+
+                @Image(source: entity-tree.png, alt: "개념도: rootEntity 아래의 점·선·연결 안내 컨테이너와 커서")
             }
 
             @Step {
                 커서는 체류 중일 때만 보여야 하므로 처음에는 꺼진 상태로 만듭니다. 엔티티는 `isEnabled`로 켜고 끕니다.
+
+                @Image(source: entity-tree.png, alt: "개념도: rootEntity 아래의 점·선·연결 안내 컨테이너와 커서")
             }
         }
     }
@@ -74,7 +164,7 @@
             }
 
             @Step {
-                세 자식을 루트에 붙여 트리를 완성하세요. 선을 먼저 붙이면 점이 선 위에 그려집니다.
+                세 자식을 루트에 붙여 트리를 완성하세요. 이 순서는 엔티티 트리의 구성 순서입니다. 실제 가림은 3D 위치와 깊이에 따라 결정됩니다.
 
                 @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-06.swift, previousFile: C05-T03-ConstellationRenderer-05.swift)
             }
@@ -132,7 +222,35 @@
             }
 
             @Step {
-                **결과 확인**: 이 시점의 `ConstellationRenderer.swift`는 실제 앱의 완성본과 같습니다. 빌드가 성공하면 됩니다. 입력 연결은 Chapter 6에서 완성합니다.
+                **Expected Result · 렌더러 코드 확인** — `rootEntity`와 점·선·커서·연결 안내를 다루는 속성 및 메서드가 준비되어야 합니다. 실제 장면에는 Chapter 6의 `RealityView`에서 추가합니다.
+
+                @Image(source: capture-next-cr-entities.png, alt: "실제 화면: C05-T03-ConstellationRenderer-13.swift 코드 작성 결과")
+
+                [capture-cr-entities]: # "CAPTURE_LINKED: CR-ENTITIES | xcode | CR-ENTITIES"
+            }
+
+            @Step {
+                작성한 파일을 저장하고 Xcode 도구 막대의 실행 대상이 Apple Vision Pro Simulator인지 확인하세요.
+
+                @Image(source: capture-next-cr-build-ready.png, alt: "실제 화면: 현재 페이지 코드 작성 완료 및 Simulator 빌드 준비")
+
+                [capture-cr-build-ready]: # "CAPTURE_LINKED: CR-BUILD-READY | xcode | CR-BUILD-READY"
+            }
+
+            @Step {
+                **Command+B**로 Build를 실행하세요. 빌드가 끝날 때까지 기다립니다. 이 확인은 해당 페이지의 코드를 모두 작성한 뒤 진행합니다.
+
+                @Image(source: capture-next-cr-build.png, alt: "실제 화면: Command B로 현재 페이지 코드 빌드")
+
+                [capture-cr-build]: # "CAPTURE_LINKED: CR-BUILD | xcode | CR-BUILD"
+            }
+
+            @Step {
+                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없어야 합니다. 루트 아래에 점·선·연결 안내와 커서가 있고, 점 추가·선 추가·커서 갱신·초기화 메서드가 준비되어야 합니다. 아직 `RealityView`에 루트를 붙이지 않았으므로 공간에 점과 선이 보이지 않는 것이 정상입니다. **연결 후 확인할 동작**: 새 위치에 머무르면 흰 구가 남고, 두 번째 점부터 흰 선이 이어집니다. 기존 점 연결 중에는 목표 강조와 반투명 미리보기 선이 보이며, 완료하면 실제 선만 추가됩니다. 초기화하면 점과 선이 사라집니다. Note: **Vision Pro 착용 촬영 대기** — V06~V08b의 흰 점·선·연결 피드백을 렌더링 결과 예시로 추가할 예정입니다.
+
+                @Image(source: capture-next-cr-build-result.png, alt: "실제 화면: 해당 페이지 코드의 Build Succeeded 확인")
+
+                [capture-cr-build-result]: # "CAPTURE_LINKED: CR-BUILD-RESULT | xcode | CR-BUILD-RESULT"
             }
 
             @Step {

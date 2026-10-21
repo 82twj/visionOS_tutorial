@@ -1,5 +1,9 @@
 @Tutorial(time: 12) {
     @Intro(title: "코디네이터의 생명주기 만들기") {
+        **확인 환경**: Xcode에서 코디네이터의 생명주기 코드를 빌드합니다. 입력 처리와 화면 연결은 다음 두 페이지에서 완성합니다.
+
+        > Note: 이 페이지의 파일 생성·파일 전환·빌드 조작은 Xcode 27.1에서 직접 캡처한 화면으로 확인합니다. 코드 내용은 기존 코드 패널을 따라가세요. 개념 설명에는 도해를 함께 표시하며, 실제 손 추적 결과는 Vision Pro 촬영 후 추가합니다.
+
         **시작 상태**: Chapter 5의 그래프 모델과 RealityKit 렌더러가 빌드됩니다.
 
         **이번 단계에서 만들 것**: 새 `ImmersiveCoordinator.swift`와 `ImmersiveView.swift` 파일을 만들고, 코디네이터의 소유 객체, 실행, 상태 변경, 초기화와 종료 경로를 구현합니다.
@@ -14,35 +18,233 @@
 
         @Steps {
             @Step {
-                앱 그룹에서 Swift 파일 `ImmersiveCoordinator.swift`와 `ImmersiveView.swift`를 만드세요. 두 파일의 앱 target membership을 확인합니다.
+                Project navigator에서 `HandConstellation` 앱의 소스 폴더를 선택하세요. 테스트 폴더와 구별합니다.
+
+                @Image(source: capture-next-ic-f01.png, alt: "실제 화면: ImmersiveCoordinator.swift 생성 전 앱 소스 폴더 선택")
+
+                [capture-ic-f01]: # "CAPTURE_LINKED: IC-F01 | xcode | IC-F01"
+            }
+
+            @Step {
+                선택한 소스 폴더를 보조 클릭해 메뉴를 여세요.
+
+                @Image(source: capture-next-ic-f02.png, alt: "실제 화면: ImmersiveCoordinator.swift 생성 위치의 보조 클릭 메뉴")
+
+                [capture-ic-f02]: # "CAPTURE_LINKED: IC-F02 | xcode | IC-F02"
+            }
+
+            @Step {
+                메뉴의 **New File from Template**을 선택하세요. Xcode 버전에 따라 **New File** 안에 해당 항목이 있을 수 있습니다.
+
+                @Image(source: capture-next-ic-f03.png, alt: "실제 화면: New File from Template 선택 후 ImmersiveCoordinator.swift 템플릿 창")
+
+                [capture-ic-f03]: # "CAPTURE_LINKED: IC-F03 | xcode | IC-F03"
+            }
+
+            @Step {
+                파일 템플릿 목록에서 **Swift File**을 선택하세요.
+
+                @Image(source: capture-next-ic-f04.png, alt: "실제 화면: ImmersiveCoordinator.swift용 Swift File 선택")
+
+                [capture-ic-f04]: # "CAPTURE_LINKED: IC-F04 | xcode | IC-F04"
+            }
+
+            @Step {
+                **Next**를 눌러 파일 이름과 저장 위치를 정하는 창을 여세요.
+
+                @Image(source: capture-next-ic-f05.png, alt: "실제 화면: Next 후 ImmersiveCoordinator.swift 저장 창")
+
+                [capture-ic-f05]: # "CAPTURE_LINKED: IC-F05 | xcode | IC-F05"
+            }
+
+            @Step {
+                파일 이름에 `ImmersiveCoordinator.swift`를 입력하세요.
+
+                @Image(source: capture-next-ic-f06.png, alt: "실제 화면: 파일 이름 ImmersiveCoordinator.swift 입력")
+
+                [capture-ic-f06]: # "CAPTURE_LINKED: IC-F06 | xcode | IC-F06"
+            }
+
+            @Step {
+                **Where**가 `HandConstellation` 앱의 소스 폴더인지 확인하세요. 소스 폴더에서 파일 생성을 시작했다면 이 위치가 기본으로 지정됩니다.
+
+                @Image(source: capture-next-ic-f07.png, alt: "실제 화면: ImmersiveCoordinator.swift 저장 폴더 확인")
+
+                [capture-ic-f07]: # "CAPTURE_LINKED: IC-F07 | xcode | IC-F07"
+            }
+
+            @Step {
+                **Targets** 선택란이 있다면 **HandConstellation** 앱에 체크되어 있는지 확인하세요. 폴더가 자동으로 target에 포함되는 구성에서는 이 선택란이 없을 수 있습니다. 이 경우 생성 후 파일이 앱 소스 폴더 안에 있는지 확인합니다.
+
+                @Image(source: capture-next-ic-f08.png, alt: "실제 화면: ImmersiveCoordinator.swift 앱 target 체크 확인")
+
+                [capture-ic-f08]: # "CAPTURE_LINKED: IC-F08 | xcode | IC-F08"
+            }
+
+            @Step {
+                **Create**를 누르세요. Project navigator에 방금 입력한 이름의 파일이 나타나야 합니다.
+
+                @Image(source: capture-next-ic-f09.png, alt: "실제 화면: Create 후 ImmersiveCoordinator.swift 생성 결과")
+
+                [capture-ic-f09]: # "CAPTURE_LINKED: IC-F09 | xcode | IC-F09"
+            }
+
+            @Step {
+                생성 후 자동으로 열린 `ImmersiveCoordinator.swift`의 시작 내용을 확인하세요. 다른 파일이 보이면 Project navigator에서 이 파일을 선택합니다.
+
+                @Image(source: capture-next-ic-f10.png, alt: "실제 화면: 자동으로 열린 ImmersiveCoordinator.swift 시작 내용 확인")
+
+                [capture-ic-f10]: # "CAPTURE_LINKED: IC-F10 | xcode | IC-F10"
+            }
+
+            @Step {
+                오른쪽 코드 패널에서 시작 내용인 `import Foundation`을 확인하세요. Xcode가 추가한 파일 머리말은 있어도 됩니다.
 
                 @Code(name: "ImmersiveCoordinator.swift", file: C06-T01-ImmersiveCoordinator-00.swift, reset: true)
             }
 
             @Step {
-                `ImmersiveView.swift`도 `import Foundation`만 있는지 확인하세요. RealityView를 연결하는 페이지까지 이 파일은 비워 둡니다.
+                Project navigator에서 `HandConstellation` 앱의 소스 폴더를 선택하세요. 테스트 폴더와 구별합니다.
+
+                @Image(source: capture-next-iv-f01.png, alt: "실제 화면: ImmersiveView.swift 생성 전 앱 소스 폴더 선택")
+
+                [capture-iv-f01]: # "CAPTURE_LINKED: IV-F01 | xcode | IV-F01"
+            }
+
+            @Step {
+                선택한 소스 폴더를 보조 클릭해 메뉴를 여세요.
+
+                @Image(source: capture-next-iv-f02.png, alt: "실제 화면: ImmersiveView.swift 생성 위치의 보조 클릭 메뉴")
+
+                [capture-iv-f02]: # "CAPTURE_LINKED: IV-F02 | xcode | IV-F02"
+            }
+
+            @Step {
+                메뉴의 **New File from Template**을 선택하세요. Xcode 버전에 따라 **New File** 안에 해당 항목이 있을 수 있습니다.
+
+                @Image(source: capture-next-iv-f03.png, alt: "실제 화면: New File from Template 선택 후 ImmersiveView.swift 템플릿 창")
+
+                [capture-iv-f03]: # "CAPTURE_LINKED: IV-F03 | xcode | IV-F03"
+            }
+
+            @Step {
+                파일 템플릿 목록에서 **Swift File**을 선택하세요.
+
+                @Image(source: capture-next-iv-f04.png, alt: "실제 화면: ImmersiveView.swift용 Swift File 선택")
+
+                [capture-iv-f04]: # "CAPTURE_LINKED: IV-F04 | xcode | IV-F04"
+            }
+
+            @Step {
+                **Next**를 눌러 파일 이름과 저장 위치를 정하는 창을 여세요.
+
+                @Image(source: capture-next-iv-f05.png, alt: "실제 화면: Next 후 ImmersiveView.swift 저장 창")
+
+                [capture-iv-f05]: # "CAPTURE_LINKED: IV-F05 | xcode | IV-F05"
+            }
+
+            @Step {
+                파일 이름에 `ImmersiveView.swift`를 입력하세요.
+
+                @Image(source: capture-next-iv-f06.png, alt: "실제 화면: 파일 이름 ImmersiveView.swift 입력")
+
+                [capture-iv-f06]: # "CAPTURE_LINKED: IV-F06 | xcode | IV-F06"
+            }
+
+            @Step {
+                **Where**가 `HandConstellation` 앱의 소스 폴더인지 확인하세요. 소스 폴더에서 파일 생성을 시작했다면 이 위치가 기본으로 지정됩니다.
+
+                @Image(source: capture-next-iv-f07.png, alt: "실제 화면: ImmersiveView.swift 저장 폴더 확인")
+
+                [capture-iv-f07]: # "CAPTURE_LINKED: IV-F07 | xcode | IV-F07"
+            }
+
+            @Step {
+                **Targets** 선택란이 있다면 **HandConstellation** 앱에 체크되어 있는지 확인하세요. 폴더가 자동으로 target에 포함되는 구성에서는 이 선택란이 없을 수 있습니다. 이 경우 생성 후 파일이 앱 소스 폴더 안에 있는지 확인합니다.
+
+                @Image(source: capture-next-iv-f08.png, alt: "실제 화면: ImmersiveView.swift 앱 target 체크 확인")
+
+                [capture-iv-f08]: # "CAPTURE_LINKED: IV-F08 | xcode | IV-F08"
+            }
+
+            @Step {
+                **Create**를 누르세요. Project navigator에 방금 입력한 이름의 파일이 나타나야 합니다.
+
+                @Image(source: capture-next-iv-f09.png, alt: "실제 화면: Create 후 ImmersiveView.swift 생성 결과")
+
+                [capture-iv-f09]: # "CAPTURE_LINKED: IV-F09 | xcode | IV-F09"
+            }
+
+            @Step {
+                생성 후 자동으로 열린 `ImmersiveView.swift`의 시작 내용을 확인하세요. 다른 파일이 보이면 Project navigator에서 이 파일을 선택합니다.
+
+                @Image(source: capture-next-iv-f10.png, alt: "실제 화면: 자동으로 열린 ImmersiveView.swift 시작 내용 확인")
+
+                [capture-iv-f10]: # "CAPTURE_LINKED: IV-F10 | xcode | IV-F10"
+            }
+
+            @Step {
+                오른쪽 코드 패널에서 시작 내용인 `import Foundation`을 확인하세요. Xcode가 추가한 파일 머리말은 있어도 됩니다.
 
                 @Code(name: "ImmersiveView.swift", file: C06-T01-ImmersiveView-00.swift, reset: true)
             }
 
             @Step {
+                Project navigator에서 `ImmersiveCoordinator.swift`를 여세요. 다음 코드 변경은 이 파일에 적용합니다.
+
+                @Image(source: capture-next-ic-open.png, alt: "실제 화면: ImmersiveCoordinator.swift 파일 열기 및 다음 코드 변경 준비")
+
+                [capture-ic-open]: # "CAPTURE_LINKED: IC-OPEN | xcode | IC-OPEN"
+            }
+
+            @Step {
                 코디네이터에 서비스, 감지기, 모델과 렌더러를 선언하고 같은 설정값으로 초기화하세요. 모든 공간 객체를 한 소유자가 관리하므로 초기화와 종료 순서가 한곳에 남습니다.
+
+                @Image(source: scene-structure.png, alt: "개념도: 공유 AppModel, 제어창, 몰입형 화면과 코디네이터의 책임")
             }
 
             @Step {
                 `run`에서 권한과 추적 상태를 반영하고 오른손 앵커만 순회하세요. task 취소, 미지원, 권한 거부와 일반 오류를 서로 다른 상태로 기록합니다.
+
+                @Image(source: scene-structure.png, alt: "개념도: 공유 AppModel, 제어창, 몰입형 화면과 코디네이터의 책임")
             }
 
             @Step {
-                그리기 상태 변경, 전체 초기화와 종료의 공개 메서드를 추가하세요. 초기화는 감지기·모델·렌더러와 화면 개수를 되돌리고, 종료는 세션 중단과 그리기 꺼짐까지 수행합니다.
-
-                맨 아래 네 개의 비공개 메서드는 이번 단계의 빌드를 위한 임시 연결 지점입니다. 아직 입력을 처리하지 않으며, 다음 페이지에서 실제 처리 코드로 교체합니다.
+                그리기 상태 변경, 전체 초기화와 종료의 공개 메서드를 추가하세요. 초기화는 감지기·모델·렌더러와 화면 개수를 되돌리고, 종료는 세션 중단과 그리기 꺼짐까지 수행합니다. 맨 아래 네 개의 비공개 메서드는 이번 단계의 빌드를 위한 임시 연결 지점입니다. 아직 입력을 처리하지 않으며, 다음 페이지에서 실제 처리 코드로 교체합니다.
 
                 @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-01.swift, previousFile: C06-T01-ImmersiveCoordinator-00.swift)
             }
 
             @Step {
-                **결과 확인**: 앱 target이 빌드되고 `run`, `drawingStateChanged`, `reset`, `stop` 네 진입점이 보이면 성공입니다. 앵커를 점과 선으로 처리하는 코드는 다음 페이지에서 추가합니다.
+                **Expected Result · 생명주기 코드 확인** — 코디네이터에 `run`, 그리기 상태 반영, 초기화, `stop`이 준비되어야 합니다. 입력 처리용 임시 메서드는 다음 페이지에서 채웁니다.
+
+                @Image(source: capture-next-ic-lifecycle.png, alt: "실제 화면: C06-T02-ImmersiveCoordinator-01.swift 코드 작성 결과")
+
+                [capture-ic-lifecycle]: # "CAPTURE_LINKED: IC-LIFECYCLE | xcode | IC-LIFECYCLE"
+            }
+
+            @Step {
+                작성한 파일을 저장하고 Xcode 도구 막대의 실행 대상이 Apple Vision Pro Simulator인지 확인하세요.
+
+                @Image(source: capture-next-ic-build-ready.png, alt: "실제 화면: 현재 페이지 코드 작성 완료 및 Simulator 빌드 준비")
+
+                [capture-ic-build-ready]: # "CAPTURE_LINKED: IC-BUILD-READY | xcode | IC-BUILD-READY"
+            }
+
+            @Step {
+                **Command+B**로 Build를 실행하세요. 빌드가 끝날 때까지 기다립니다. 이 확인은 해당 페이지의 코드를 모두 작성한 뒤 진행합니다.
+
+                @Image(source: capture-next-ic-build.png, alt: "실제 화면: Command B로 현재 페이지 코드 빌드")
+
+                [capture-ic-build]: # "CAPTURE_LINKED: IC-BUILD | xcode | IC-BUILD"
+            }
+
+            @Step {
+                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없고 `run`, `drawingStateChanged`, `reset`, `stop` 네 진입점이 있어야 합니다. 종료 시 세션과 커서를 정리하고, 초기화 시 감지기·모델·렌더러와 개수를 함께 되돌리는 경로를 확인하세요. `ImmersiveView`는 아직 시작 파일이며, 비공개 입력 메서드도 임시 연결 지점입니다. Simulator의 제어창이 이전과 같은 대기 상태여도 정상입니다. 다음 페이지에서 입력 처리 내용을 채웁니다.
+
+                @Image(source: capture-next-ic-build-result.png, alt: "실제 화면: 해당 페이지 코드의 Build Succeeded 확인")
+
+                [capture-ic-build-result]: # "CAPTURE_LINKED: IC-BUILD-RESULT | xcode | IC-BUILD-RESULT"
             }
         }
     }

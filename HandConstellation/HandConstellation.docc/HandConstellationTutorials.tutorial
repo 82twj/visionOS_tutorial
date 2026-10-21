@@ -4,6 +4,8 @@
 
         중급 이상 난이도입니다. Swift와 SwiftUI를 이미 알고 있다고 가정하고, ARKit·RealityKit·좌표 변환·상태 머신은 사용하기 전에 설명합니다.
 
+        Chapter 1~2는 Simulator의 창으로, Chapter 3~5는 빌드와 코드 흐름으로, Chapter 6은 공간 연결과 미지원 안내로 진행 상태를 확인합니다. 실제 손 추적과 그리기는 Chapter 7에서 Vision Pro로 확인합니다.
+
         @Image(source: constellation-hero.png, alt: "오른손 검지로 두 개의 빛나는 별자리를 그리고 그리기 상태를 제어하는 Hand Constellation 앱")
     }
 
@@ -66,9 +68,9 @@
     }
 
     @Chapter(name: "Vision Pro에서 실행하기") {
-        Apple Vision Pro에서 앱을 실행해 손 추적 권한을 허용하고, 여러 기존 점 연결·버튼 기반 그리기 전환·분리된 두 번째 별자리를 확인합니다.
+        Apple Vision Pro에서 권한 허용, 검지 커서, Dwell, 기존 점 연결, 분리와 초기화를 순서대로 확인합니다. 이 Chapter는 실기기 전용이며 착용 캡처는 추후 추가합니다. 아래 결과 그림은 개념도입니다.
 
-        @Image(source: device-first-constellation.png, alt: "흰 점과 흰 선으로 이루어진 첫 별자리")
+        @Image(source: device-closed-triangle.png, alt: "개념도: 첫 실습의 최종 기준인 점 4개와 선 5개의 그래프")
 
         @TutorialReference(tutorial: "doc:RunningOnVisionPro")
         @TutorialReference(tutorial: "doc:DrawingTheFirstConstellation")

@@ -1,5 +1,9 @@
 @Tutorial(time: 10) {
     @Intro(title: "오른손 검지 끝을 월드 좌표로 바꾸기") {
+        **확인 환경**: Xcode에서 좌표 반환 메서드를 빌드합니다. 실제 검지 추적은 Chapter 6 연결 후 Chapter 7에서 확인합니다.
+
+        > Note: 이 페이지의 파일 생성·파일 전환·빌드 조작은 Xcode 27.1에서 직접 캡처한 화면으로 확인합니다. 코드 내용은 기존 코드 패널을 따라가세요. 개념 설명에는 도해를 함께 표시하며, 실제 손 추적 결과는 Vision Pro 촬영 후 추가합니다.
+
         **시작 상태**: `HandTrackingService.start()`와 `stop()`이 빌드됩니다.
 
         **이번 단계에서 만들 것**: 손 앵커 하나를 받아 오른손 검지 끝의 월드 위치를 돌려주는 메서드입니다.
@@ -21,18 +25,26 @@
         @Steps {
             @Step {
                 오른쪽 그림의 왼쪽 칸을 보세요. `originFromAnchorTransform`은 월드 원점에서 손 앵커까지의 변환입니다. 손이 움직이면 이 값이 바뀝니다.
+
+                @Image(source: world-transform-math.png, alt: "개념도: 손 앵커 변환 × 관절 변환과 네 번째 열의 월드 위치")
             }
 
             @Step {
                 가운데 칸의 `anchorFromJointTransform`은 손 앵커에서 특정 관절까지의 변환입니다. 손가락을 굽히면 이 값이 바뀝니다.
+
+                @Image(source: world-transform-math.png, alt: "개념도: 손 앵커 변환 × 관절 변환과 네 번째 열의 월드 위치")
             }
 
             @Step {
                 두 변환을 곱하면 월드 원점에서 검지 끝까지의 변환이 됩니다. 곱하는 순서가 중요합니다. 왼쪽부터 바깥 기준, 오른쪽으로 갈수록 안쪽 기준입니다.
+
+                @Image(source: world-transform-math.png, alt: "개념도: 손 앵커 변환 × 관절 변환과 네 번째 열의 월드 위치")
             }
 
             @Step {
                 아래쪽 칸을 보세요. 결과 행렬의 네 번째 열(`columns.3`)에 위치가 들어 있습니다. 앞의 세 열은 회전과 크기 정보입니다.
+
+                @Image(source: world-transform-math.png, alt: "개념도: 손 앵커 변환 × 관절 변환과 네 번째 열의 월드 위치")
             }
         }
     }
@@ -45,6 +57,14 @@
         }
 
         @Steps {
+            @Step {
+                Project navigator에서 `HandTrackingService.swift`를 여세요. 다음 좌표 변환 메서드는 이 파일에 추가합니다.
+
+                @Image(source: capture-next-wt-open.png, alt: "실제 화면: HandTrackingService.swift 파일을 열어 다음 코드 변경 준비")
+
+                [capture-wt-open]: # "CAPTURE_LINKED: WT-OPEN | xcode | WT-OPEN"
+            }
+
             @Step {
                 메서드를 선언하고 세 가지를 확인하세요. 왼손 앵커가 아닌지, 앵커가 지금 추적 중인지, 손 골격 데이터가 들어 있는지입니다. 반환 타입이 옵셔널이므로 하나라도 실패하면 위치를 만들지 않고 `nil`을 돌려줍니다.
 
@@ -70,7 +90,35 @@
             }
 
             @Step {
-                **결과 확인**: 빌드가 성공하고 서비스가 손 추적 세션과 오른손 검지 끝 좌표를 담당하면 됩니다. 아직 공간과 연결하지 않았으므로 커서는 보이지 않습니다.
+                **Expected Result · 메서드 확인** — `rightIndexFingerTipPosition(from:)`에서 두 변환을 곱하고 `columns.3`의 x·y·z를 꺼내야 합니다. 오른손·추적 상태·유한한 좌표 검사도 같은 메서드에 있어야 합니다.
+
+                @Image(source: capture-next-wt-method.png, alt: "실제 화면: 오른손 검지 관절의 월드 좌표 변환 메서드 작성 결과")
+
+                [capture-wt-method]: # "CAPTURE_LINKED: WT-METHOD | xcode | WT-METHOD"
+            }
+
+            @Step {
+                작성한 파일을 저장하고 Xcode 도구 막대의 실행 대상이 Apple Vision Pro Simulator인지 확인하세요.
+
+                @Image(source: capture-next-wt-build-ready.png, alt: "실제 화면: 현재 페이지 코드 작성 완료 및 Simulator 빌드 준비")
+
+                [capture-wt-build-ready]: # "CAPTURE_LINKED: WT-BUILD-READY | xcode | WT-BUILD-READY"
+            }
+
+            @Step {
+                **Command+B**로 Build를 실행하세요. 빌드가 끝날 때까지 기다립니다. 이 확인은 해당 페이지의 코드를 모두 작성한 뒤 진행합니다.
+
+                @Image(source: capture-next-wt-build.png, alt: "실제 화면: Command B로 현재 페이지 코드 빌드")
+
+                [capture-wt-build]: # "CAPTURE_LINKED: WT-BUILD | xcode | WT-BUILD"
+            }
+
+            @Step {
+                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없어야 합니다. 추적 중인 오른손 검지 관절은 월드 위치를 반환하고, 왼손·추적되지 않는 손이나 관절·유효하지 않은 좌표는 `nil`을 반환하는 경로를 확인하세요. 화면은 아직 제어창만 보이는 상태입니다. **연결 후 확인할 동작**: 그리기를 켰을 때 커서가 오른손 검지를 따라 움직여야 합니다. Chapter 7의 <doc:DrawingTheFirstConstellation>에서 이 동작을 확인합니다. ‘추적 중’이라는 문구는 세션 시작 상태이므로, 실제 관절 추적 여부는 커서 이동으로 별도 확인합니다. Note: **Vision Pro 착용 촬영 대기** — 검지와 커서가 함께 움직이는 V03 영상을 이 위치의 동작 미리 보기에 추가할 예정입니다.
+
+                @Image(source: capture-next-wt-build-result.png, alt: "실제 화면: 해당 페이지 코드의 Build Succeeded 확인")
+
+                [capture-wt-build-result]: # "CAPTURE_LINKED: WT-BUILD-RESULT | xcode | WT-BUILD-RESULT"
             }
 
             @Step {

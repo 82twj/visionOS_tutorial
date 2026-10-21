@@ -1,70 +1,190 @@
 @Tutorial(time: 7) {
     @Intro(title: "Vision Pro에서 실행하고 손 추적 권한 허용하기") {
-        **시작 상태**: Chapter 6의 완성 앱이 오류 없이 빌드되고 서명에 사용할 Apple Developer 팀과 Apple Vision Pro가 준비되어 있습니다.
+        **확인 환경**: 서명 설정은 Mac의 Xcode, 기기 연결과 권한 허용은 실제 Vision Pro에서 확인합니다.
 
-        **이번 단계에서 만들 것**: 코드는 만들지 않습니다. Chapter 6까지 완성한 앱을 Apple Vision Pro에 설치하고 손 추적 권한을 허용합니다.
+        **시작 상태**: Chapter 6까지 전체 앱을 작성했고 Simulator에서 공간 열기와 손 추적 미지원 안내를 확인했습니다.
 
-        여기서부터는 실기기가 필요합니다. ARKit 손 추적은 Simulator에서 동작하지 않습니다.
+        **이번 단계에서 할 것**: Mac에서 서명을 설정한 뒤, 실기기를 준비했을 때 앱 설치와 손 추적 권한을 확인합니다. 앱 코드는 추가하지 않습니다.
 
-        @Image(source: xcode-run-destination.png, alt: "Xcode 도구 막대에서 실행 대상이 Apple Vision Pro로 선택된 상태와 사전 확인 목록")
+        > Note: **조작 화면 첨부 대기** — Mac의 서명 설정은 각 Step에 실제 Xcode 화면을 추가합니다. **Vision Pro 착용 촬영 대기** — 기기 승인, 앱 첫 실행, 권한 요청과 허용 후 화면은 나중에 촬영합니다. 지금 Mac에서만 진행한다면 서명 설정까지 확인하고 실기기 절차는 나중에 이어가세요.
+
+        아래 실행 대상 그림은 준비 항목을 설명하는 개념도입니다.
+
+        @Image(source: xcode-run-destination.png, alt: "개념도: Simulator와 실제 Vision Pro 실행 대상, 서명 준비 항목을 구분한 안내")
     }
 
-    @Section(title: "실행 준비하기") {
+    @Section(title: "Mac에서 서명 설정하기") {
         @ContentAndMedia {
-            실기기에 앱을 설치하려면 서명이 필요합니다. 템플릿이 넣어 준 Bundle Identifier는 예시 값이므로 그대로 두면 설치가 실패합니다.
-
-            @Image(source: xcode-run-destination.png, alt: "실행 대상 선택과 서명 사전 확인 목록")
+            실기기 설치에는 선택한 개발 팀의 서명 설정이 필요합니다. Bundle Identifier는 본인이 사용할 고유한 값으로 정합니다. 예시 문자열을 썼다는 이유만으로 항상 실패하는 것은 아니며, 선택한 팀에서 사용할 수 있는 값인지 확인해야 합니다.
         }
 
         @Steps {
             @Step {
-                TARGETS에서 **HandConstellation**을 고르고 **Signing & Capabilities** 탭을 여세요. Team에서 본인의 Apple 계정을 선택합니다.
+                Project navigator에서 파란 프로젝트 아이콘을 선택하세요.
+
+                [capture-g01]: # "CAPTURE_PENDING: G01 | xcode"
             }
 
             @Step {
-                Bundle Identifier를 본인만의 고유한 값으로 바꾸세요. 예를 들어 `com.내이름.HandConstellation` 형태로 씁니다.
+                **TARGETS**에서 **HandConstellation** 앱을 선택하세요.
+
+                [capture-g02]: # "CAPTURE_PENDING: G02 | xcode"
             }
 
             @Step {
-                Apple Vision Pro를 Mac과 같은 Apple 계정으로 페어링하고, Xcode 도구 막대의 실행 대상에서 기기를 선택하세요.
+                **Signing & Capabilities** 탭을 여세요.
+
+                [capture-g03]: # "CAPTURE_PENDING: G03 | xcode"
             }
 
             @Step {
-                **Run**을 누르세요. 처음 설치할 때는 기기에서 개발자 앱을 신뢰하라는 안내가 나올 수 있습니다. 기기의 **설정 > 일반 > VPN 및 기기 관리**에서 신뢰를 허용합니다.
+                **Team** 메뉴를 여세요.
+
+                [capture-g04]: # "CAPTURE_PENDING: G04 | xcode"
+            }
+
+            @Step {
+                본인이 사용할 개발 팀을 선택하세요. 팀을 고를 수 없다면 Xcode의 계정과 팀 접근 상태를 먼저 확인합니다.
+
+                [capture-g05]: # "CAPTURE_PENDING: G05 | xcode"
+            }
+
+            @Step {
+                **Bundle Identifier**에 고유한 값을 입력하세요. 예를 들어 `com.yourname.HandConstellation`처럼 정할 수 있습니다.
+
+                [capture-g06]: # "CAPTURE_PENDING: G06 | xcode"
+            }
+
+            @Step {
+                입력을 확정하고 선택한 팀과 Bundle Identifier가 저장됐는지 확인하세요. 서명 오류가 표시되면 그 원인을 해결한 뒤 설치를 진행합니다.
+
+                [capture-g07]: # "CAPTURE_PENDING: G07 | xcode"
+            }
+
+            @Step {
+                **Expected Result · Mac 준비 확인** — 올바른 앱 target에 개발 팀과 Bundle Identifier가 설정되어야 합니다. 이 확인만으로 앱이 기기에 설치되거나 손 추적 권한을 얻은 것은 아닙니다.
+            }
+        }
+    }
+
+    @Section(title: "실기기 연결과 설치 준비하기") {
+        @ContentAndMedia {
+            이 Section은 실제 기기가 준비됐을 때 진행합니다. 아래 Mac 화면 자체는 착용 없이 캡처할 수 있지만, 페어링 승인과 개발 설정은 기기에서 조작해야 할 수 있습니다.
+
+            > Note: **기기 연결·착용 촬영 대기** — D01~D09를 실기기 준비 시 함께 확인합니다. 기기 연결이나 Developer Mode의 화면·경로는 Xcode와 visionOS 버전에 맞춰 확인하고 캡처합니다.
+
+            [Apple의 기기 실행 안내](https://developer.apple.com/documentation/xcode/running-your-app-on-simulated-or-physical-devices)와 [Developer Mode 안내](https://developer.apple.com/documentation/xcode/enabling-developer-mode-on-a-device)를 참고할 수 있습니다.
+        }
+
+        @Steps {
+            @Step {
+                Xcode의 **Window** 메뉴를 여세요.
+
+                [capture-d01]: # "CAPTURE_PENDING: D01 | device-setup"
+            }
+
+            @Step {
+                **Devices and Simulators** 또는 현재 버전에서 기기를 관리하는 대응 화면을 여세요.
+
+                [capture-d02]: # "CAPTURE_PENDING: D02 | device-setup"
+            }
+
+            @Step {
+                연결할 Vision Pro의 페어링 절차를 진행하세요. 기기에 승인 요청이 나타나면 실제 기기를 착용하고 확인합니다. 이 승인 화면은 추후 촬영합니다.
+
+                [capture-d03]: # "CAPTURE_PENDING: D03 | device-setup"
+            }
+
+            @Step {
+                기기의 개발 준비 상태를 확인하세요. Developer Mode 등 추가 설정이 요청되면 기기의 안내에 따라 완료한 뒤 Xcode로 돌아옵니다.
+
+                [capture-d04]: # "CAPTURE_PENDING: D04 | device-setup"
+            }
+
+            @Step {
+                Mac의 기기 관리 화면에서 Vision Pro가 개발에 사용할 수 있는 상태인지 확인하세요.
+
+                [capture-d05]: # "CAPTURE_PENDING: D05 | device-setup"
+            }
+
+            @Step {
+                Xcode 도구 막대의 실행 대상 메뉴를 여세요.
+
+                [capture-d06]: # "CAPTURE_PENDING: D06 | device-setup"
+            }
+
+            @Step {
+                연결된 **실제 Vision Pro**를 선택하세요. 이름에 Simulator가 붙은 대상이나 빌드 전용 대상과 구별합니다.
+
+                [capture-d07]: # "CAPTURE_PENDING: D07 | device-setup"
+            }
+
+            @Step {
+                **Run**을 누르세요. 빌드와 설치가 끝날 때까지 기다립니다.
+
+                [capture-d08]: # "CAPTURE_PENDING: D08 | device-setup"
+            }
+
+            @Step {
+                기기에서 추가 개발자 앱 확인이나 허용을 요청하는 경우 해당 안내를 완료하세요. 별도 안내 없이 앱이 열렸다면 다음 Section으로 진행합니다.
+
+                [capture-d09]: # "CAPTURE_PENDING: D09 | device-setup"
             }
         }
     }
 
     @Section(title: "권한 허용하기") {
         @ContentAndMedia {
-            앱이 처음으로 손 추적을 요청할 때 시스템 권한 창이 한 번 나타납니다. 이 창에는 Chapter 1에서 Info에 입력한 문장이 그대로 표시됩니다.
+            기기에서 앱을 실행한 뒤 몰입형 공간을 열면 손 추적 서비스가 권한을 확인합니다. 처음 요청할 때만 시스템 창이 나타나며, 이미 허용한 경우에는 바로 추적을 시작할 수 있습니다.
 
-            @Image(source: device-permission-prompt.png, alt: "실제 기기 캡처를 기다리는 자리 표시와 권한을 허용했을 때와 거부했을 때의 결과 비교")
+            > Note: **Vision Pro 착용 촬영 대기** — V00~V02에 앱 시작, 첫 권한 요청과 허용 후 상태를 각각 추가합니다. 아래 그림은 시스템 팝업 캡처가 아니라 촬영 대기 안내입니다.
+
+            @Image(source: device-permission-prompt.png, alt: "손 추적 권한 팝업의 실제 기기 촬영이 아직 대기 중임을 알리는 안내 그림")
         }
 
         @Steps {
             @Step {
-                앱이 실행되면 제어 창이 나타납니다. **별자리 그리기 시작**을 바라보고 엄지와 검지를 맞대어 선택하세요.
+                Vision Pro를 착용하고 HandConstellation의 제어창을 확인하세요. 아직 공간을 열지 않은 상태에서는 대기·그리기 꺼짐·개수 0이 보여야 합니다.
+
+                [capture-v00-window]: # "CAPTURE_PENDING: V00-WINDOW | visionpro"
             }
 
             @Step {
-                몰입형 공간이 열리면서 손 추적 권한 창이 나타납니다. 창의 설명 문장이 Chapter 1에서 입력한 문장과 같은지 확인하세요.
+                **별자리 그리기 시작**을 선택하세요. 몰입형 공간이 열립니다.
+
+                [capture-v00]: # "CAPTURE_PENDING: V00 | visionpro"
             }
 
             @Step {
-                **허용**을 선택하세요. 제어 창의 상태가 **추적 중**으로 바뀌고, 안내 문장이 "그리기 꺼짐: 창의 버튼으로 시작하세요"가 됩니다.
+                처음 요청하는 경우 손 추적 권한 창의 설명을 읽으세요. Chapter 1에 입력한 사용 목적 문장인지 확인합니다. 이전에 허용했다면 팝업 없이 다음 상태로 진행할 수 있습니다.
+
+                [capture-v01]: # "CAPTURE_PENDING: V01 | visionpro"
             }
 
             @Step {
-                거부했을 때의 동작도 알아 두세요. 상태가 **확인 필요**가 되고 "손 추적 권한이 거부되었습니다"라는 안내가 나옵니다. 기기의 **설정 > 앱 > HandConstellation**에서 다시 허용할 수 있습니다.
+                권한 창에서 **허용**을 선택하세요.
+
+                [capture-v02-allow]: # "CAPTURE_PENDING: V02-ALLOW | visionpro"
             }
 
             @Step {
-                **결과 확인**: 제어 창의 상태가 **추적 중**이고 그리기가 **꺼짐**이면 성공입니다. 공간을 연 직후에 그리기가 꺼져 있는 것이 의도한 동작입니다.
+                **Expected Result · 결과 확인** — 제어창에 **추적 중**, **그리기 꺼짐**, **별자리 0개 · 점 0개 · 선 0개**가 보여야 합니다. 상태 문장은 **그리기 꺼짐: 다시 시작하려면 그리기 켜기 버튼을 누르세요.**입니다. 그리기 버튼은 사용할 수 있고, 공간을 연 것만으로 점은 생기지 않아야 합니다.
+
+                [capture-v02]: # "CAPTURE_PENDING: V02 | visionpro"
             }
 
             @Step {
-                **문제가 생겼다면**: 권한 창이 아예 나타나지 않고 곧바로 "확인 필요"가 된다면 Chapter 1의 Info 항목이 빠졌을 가능성이 큽니다. Target의 Info 탭에서 Privacy - Hands Tracking Usage Description을 다시 확인하세요.
+                **이 단계가 확인하는 범위**: 추적 중 표시는 세션이 시작됐다는 뜻입니다. 실제 오른손 검지 좌표가 갱신되는지는 다음 페이지에서 그리기를 켜고 커서를 움직여 별도로 확인합니다.
+            }
+
+            @Step {
+                **권한 거부는 별도 확인 시나리오**입니다. 거부한 경우 확인 필요 상태와 권한 거부 안내가 표시되고 그리기 버튼을 사용할 수 없어야 합니다. 정상 실습 중에 일부러 거부할 필요는 없습니다. 다시 허용하는 경로는 해당 visionOS의 앱 권한 설정에서 확인합니다.
+
+                [capture-v13]: # "CAPTURE_PENDING: V13 | visionpro"
+            }
+
+            @Step {
+                **문제가 생겼다면**: 팝업이 안 떴어도 이미 허용했다면 정상입니다. 확인 필요 상태라면 표시된 원인을 먼저 읽고, 권한 거부 여부와 Chapter 1의 Info 키·설명을 확인하세요. Simulator의 미지원 안내는 권한 거부와 다른 상태입니다.
             }
         }
     }
