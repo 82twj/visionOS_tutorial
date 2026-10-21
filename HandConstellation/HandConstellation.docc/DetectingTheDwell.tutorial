@@ -2,8 +2,6 @@
     @Intro(title: "검지가 머무르면 한 번만 점 확정하기") {
         **확인 환경**: Xcode에서 판정기를 빌드하고 입력·출력 흐름을 읽습니다. 점 생성 화면은 Chapter 6 연결 후 확인합니다.
 
-        > Note: 이 페이지의 파일 생성·파일 전환·빌드 조작은 Xcode 27.1에서 직접 캡처한 화면으로 확인합니다. 코드 내용은 기존 코드 패널을 따라가세요. 개념 설명에는 도해를 함께 표시하며, 실제 손 추적 결과는 Vision Pro 촬영 후 추가합니다.
-
         **시작 상태**: 설정 파일이 빌드되고 `DwellDetector.swift`에는 `import Foundation`만 있습니다.
 
         **이번 단계에서 만들 것**: 위치의 흐름을 받아 **한 번의 점 입력**으로 바꾸는 `DwellDetector`입니다.
@@ -176,7 +174,7 @@
             }
 
             @Step {
-                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없어야 합니다. 이 Section의 표는 같은 위치의 유효한 입력이 계속 들어온다고 가정한 **코드 흐름 예시**입니다. 실행 화면이나 실제 측정 결과가 아닙니다. 이 판정기는 좌표를 확정할 뿐 직접 구를 만들지 않습니다. 커서 확대와 흰 점 생성은 Chapter 5·6의 렌더링과 입력 연결 후 <doc:DrawingTheFirstConstellation>에서 확인합니다. Note: **Vision Pro 착용 촬영 대기** — V04~V05의 머무름·점 생성 연속 화면을 연결 후 동작 미리 보기에 추가할 예정입니다.
+                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없어야 합니다. 이 Section의 표는 같은 위치의 유효한 입력이 계속 들어온다고 가정한 **코드 흐름 예시**입니다. 실행 화면이나 실제 측정 결과가 아닙니다. 이 판정기는 좌표를 확정할 뿐 직접 구를 만들지 않습니다. 커서 확대와 흰 점 생성은 Chapter 5·6의 렌더링과 입력 연결 후 <doc:DrawingTheFirstConstellation>에서 확인합니다.
 
                 @Image(source: capture-next-dw-build-result.png, alt: "실제 화면: 해당 페이지 코드의 Build Succeeded 확인")
 

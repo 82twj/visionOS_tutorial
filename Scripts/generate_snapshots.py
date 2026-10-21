@@ -208,9 +208,13 @@ add("C05-T03-ConstellationRenderer-13.swift", R(N, 1, 198))
 
 I = "ImmersiveCoordinator.swift"
 add("C06-T01-ImmersiveCoordinator-00.swift", E("C06-T01-ImmersiveCoordinator-00.swift"))
-add("C06-T02-ImmersiveCoordinator-01.swift", R(I, 1, 107), T("""
+I_HOOKS = """
     // Temporary hooks. The next tutorial implements the input pipeline.
     private func process(anchor: HandAnchor, appModel: AppModel) {}
+"""
+add("C06-T02-ImmersiveCoordinator-01.swift", R(I, 1, 39), T("}\n"))
+add("C06-T02-ImmersiveCoordinator-02.swift", R(I, 1, 73), T(I_HOOKS + "}\n"))
+add("C06-T02-ImmersiveCoordinator-03.swift", R(I, 1, 107), T(I_HOOKS + """\
     private func applyDrawingState(appModel: AppModel) {}
     private func syncDrawingGuidance(appModel: AppModel) {}
     private func trackingLost(appModel: AppModel) {}

@@ -2,8 +2,6 @@
     @Intro(title: "조절 가능한 값을 한곳에 모으기") {
         **확인 환경**: Xcode에서 파일과 설정값을 확인합니다. 이 단계의 설정만으로 화면에 점이 생기지는 않습니다.
 
-        > Note: 이 페이지의 파일 생성·파일 전환·빌드 조작은 Xcode 27.1에서 직접 캡처한 화면으로 확인합니다. 코드 내용은 기존 코드 패널을 따라가세요. 개념 설명에는 도해를 함께 표시하며, 실제 손 추적 결과는 Vision Pro 촬영 후 추가합니다.
-
         **시작 상태**: Chapter 3의 `HandTrackingService`가 빌드되고 검지 끝 월드 좌표를 계산하는 메서드가 준비되어 있습니다. 실제 추적 루프와는 아직 연결하지 않았습니다.
 
         **이번 단계에서 만들 것**: 설정과 두 입력 감지기 파일을 만들고, 체류·기존 점 연결·흰색 렌더링 기준을 `ConstellationConfiguration`에 모읍니다.
@@ -312,7 +310,7 @@
             @Step {
                 **Expected Result · 설정 파일 확인** — 앱 소스 폴더에 새 파일 세 개가 있고, `ConstellationConfiguration`에 체류·연결·렌더링 기준값이 모여 있어야 합니다. 두 감지기 파일은 다음 페이지에서 구현합니다.
 
-                @Image(source: capture-next-cf-values.png, alt: "실제 화면: C04-T02-Configuration-07.swift 단계의 코드 작성 결과")
+                @Image(source: capture-next-cf-values.png, alt: "실제 화면: 체류·거리·렌더링 기준을 모은 ConstellationConfiguration")
 
                 [capture-cf-values]: # "CAPTURE_LINKED: CF-VALUES | xcode | CF-VALUES"
             }

@@ -2,8 +2,6 @@
     @Intro(title: "코디네이터의 생명주기 만들기") {
         **확인 환경**: Xcode에서 코디네이터의 생명주기 코드를 빌드합니다. 입력 처리와 화면 연결은 다음 두 페이지에서 완성합니다.
 
-        > Note: 이 페이지의 파일 생성·파일 전환·빌드 조작은 Xcode 27.1에서 직접 캡처한 화면으로 확인합니다. 코드 내용은 기존 코드 패널을 따라가세요. 개념 설명에는 도해를 함께 표시하며, 실제 손 추적 결과는 Vision Pro 촬영 후 추가합니다.
-
         **시작 상태**: Chapter 5의 그래프 모델과 RealityKit 렌더러가 빌드됩니다.
 
         **이번 단계에서 만들 것**: 새 `ImmersiveCoordinator.swift`와 `ImmersiveView.swift` 파일을 만들고, 코디네이터의 소유 객체, 실행, 상태 변경, 초기화와 종료 경로를 구현합니다.
@@ -200,25 +198,25 @@
             @Step {
                 코디네이터에 서비스, 감지기, 모델과 렌더러를 선언하고 같은 설정값으로 초기화하세요. 모든 공간 객체를 한 소유자가 관리하므로 초기화와 종료 순서가 한곳에 남습니다.
 
-                @Image(source: scene-structure.png, alt: "개념도: 공유 AppModel, 제어창, 몰입형 화면과 코디네이터의 책임")
-            }
-
-            @Step {
-                `run`에서 권한과 추적 상태를 반영하고 오른손 앵커만 순회하세요. task 취소, 미지원, 권한 거부와 일반 오류를 서로 다른 상태로 기록합니다.
-
-                @Image(source: scene-structure.png, alt: "개념도: 공유 AppModel, 제어창, 몰입형 화면과 코디네이터의 책임")
-            }
-
-            @Step {
-                그리기 상태 변경, 전체 초기화와 종료의 공개 메서드를 추가하세요. 초기화는 감지기·모델·렌더러와 화면 개수를 되돌리고, 종료는 세션 중단과 그리기 꺼짐까지 수행합니다. 맨 아래 네 개의 비공개 메서드는 이번 단계의 빌드를 위한 임시 연결 지점입니다. 아직 입력을 처리하지 않으며, 다음 페이지에서 실제 처리 코드로 교체합니다.
-
                 @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-01.swift, previousFile: C06-T01-ImmersiveCoordinator-00.swift)
+            }
+
+            @Step {
+                `run`에서 권한과 추적 상태를 반영하고 오른손 앵커만 순회하세요. task 취소, 미지원, 권한 거부와 일반 오류를 서로 다른 상태로 기록합니다. `run`이 부르는 입력 처리 메서드는 다음 페이지에서 구현하므로, 맨 아래에 빈 임시 메서드를 하나 둡니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-02.swift, previousFile: C06-T02-ImmersiveCoordinator-01.swift)
+            }
+
+            @Step {
+                그리기 상태 변경, 전체 초기화와 종료의 공개 메서드를 추가하세요. 초기화는 감지기·모델·렌더러와 화면 개수를 되돌리고, 종료는 세션 중단과 그리기 꺼짐까지 수행합니다. 새 메서드가 부르는 비공개 메서드 세 개도 맨 아래에 임시로 추가합니다. 맨 아래 네 개의 임시 메서드는 아직 입력을 처리하지 않으며, 다음 페이지에서 실제 처리 코드로 교체합니다.
+
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T02-ImmersiveCoordinator-03.swift, previousFile: C06-T02-ImmersiveCoordinator-02.swift)
             }
 
             @Step {
                 **Expected Result · 생명주기 코드 확인** — 코디네이터에 `run`, 그리기 상태 반영, 초기화, `stop`이 준비되어야 합니다. 입력 처리용 임시 메서드는 다음 페이지에서 채웁니다.
 
-                @Image(source: capture-next-ic-lifecycle.png, alt: "실제 화면: C06-T02-ImmersiveCoordinator-01.swift 코드 작성 결과")
+                @Image(source: capture-next-ic-lifecycle.png, alt: "실제 화면: 실행·상태 변경·초기화·종료 경로를 구현한 ImmersiveCoordinator")
 
                 [capture-ic-lifecycle]: # "CAPTURE_LINKED: IC-LIFECYCLE | xcode | IC-LIFECYCLE"
             }

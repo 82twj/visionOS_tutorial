@@ -6,7 +6,7 @@
 
         **이번 단계에서 할 것**: Mac에서 서명을 설정한 뒤, 실기기를 준비했을 때 앱 설치와 손 추적 권한을 확인합니다. 앱 코드는 추가하지 않습니다.
 
-        > Note: **조작 화면 첨부 대기** — Mac의 서명 설정은 각 Step에 실제 Xcode 화면을 추가합니다. **Vision Pro 착용 촬영 대기** — 기기 승인, 앱 첫 실행, 권한 요청과 허용 후 화면은 나중에 촬영합니다. 지금 Mac에서만 진행한다면 서명 설정까지 확인하고 실기기 절차는 나중에 이어가세요.
+        > Important: 이 페이지부터 실제 Vision Pro가 필요합니다. 손 추적과 그리기는 Simulator에서 확인할 수 없습니다. 기기가 없다면 Mac에서 서명 설정까지 진행하고, 기기를 준비한 뒤 설치와 권한 확인을 이어가세요.
 
         아래 실행 대상 그림은 준비 항목을 설명하는 개념도입니다.
 
@@ -69,9 +69,9 @@
 
     @Section(title: "실기기 연결과 설치 준비하기") {
         @ContentAndMedia {
-            이 Section은 실제 기기가 준비됐을 때 진행합니다. 아래 Mac 화면 자체는 착용 없이 캡처할 수 있지만, 페어링 승인과 개발 설정은 기기에서 조작해야 할 수 있습니다.
+            이 Section은 실제 기기가 준비됐을 때 진행합니다. 페어링 승인과 Developer Mode 같은 개발 설정은 기기에서 직접 조작해야 할 수 있습니다.
 
-            > Note: **기기 연결·착용 촬영 대기** — D01~D09를 실기기 준비 시 함께 확인합니다. 기기 연결이나 Developer Mode의 화면·경로는 Xcode와 visionOS 버전에 맞춰 확인하고 캡처합니다.
+            기기 연결과 Developer Mode의 설정 위치는 Xcode와 visionOS 버전에 따라 다를 수 있습니다. 기기에 표시되는 안내를 따르고, Xcode에서 실제 기기를 실행 대상으로 선택할 수 있는지 확인하세요.
 
             [Apple의 기기 실행 안내](https://developer.apple.com/documentation/xcode/running-your-app-on-simulated-or-physical-devices)와 [Developer Mode 안내](https://developer.apple.com/documentation/xcode/enabling-developer-mode-on-a-device)를 참고할 수 있습니다.
         }
@@ -90,7 +90,7 @@
             }
 
             @Step {
-                연결할 Vision Pro의 페어링 절차를 진행하세요. 기기에 승인 요청이 나타나면 실제 기기를 착용하고 확인합니다. 이 승인 화면은 추후 촬영합니다.
+                연결할 Vision Pro의 페어링 절차를 진행하세요. 기기에 승인 요청이 나타나면 실제 기기를 착용하고 확인합니다.
 
                 [capture-d03]: # "CAPTURE_PENDING: D03 | device-setup"
             }
@@ -137,9 +137,6 @@
         @ContentAndMedia {
             기기에서 앱을 실행한 뒤 몰입형 공간을 열면 손 추적 서비스가 권한을 확인합니다. 처음 요청할 때만 시스템 창이 나타나며, 이미 허용한 경우에는 바로 추적을 시작할 수 있습니다.
 
-            > Note: **Vision Pro 착용 촬영 대기** — V00~V02에 앱 시작, 첫 권한 요청과 허용 후 상태를 각각 추가합니다. 아래 그림은 시스템 팝업 캡처가 아니라 촬영 대기 안내입니다.
-
-            @Image(source: device-permission-prompt.png, alt: "손 추적 권한 팝업의 실제 기기 촬영이 아직 대기 중임을 알리는 안내 그림")
         }
 
         @Steps {
@@ -162,13 +159,13 @@
             }
 
             @Step {
-                권한 창에서 **허용**을 선택하세요.
+                권한 창이 나타났다면 **허용**을 선택하세요. 이미 허용해 창이 나타나지 않았다면 다음 결과를 확인합니다.
 
                 [capture-v02-allow]: # "CAPTURE_PENDING: V02-ALLOW | visionpro"
             }
 
             @Step {
-                **Expected Result · 결과 확인** — 제어창에 **추적 중**, **그리기 꺼짐**, **별자리 0개 · 점 0개 · 선 0개**가 보여야 합니다. 상태 문장은 **그리기 꺼짐: 다시 시작하려면 그리기 켜기 버튼을 누르세요.**입니다. 그리기 버튼은 사용할 수 있고, 공간을 연 것만으로 점은 생기지 않아야 합니다.
+                **Expected Result · 결과 확인** — 제어창에 **추적 중**, **그리기 꺼짐**, **별자리 0개 · 점 0개 · 선 0개**가 보여야 합니다. 상태 문장은 ‘그리기 꺼짐: 다시 시작하려면 그리기 켜기 버튼을 누르세요.’입니다. 그리기 버튼은 사용할 수 있고, 공간을 연 것만으로 점은 생기지 않아야 합니다.
 
                 [capture-v02]: # "CAPTURE_PENDING: V02 | visionpro"
             }

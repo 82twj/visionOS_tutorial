@@ -148,7 +148,7 @@ python3 Scripts/generate_images.py
 - visionOS SDK 대상 앱과 테스트 번들 컴파일 성공
 - `swift test`: 23개 테스트 통과
 - DocC 아카이브 경고 없이 빌드 성공
-- 코드 스냅샷 95개를 재현하며 모든 Swift 스냅샷이 문법 검사를 통과
+- 코드 스냅샷 97개를 재현하며 모든 Swift 스냅샷이 문법 검사를 통과
 - 각 파일의 마지막 스냅샷이 실제 앱 소스와 일치
 - 생성된 19개 페이지의 본문·자료 참조·18개 다음 링크·7개 Chapter와 이전 주소 6개를 검사
 - 실제 Xcode 26.6 권한 설정과 visionOS 26.5 Simulator 대기 화면을 문서에 포함

@@ -2,8 +2,6 @@
     @Intro(title: "RealityKit으로 점과 선 그리기") {
         **확인 환경**: Xcode에서 렌더러를 빌드합니다. Chapter 6에서 RealityView에 붙인 뒤 실제 장면을 확인합니다.
 
-        > Note: 이 페이지의 파일 생성·파일 전환·빌드 조작은 Xcode 27.1에서 직접 캡처한 화면으로 확인합니다. 코드 내용은 기존 코드 패널을 따라가세요. 개념 설명에는 도해를 함께 표시하며, 실제 손 추적 결과는 Vision Pro 촬영 후 추가합니다.
-
         **시작 상태**: `ConstellationModel.swift`가 빌드되고 점과 선분 결과를 반환합니다.
 
         **이번 단계에서 만들 것**: 새 `ConstellationRenderer.swift` 파일과, 확정된 점을 흰 구로 두 점 사이를 흰 원기둥으로 그리는 렌더러입니다.
@@ -120,7 +118,7 @@
             }
 
             @Step {
-                커서는 체류 중일 때만 보여야 하므로 처음에는 꺼진 상태로 만듭니다. 엔티티는 `isEnabled`로 켜고 끕니다.
+                커서는 그리기가 켜져 있고 유효한 검지 좌표가 있을 때 표시합니다. 아직 입력을 연결하지 않았으므로 처음에는 꺼 둡니다. 엔티티는 `isEnabled`로 켜고 끕니다.
 
                 @Image(source: entity-tree.png, alt: "개념도: rootEntity 아래의 점·선·연결 안내 컨테이너와 커서")
             }
@@ -224,7 +222,7 @@
             @Step {
                 **Expected Result · 렌더러 코드 확인** — `rootEntity`와 점·선·커서·연결 안내를 다루는 속성 및 메서드가 준비되어야 합니다. 실제 장면에는 Chapter 6의 `RealityView`에서 추가합니다.
 
-                @Image(source: capture-next-cr-entities.png, alt: "실제 화면: C05-T03-ConstellationRenderer-13.swift 코드 작성 결과")
+                @Image(source: capture-next-cr-entities.png, alt: "실제 화면: 점·선·커서·연결 안내를 구성한 ConstellationRenderer")
 
                 [capture-cr-entities]: # "CAPTURE_LINKED: CR-ENTITIES | xcode | CR-ENTITIES"
             }
@@ -246,7 +244,7 @@
             }
 
             @Step {
-                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없어야 합니다. 루트 아래에 점·선·연결 안내와 커서가 있고, 점 추가·선 추가·커서 갱신·초기화 메서드가 준비되어야 합니다. 아직 `RealityView`에 루트를 붙이지 않았으므로 공간에 점과 선이 보이지 않는 것이 정상입니다. **연결 후 확인할 동작**: 새 위치에 머무르면 흰 구가 남고, 두 번째 점부터 흰 선이 이어집니다. 기존 점 연결 중에는 목표 강조와 반투명 미리보기 선이 보이며, 완료하면 실제 선만 추가됩니다. 초기화하면 점과 선이 사라집니다. Note: **Vision Pro 착용 촬영 대기** — V06~V08b의 흰 점·선·연결 피드백을 렌더링 결과 예시로 추가할 예정입니다.
+                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없어야 합니다. 루트 아래에 점·선·연결 안내와 커서가 있고, 점 추가·선 추가·커서 갱신·초기화 메서드가 준비되어야 합니다. 아직 `RealityView`에 루트를 붙이지 않았으므로 공간에 점과 선이 보이지 않는 것이 정상입니다. **연결 후 확인할 동작**: 새 위치에 머무르면 흰 구가 남고, 두 번째 점부터 흰 선이 이어집니다. 기존 점 연결 중에는 목표 강조와 반투명 미리보기 선이 보이며, 완료하면 실제 선만 추가됩니다. 초기화하면 점과 선이 사라집니다.
 
                 @Image(source: capture-next-cr-build-result.png, alt: "실제 화면: 해당 페이지 코드의 Build Succeeded 확인")
 

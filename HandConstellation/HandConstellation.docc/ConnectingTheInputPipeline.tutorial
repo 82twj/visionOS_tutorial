@@ -2,8 +2,6 @@
     @Intro(title: "입력 처리 순서 연결하기") {
         **확인 환경**: Xcode에서 입력 처리 순서를 확인합니다. 다음 페이지에서 화면 수명을 연결해야 추적 루프가 실행됩니다.
 
-        > Note: 이 페이지의 파일 생성·파일 전환·빌드 조작은 Xcode 27.1에서 직접 캡처한 화면으로 확인합니다. 코드 내용은 기존 코드 패널을 따라가세요. 개념 설명에는 도해를 함께 표시하며, 실제 손 추적 결과는 Vision Pro 촬영 후 추가합니다.
-
         **시작 상태**: `ImmersiveCoordinator`의 실행·상태 변경·초기화·종료 경로가 빌드됩니다.
 
         **이번 단계에서 만들 것**: 손 앵커 하나가 들어왔을 때 버튼 상태, 기존 점 연결, 새 점 체류를 안전한 순서로 처리하는 `ImmersiveCoordinator`입니다.
@@ -32,7 +30,7 @@
             @Step {
                 버튼 기반 상태 반영, 최근접 기존 점 고정, 중복 간선 안내, 일반 점 확정과 개수 동기화를 한 코디네이터에 연결하세요.
 
-                @Code(name: "ImmersiveCoordinator.swift", file: C06-T03-ImmersiveCoordinator-22.swift, previousFile: C06-T02-ImmersiveCoordinator-01.swift)
+                @Code(name: "ImmersiveCoordinator.swift", file: C06-T03-ImmersiveCoordinator-22.swift, previousFile: C06-T02-ImmersiveCoordinator-03.swift)
             }
 
             @Step {
