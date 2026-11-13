@@ -29,6 +29,19 @@ jobs:
       - name: Verify authored tutorial
         run: Scripts/verify-snapshots.sh
 
+      - name: Build starter project
+        run: |
+          xcodebuild \
+            -project StarterProject/HandConstellation/HandConstellation.xcodeproj \
+            -target HandConstellation \
+            -configuration Debug \
+            -sdk xros \
+            -arch arm64 \
+            CODE_SIGNING_ALLOWED=NO \
+            SYMROOT="$RUNNER_TEMP/StarterBuild" \
+            OBJROOT="$RUNNER_TEMP/StarterIntermediates" \
+            build
+
       - name: Build DocC archive
         run: |
           xcodebuild \

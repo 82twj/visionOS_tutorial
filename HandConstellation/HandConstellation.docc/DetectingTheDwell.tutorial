@@ -1,188 +1,132 @@
-@Tutorial(time: 12) {
-    @Intro(title: "검지가 머무르면 한 번만 점 확정하기") {
-        **확인 환경**: Xcode에서 판정기를 빌드하고 입력·출력 흐름을 읽습니다. 점 생성 화면은 Chapter 6 연결 후 확인합니다.
+@Tutorial(time: 10) {
+    @Intro(title: "검지를 잠시 멈추면 점 찍기") {
+        손 추적은 검지 위치를 1초에 약 90번 보냅니다. 위치가 올 때마다 점을 찍으면 손이 지나간 자리마다 점이 생깁니다. 그래서 이 앱은 검지가 한자리에 0.8초 동안 머물렀을 때만 점을 하나 찍습니다. 이 동작을 머무르기(dwell)라고 부릅니다.
 
-        **시작 상태**: 설정 파일이 빌드되고 `DwellDetector.swift`에는 `import Foundation`만 있습니다.
-
-        **이번 단계에서 만들 것**: 위치의 흐름을 받아 **한 번의 점 입력**으로 바꾸는 `DwellDetector`입니다.
-
-        손 추적은 1초에 수십 번 위치를 보냅니다. 그대로 점을 찍으면 손이 지나간 자리마다 점이 생깁니다. 그래서 "한곳에 충분히 오래 머물렀는가"를 판단하는 상태 머신이 필요합니다.
+        스타터의 `DwellDetector.swift`에는 필요한 타입과 속성이 이미 들어 있고, 위치를 받아 상태를 바꾸는 `update` 메서드만 없습니다. 이 페이지에서는 준비된 타입을 먼저 읽은 뒤 `update`를 작성합니다. 점이 실제로 찍히는 모습은 Chapter 4에서 연결한 뒤 Chapter 5에서 Vision Pro로 확인합니다.
 
         @Image(source: dwell-states.png, alt: "idle, dwelling, coolingDown 세 상태와 상태를 바꾸는 조건을 화살표로 이은 그림")
     }
 
-    @Section(title: "타입과 상태 정의하기") {
+    @Section(title: "스타터에 준비된 타입 읽기") {
         @ContentAndMedia {
-            상태 머신은 현재 상태와 들어온 입력으로 다음 상태를 정합니다. `idle`에서 후보를 받고, `dwelling`에서 0.8초를 재며, 완료 뒤 `coolingDown`에서 3cm 이동을 기다립니다. 1.5cm 안정 반경을 벗어나면 새 자리에서 시간을 다시 잽니다.
+            `DwellDetector`는 늘 세 상태 중 하나에 있습니다.
 
-            바깥에 보여 줄 상태(`Phase`)와 내부에서만 쓰는 상태(`State`)를 나눕니다. 화면은 "지금 머무는 중"인지만 알면 되고, 후보 위치와 시작 시각까지 알 필요는 없습니다.
+            | 상태 | 하는 일 | 다음 상태로 가는 때 |
+            | --- | --- | --- |
+            | `idle` | 아직 지켜보는 위치가 없습니다. | 위치가 들어오면 바로 `dwelling`으로 갑니다. |
+            | `dwelling` | 검지가 1.5cm 안에 머무는 시간을 잽니다. | 0.8초가 되면 점을 찍고 `coolingDown`으로 갑니다. 1.5cm 밖으로 나가면 새 자리에서 다시 잽니다. |
+            | `coolingDown` | 방금 점을 찍은 자리에서 점이 또 찍히지 않게 기다립니다. | 3cm 이상 멀어지면 `dwelling`으로 갑니다. |
 
-            @Image(source: dwell-states.png, alt: "체류 판정의 세 상태와 전환 조건 그림")
+            기준이 되는 세 값은 스타터의 `ConstellationConfiguration`에 있습니다. 거리 단위는 미터입니다.
+
+            | 설정 | 값 | 뜻 |
+            | --- | --- | --- |
+            | `dwellDuration` | 0.8초 | 이만큼 머무르면 점을 찍습니다 |
+            | `stabilityRadius` | 0.015 (1.5cm) | 머무르는 동안 이 정도 흔들림은 괜찮습니다 |
+            | `rearmDistance` | 0.030 (3cm) | 점을 찍은 뒤 이만큼 움직여야 다음 점을 잽니다 |
+
+            같은 파일의 `connectionSnapDistance`(3cm)와 `connectionReleaseDistance`(4cm)는 스타터에 들어 있는 기존 점 연결 감지기가 쓰는 값입니다. 이 페이지에서는 다루지 않습니다.
+
+            @Image(source: tunable-values.png, alt: "ConstellationConfiguration의 머무르기 값과 점·선 크기 값을 정리한 그림")
         }
 
         @Steps {
             @Step {
-                Project navigator에서 `DwellDetector.swift`를 여세요. 다음 코드 변경은 이 파일에 적용합니다.
+                Project navigator에서 `DwellDetector.swift`를 여세요. 상태 타입, 기준값, initializer, 보조 메서드는 이미 있고 `update` 메서드만 없습니다.
 
-                @Image(source: capture-next-dw-open.png, alt: "실제 화면: DwellDetector.swift 파일을 열어 다음 코드 변경 준비")
+                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-00.swift, reset: true)
 
-                [capture-dw-open]: # "CAPTURE_LINKED: DW-OPEN | xcode | DW-OPEN"
+                맨 아래의 `hasFiniteComponents` 확장은 Chapter 2에서 검지 좌표를 검사할 때 이미 썼습니다.
             }
 
             @Step {
-                `simd`를 import하고 `Sendable`을 따르는 빈 struct를 선언하세요. 값 타입이므로 복사해서 넘겨도 서로 영향을 주지 않습니다.
+                강조된 `Phase`와 `Snapshot`은 `update`가 위치를 받을 때마다 바깥에 돌려줄 결과를 담습니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-01.swift, previousFile: C04-T01-DwellDetector-00.swift)
+                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-00-phase.swift, previousFile: HL-DwellDetector-phase.swift)
+
+                `progress`는 커서 크기가 되고, `committedPosition`은 점을 찍어야 하는 바로 그 한 번에만 값이 있습니다. 나머지 때는 늘 `nil`이므로 코디네이터는 이 값이 있을 때만 점을 추가합니다.
             }
 
             @Step {
-                바깥에 보여 줄 `Phase`를 추가하세요. 그림의 세 원과 같은 이름입니다.
+                `State`는 안에서만 쓰는 상태입니다. `dwelling`은 머무르기를 시작한 위치와 시각을, `coolingDown`은 마지막으로 점을 찍은 위치를 함께 기억합니다. 이렇게 case에 붙여 두는 값을 associated value라고 합니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-02.swift, previousFile: C04-T03-DwellDetector-01.swift)
+                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-00-state.swift, previousFile: HL-DwellDetector-state.swift)
+
+                세 기준값은 `let`이라 만든 뒤에는 바뀌지 않습니다. 위치가 들어올 때마다 바뀌는 것은 `state` 하나뿐입니다.
             }
 
             @Step {
-                한 번의 계산 결과를 담는 `Snapshot`을 추가하세요. `committedPosition`이 `nil`이 아닌 경우에만 점을 만듭니다. 이 한 필드가 "지금 점을 찍어야 하는가"의 유일한 신호입니다.
+                세 기준값의 기본값은 `ConstellationConfiguration.swift`에 있습니다. `DwellDetector`의 initializer는 따로 값을 넘기지 않으면 `ConstellationConfiguration.standard`에서 이 세 값을 가져옵니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-03.swift, previousFile: C04-T03-DwellDetector-02.swift)
-            }
+                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-07.swift, previousFile: HL-Configuration-dwell.swift)
 
-            @Step {
-                내부 상태 `State`를 추가하세요. `dwelling`은 후보 위치와 시작 시각을, `coolingDown`은 마지막으로 확정한 위치를 함께 기억합니다. 이런 값을 associated value라고 합니다.
-
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-04.swift, previousFile: C04-T03-DwellDetector-03.swift)
-            }
-
-            @Step {
-                세 기준값과 현재 상태를 저장하세요. 기준값은 `let`이므로 만든 뒤에는 바뀌지 않습니다.
-
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-05.swift, previousFile: C04-T03-DwellDetector-04.swift)
-            }
-
-            @Step {
-                initializer에서 기본값을 `ConstellationConfiguration.standard`로 받으세요. `precondition`은 0 이하의 값이 들어오면 즉시 멈춰 잘못된 설정을 개발 중에 발견하게 해 줍니다.
-
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-06.swift, previousFile: C04-T03-DwellDetector-05.swift)
+                값을 바꿔 보고 싶다면 이 파일만 고치면 됩니다. 예를 들어 `dwellDuration`을 0.5로 줄이면 점이 더 빨리 찍힙니다.
             }
         }
     }
 
-    @Section(title: "판정 로직 채우기") {
+    @Section(title: "update로 상태 바꾸기") {
         @ContentAndMedia {
-            이제 상태 전환을 코드로 옮깁니다. `update`는 매 프레임 호출되므로 짧고 예측 가능해야 합니다.
+            `update(position:at:)`는 새 검지 위치가 들어올 때마다 불립니다. 현재 상태를 보고 다음 상태를 정한 뒤, 결과를 `Snapshot`으로 돌려줍니다. 아래 표는 검지를 한자리에 가만히 두었을 때 무슨 일이 일어나는지 보여 줍니다.
 
-            먼저 도우미 메서드를 만들고, 그다음 `update`의 갈래를 하나씩 채웁니다. 오른쪽은 **연결 후 동작을 설명하는 개념도**입니다. 이 시점에 실행되는 화면이나 실기기 캡처가 아닙니다.
+            | 들어온 위치 | 상태 | 진행률 | 점 찍기 |
+            | --- | --- | --- | --- |
+            | 첫 위치 | `dwelling` 시작 | 0 | 안 함 |
+            | 0.4초 뒤, 1.5cm 안 | `dwelling` | 0.5 | 안 함 |
+            | 0.8초 뒤, 1.5cm 안 | `coolingDown` | 1 | 이때 한 번 |
+            | 같은 자리에서 계속 | `coolingDown` | 0 | 안 함 |
+            | 3cm 이상 움직임 | 새 `dwelling` 시작 | 0 | 안 함 |
 
-            @Image(source: dwell-progress.png, alt: "개념도: 검지 커서가 0초부터 0.8초까지 커지다가 별 점으로 확정되는 네 단계")
+            진행률이 0에서 1로 오르는 동안 커서가 점점 커지고, 1이 되는 순간 점이 생깁니다.
 
-            아래는 같은 위치의 유효 입력이 안정 반경 안에서 계속 들어온다는 조건으로 읽는 Dwell 코드 흐름 예시입니다. 실행 캡처나 실제 측정 결과가 아닙니다.
-
-            | 입력 | 판정 결과 | 점 확정 신호 |
-            | --- | --- | --- |
-            | 첫 입력 | `dwelling`, 진행률 0 | 없음 |
-            | 약 0.4초 뒤, 안정 반경 안 | 진행률 약 0.5 | 없음 |
-            | 약 0.8초 뒤, 안정 반경 안 | `coolingDown`으로 전환 | `committedPosition`이 한 번만 반환됨 |
-            | 같은 자리에서 계속 대기 | `coolingDown` 유지 | 추가 확정 없음 |
-            | 마지막 확정점에서 3cm 이상 이동 | 새 `dwelling` 시작 | 아직 확정 없음 |
+            @Image(source: dwell-progress.png, alt: "검지 커서가 0초부터 0.8초까지 점점 커지다가 점으로 바뀌는 네 단계")
         }
 
         @Steps {
             @Step {
-                추적이 끊겼을 때 부르는 `trackingLost()`, 전체를 되돌리는 `reset()`, 아무 일도 없을 때 돌려줄 `idleSnapshot`을 추가하세요. 다음 Step의 `update`가 이 셋을 사용합니다.
+                `update(position:at:)`를 선언하세요. 먼저 위치와 시각이 제대로 된 숫자인지(`NaN`이나 무한대가 아닌지) 확인하고, 아니면 `trackingLost()`로 상태를 지운 뒤 `idleSnapshot`을 돌려줍니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-07.swift, previousFile: C04-T03-DwellDetector-06.swift)
+                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-01.swift, previousFile: C04-T07-DwellDetector-00.swift)
+
+                `switch`의 `default` 갈래는 세 상태를 하나씩 채우는 동안 빌드가 되도록 넣어 둔 임시 코드입니다. `.coolingDown`을 채우는 마지막 코드 단계에서 지웁니다.
             }
 
             @Step {
-                `update`를 선언하고 잘못된 좌표나 시간이 들어오면 `.idle`로 되돌리세요. 함께 추가한 `hasFiniteComponents`는 Chapter 3에서 예고한 도우미이며, 세 성분이 모두 유한한 수인지 확인합니다. 유효하지 않은 입력에서 후보와 시작 시각을 지워, 이전 체류가 다음 유효 입력까지 이어지는 일을 막습니다.
+                `.idle`을 채우세요. 들어온 위치와 시각을 머무르기의 시작점으로 저장하고, 진행률 0인 `dwelling` 결과를 돌려줍니다. 아직 점을 찍지 않으므로 `committedPosition`은 `nil`입니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-08.swift, previousFile: C04-T03-DwellDetector-07.swift)
+                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-02.swift, previousFile: C04-T07-DwellDetector-01.swift)
             }
 
             @Step {
-                Project navigator에서 `HandTrackingService.swift`를 여세요. 다음 코드 변경은 이 파일에 적용합니다.
+                `.dwelling`을 추가하고, 검지가 시작점에서 1.5cm 넘게 벗어났다면 새 위치에서 시간을 처음부터 다시 재세요. 손을 옮기는 도중에 점이 찍히지 않는 것은 이 조건 덕분입니다.
 
-                @Image(source: capture-next-dw-to-ht.png, alt: "실제 화면: HandTrackingService.swift 파일을 열어 다음 코드 변경 준비")
+                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-03.swift, previousFile: C04-T07-DwellDetector-02.swift)
 
-                [capture-dw-to-ht]: # "CAPTURE_LINKED: DW-TO-HT | xcode | DW-TO-HT"
+                1.5cm 안에 머물러 있을 때의 처리는 다음 단계에서 채웁니다. 그때까지는 진행률 0을 돌려주는 임시 줄을 둡니다.
             }
 
             @Step {
-                이제 `HandTrackingService.swift`의 마지막 좌표 검사도 방금 만든 `hasFiniteComponents`를 사용하도록 바꾸세요. Chapter 3의 세 성분 검사를 같은 의미의 공통 도우미로 교체합니다.
+                임시 줄을 지우고, 1.5cm 안에 머물렀을 때 지난 시간과 0–1 사이의 진행률을 계산하세요. 0.8초가 안 됐으면 진행률만 돌려주고, 0.8초가 되면 `.coolingDown`으로 넘어가면서 시작점을 `committedPosition`에 담아 돌려줍니다. 점은 이 한 번만 찍힙니다.
 
-                @Code(name: "HandTrackingService.swift", file: C04-T05-HandTrackingService-19.swift, previousFile: C03-T03-HandTrackingService-11.swift)
+                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-04.swift, previousFile: C04-T07-DwellDetector-03.swift)
+
+                `1e-9`를 더하는 것은 부동소수점 계산 오차 때문입니다. 0.8초가 지났는데도 0.7999999…처럼 계산되어 한 프레임 늦게 점이 찍히는 일을 막습니다.
             }
 
             @Step {
-                Project navigator에서 `DwellDetector.swift`를 여세요. 다음 코드 변경은 이 파일에 적용합니다.
+                임시 `default` 갈래를 `.coolingDown`으로 바꾸세요. 마지막으로 점을 찍은 자리에서 3cm 이상 멀어졌을 때만 새 머무르기를 시작합니다. 그 전까지는 진행률 0을 돌려주므로 커서도 커지지 않습니다.
 
-                @Image(source: capture-next-dw-return-clean.png, alt: "실제 화면: DwellDetector.swift 파일 열기 및 다음 코드 변경 준비")
-
-                [capture-dw-return]: # "CAPTURE_LINKED: DW-RETURN | xcode | DW-RETURN-CLEAN"
+                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-14.swift, previousFile: C04-T07-DwellDetector-04.swift)
             }
 
             @Step {
-                `.idle` 갈래를 채우세요. 현재 위치와 시간을 체류 시작점으로 저장하고 진행률 0을 돌려줍니다. 아직 점은 확정하지 않으므로 `committedPosition`은 `nil`입니다.
+                **Command+B**로 빌드하세요. Build Succeeded가 뜨면 됩니다. 이 감지기는 점을 찍을 위치만 알려 주고 화면에 직접 그리지는 않습니다. 점을 그리는 렌더러는 다음 페이지에서 만듭니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-09.swift, previousFile: C04-T03-DwellDetector-08.swift)
-            }
+                @Image(source: capture-next-dw-build-result.png, alt: "Xcode에서 DwellDetector.swift를 빌드해 Build Succeeded가 표시된 화면")
 
-            @Step {
-                `.dwelling`에서 검지가 1.5cm 반경을 벗어나면 새 위치에서 타이머를 다시 시작하세요. 손을 옮기는 동안 점이 찍히지 않게 하는 핵심 조건입니다.
-
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-10.swift, previousFile: C04-T03-DwellDetector-09.swift)
-            }
-
-            @Step {
-                반경 안에 머물렀다면 경과 시간과 0부터 1 사이의 진행률을 계산하세요. 아직 0.8초에 이르지 못했다면 진행률만 돌려줍니다. 이 값이 화면에서 커서 크기가 됩니다. `1e-9`를 더하는 것은 부동소수점 오차 때문에 0.8초에 아주 조금 못 미치는 상황을 흡수하기 위한 것입니다.
-
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-11.swift, previousFile: C04-T03-DwellDetector-10.swift)
-            }
-
-            @Step {
-                0.8초를 채우면 중심 위치를 확정하고 `.coolingDown`으로 넘어가세요. 이 한 번의 반환에서만 `committedPosition`이 값을 가집니다.
-
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-12.swift, previousFile: C04-T03-DwellDetector-11.swift)
-            }
-
-            @Step {
-                `.coolingDown` 갈래를 채우세요. 마지막 점에서 3cm 이상 멀어졌을 때만 새 체류를 시작합니다. 그 전까지는 진행률 0을 돌려주므로 커서도 커지지 않습니다.
-
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-13.swift, previousFile: C04-T03-DwellDetector-12.swift)
-            }
-
-            @Step {
-                기존 점 연결은 일반 점 감지기 밖에서 확정됩니다. 연결 직후 같은 점에 일반 점이 생기지 않도록 외부 확정을 cooldown으로 전달하는 `beginCooldown`을 추가하세요.
-
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-14.swift, previousFile: C04-T03-DwellDetector-13.swift)
-            }
-
-            @Step {
-                작성한 파일을 저장하고 Xcode 도구 막대의 실행 대상이 Apple Vision Pro Simulator인지 확인하세요.
-
-                @Image(source: capture-next-dw-build-ready.png, alt: "실제 화면: 현재 페이지 코드 작성 완료 및 Simulator 빌드 준비")
-
-                [capture-dw-build-ready]: # "CAPTURE_LINKED: DW-BUILD-READY | xcode | DW-BUILD-READY"
-            }
-
-            @Step {
-                **Command+B**로 Build를 실행하세요. 빌드가 끝날 때까지 기다립니다. 이 확인은 해당 페이지의 코드를 모두 작성한 뒤 진행합니다.
-
-                @Image(source: capture-next-dw-build.png, alt: "실제 화면: Command B로 현재 페이지 코드 빌드")
-
-                [capture-dw-build]: # "CAPTURE_LINKED: DW-BUILD | xcode | DW-BUILD"
-            }
-
-            @Step {
-                **Expected Result · 결과 확인** — Xcode에서 빌드 오류가 없어야 합니다. 이 Section의 표는 같은 위치의 유효한 입력이 계속 들어온다고 가정한 **코드 흐름 예시**입니다. 실행 화면이나 실제 측정 결과가 아닙니다. 이 판정기는 좌표를 확정할 뿐 직접 구를 만들지 않습니다. 커서 확대와 흰 점 생성은 Chapter 5·6의 렌더링과 입력 연결 후 <doc:DrawingTheFirstConstellation>에서 확인합니다.
-
-                @Image(source: capture-next-dw-build-result.png, alt: "실제 화면: 해당 페이지 코드의 Build Succeeded 확인")
+                **문제가 생겼다면**: `switch`가 모든 경우를 다루지 않는다는 오류가 나면 `.idle`, `.dwelling`, `.coolingDown` 세 갈래가 모두 있는지 확인하세요. 앞 단계에서 임시로 넣었던 줄이 남아 있다면 지웁니다.
 
                 [capture-dw-build-result]: # "CAPTURE_LINKED: DW-BUILD-RESULT | xcode | DW-BUILD-RESULT"
-            }
-
-            @Step {
-                **문제가 생겼다면**: `switch`가 모든 경우를 다루지 않는다는 오류가 나면 세 갈래가 모두 들어갔는지 확인하세요. 앞 단계에서 임시로 넣었던 `default` 줄이 남아 있다면 지웁니다.
             }
         }
     }

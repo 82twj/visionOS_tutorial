@@ -1,130 +1,100 @@
-@Tutorial(time: 7) {
-    @Intro(title: "Xcode 기본 코드 읽고 실행하기") {
-        **확인 환경**: Xcode와 visionOS Simulator에서 기본 창을 확인합니다. 손 추적은 아직 구현하지 않았습니다.
+@Tutorial(time: 10, projectFiles: HandConstellation-Starter.zip) {
+    @Intro(title: "스타터 프로젝트 살펴보고 실행하기") {
+        내려받은 스타터 프로젝트를 Xcode로 열고, 어떤 파일이 완성되어 있고 어떤 파일을 직접 채울지 확인합니다. 이어서 앱 진입점과 앱 전체가 함께 쓰는 `AppModel`을 읽고, visionOS Simulator에서 실행해 제어창이 뜨는지 봅니다.
 
-        > Note: 아래는 Xcode 27.1과 visionOS 27.0 Simulator에서 캡처한 화면입니다. 오른쪽 코드 패널은 이 과정의 기준 코드이며, 템플릿이 자동 생성한 코드와 일부 내용이 다를 수 있습니다.
+        이 페이지에서는 코드를 고치지 않습니다. 오른쪽 코드 패널에서 강조된 줄이 각 단계에서 설명하는 부분입니다.
 
-        **시작 상태**: 앞 페이지에서 만든 `HandConstellation` 프로젝트가 열려 있고 visionOS Simulator를 선택할 수 있습니다.
-
-        **이번 단계에서 만들 것**: 없습니다. Xcode가 자동으로 넣어 준 두 Swift 파일을 읽고, Simulator에서 기본 앱이 실행되는지 확인합니다.
-
-        완성 코드를 붙여 넣기 전에 시작점을 이해해 두면, 다음 Chapter부터 오른쪽 코드에서 파란색으로 강조되는 줄이 왜 그 자리에 들어가는지 알 수 있습니다.
-
-        @Image(source: capture-c01-r01.png, alt: "Xcode에서 ContentView.swift와 앱 진입점 파일이 생성된 실제 화면")
+        @Image(source: capture-next-rv-window.png, alt: "visionOS Simulator에서 스타터 프로젝트를 실행해 대기 상태의 제어창이 뜬 화면")
     }
 
-    @Section(title: "두 개의 시작 파일 읽기") {
+    @Section(title: "스타터 프로젝트 열기") {
         @ContentAndMedia {
-            visionOS App 템플릿은 앱의 진입점 파일과 첫 화면 파일을 만들어 줍니다. 이 페이지에서는 두 파일을 읽기만 하고 수정하지 않습니다.
+            스타터 프로젝트의 파일은 완성본, 일부만 작성된 파일, 빈 파일 세 가지로 나뉩니다. 완성본은 고치지 않고 필요할 때 읽기만 하며, 나머지는 표에 적힌 Chapter에서 채웁니다. 빈 파일에는 `import Foundation` 한 줄만 들어 있습니다.
 
-            @Image(source: capture-c01-r01.png, alt: "Xcode에서 ContentView.swift와 앱 진입점 파일이 생성된 실제 화면")
+            | 파일 | 스타터 상태 | 작성 Chapter |
+            | --- | --- | --- |
+            | AppModel, ControlView, ConstellationConfiguration, ConstellationModel, ExistingPointConnectionDetector | 완성본 | 작성하지 않음 |
+            | HandConstellationApp | `WindowGroup`만 있음 | Chapter 4 (`ImmersiveSpace` 추가) |
+            | DwellDetector | `update` 메서드만 없음 | Chapter 3 |
+            | HandTrackingService | 빈 파일 | Chapter 2 |
+            | ConstellationRenderer | 빈 파일 | Chapter 3 |
+            | ImmersiveCoordinator, ImmersiveView | 빈 파일 | Chapter 4 |
+            | Info | 장면 설정만 있음 | Chapter 1 (손 추적 설명 추가) |
+
+            @Image(source: starter-project-files.png, alt: "스타터 프로젝트의 파일을 완성본, 일부만 작성된 파일, 직접 작성할 파일로 나누고 각 파일을 작성할 Chapter를 표시한 그림")
         }
 
         @Steps {
             @Step {
-                Project navigator에서 `ContentView.swift`를 여세요. Xcode 버전에 따라 기본 내용이 다를 수 있으므로 파일 역할을 먼저 확인하세요. 아직 화면 기능을 추가하지 않습니다.
+                `HandConstellation-Starter` 폴더의 `HandConstellation.xcodeproj`를 더블클릭해 Xcode로 여세요. 왼쪽 Project navigator에 표의 파일이 모두 보이고, `HandConstellationApp.swift`를 선택하면 `WindowGroup` 하나만 있는 코드가 열립니다.
 
-                @Image(source: capture-c01-r01.png, alt: "ContentView.swift를 선택해 자동 생성된 SwiftUI 코드가 열린 화면")
+                @Image(source: capture-next-rv-app.png, alt: "Xcode에서 스타터 프로젝트를 열어 Project navigator의 파일 목록과 WindowGroup만 있는 HandConstellationApp.swift를 표시한 화면")
 
-                [capture-r01]: # "CAPTURE_LINKED: R01 | xcode | R01"
+                스타터의 Team은 None으로 비어 있습니다. Simulator에서 실행할 때는 서명 팀이 필요 없으니 그대로 두세요. 실제 Vision Pro에 설치할 서명 팀은 Chapter 5에서 설정합니다.
+
+                [capture-rv-app]: # "CAPTURE_LINKED: RV-APP | xcode | RV-APP"
+            }
+        }
+    }
+
+    @Section(title: "앱 진입점과 공유 상태 읽기") {
+        @ContentAndMedia {
+            visionOS 앱도 SwiftUI의 [`App`](https://developer.apple.com/documentation/swiftui/app) 프로토콜로 시작합니다. 앱 진입점에는 창이나 몰입형 공간 같은 장면(scene)을 나열하고, 여러 장면이 함께 봐야 하는 값은 `AppModel` 하나에 모아 둡니다.
+
+            제어창은 [`WindowGroup`](https://developer.apple.com/documentation/swiftui/windowgroup)으로, 손으로 그리는 공간은 [`ImmersiveSpace`](https://developer.apple.com/documentation/swiftui/immersivespace)로 띄웁니다. 스타터에는 아직 제어창만 있습니다.
+
+            @Image(source: scene-structure.png, alt: "WindowGroup으로 띄운 제어창의 별자리 그리기 시작 버튼이 RealityView와 ARKitSession을 담은 혼합 몰입형 공간을 여는 구조")
+        }
+
+        @Steps {
+            @Step {
+                방금 연 `HandConstellationApp.swift`에서 강조된 `body`를 보세요. 타입이 `some Scene`이라는 것은 이 자리에 장면을 여러 개 나열할 수 있다는 뜻이고, 지금은 제어창인 `ControlView`를 띄우는 `WindowGroup` 하나만 있습니다.
+
+                @Code(name: "HandConstellationApp.swift", file: C02-T03-HandConstellationApp-02-scenes.swift, previousFile: HL-HandConstellationApp-scenes.swift)
+
+                Chapter 4에서 이 목록에 몰입형 공간을 여는 `ImmersiveSpace`를 추가합니다.
             }
 
             @Step {
-                오른쪽은 이 과정의 기준 시작 코드입니다. 실제 캡처에는 `Model3D`와 `import RealityKit`이 추가로 보입니다. 템플릿 차이를 확인하고 지금은 코드를 수정하지 않습니다.
+                이번에는 강조된 두 줄을 보세요. `@State`로 `AppModel`을 하나 만들고, `.environment(appModel)`로 제어창에 전달합니다. Chapter 4에서 추가할 몰입형 공간에도 같은 객체를 전달하므로 창과 공간은 언제나 같은 상태를 봅니다.
 
-                @Code(name: "ContentView.swift", file: C01-T03-ContentView-00.swift, reset: true)
+                @Code(name: "HandConstellationApp.swift", file: C02-T03-HandConstellationApp-02.swift, previousFile: HL-HandConstellationApp-environment.swift)
             }
 
             @Step {
-                `import SwiftUI`는 `Text`, `Image`, `VStack` 같은 화면 구성 요소를 사용할 수 있게 합니다.
+                `AppModel.swift`를 열어 강조된 부분을 보세요. `DrawingState`와 `isDrawingEnabled`·`setDrawingEnabled`·`toggleDrawing`이 그리기 켜짐·꺼짐을 저장하고 바꾸는 코드이고, 제어창의 **그리기 켜기** 버튼이 `toggleDrawing()`을 부릅니다. 위쪽의 `immersiveSpaceID`는 몰입형 공간을 등록하고 열 때 쓰는 이름입니다.
 
-                @Code(name: "ContentView.swift", file: C01-T03-ContentView-00.swift)
-            }
+                @Code(name: "AppModel.swift", file: C02-T02-AppModel-12.swift, previousFile: HL-AppModel-drawing.swift)
 
-            @Step {
-                `struct ContentView: View`는 이 타입이 하나의 SwiftUI 화면임을 뜻합니다. `body` 안의 내용이 실제로 보이는 부분입니다.
-
-                @Code(name: "ContentView.swift", file: C01-T03-ContentView-00.swift)
-            }
-
-            @Step {
-                맨 아래 `#Preview`는 Xcode Canvas에서 화면을 미리 보는 선언입니다. 이 Step에서는 선언의 역할만 읽습니다. Chapter 2에서 Canvas를 여는 조작을 따라가며 제어창을 확인합니다.
-
-                @Code(name: "ContentView.swift", file: C01-T03-ContentView-00.swift)
-            }
-
-            @Step {
-                실제 Xcode 화면에서 맨 아래 `#Preview` 선언과 오른쪽 Canvas 위치를 확인하세요. 캡처의 **Canvas paused**는 미리보기가 일시 정지된 상태입니다. 여기서는 선언을 읽고, 미리보기 실행은 Chapter 2에서 진행합니다.
-
-                @Image(source: capture-c01-r02-paused.png, alt: "기본 #Preview와 일시 정지된 Canvas 및 새로고침 버튼")
-
-                [capture-r02]: # "CAPTURE_LINKED: R02 | xcode | R02-PAUSED"
-            }
-
-            @Step {
-                이제 `HandConstellationApp.swift`를 여세요. `@main`이 붙은 타입이 앱의 시작점이고, `WindowGroup` 안의 `ContentView()`가 처음 표시할 창입니다.
-
-                @Image(source: capture-c01-r03.png, alt: "HandConstellationApp.swift에서 @main과 WindowGroup을 확인하는 실제 화면")
-
-                [capture-r03]: # "CAPTURE_LINKED: R03 | xcode | R03"
-            }
-
-            @Step {
-                코드 패널에서 `WindowGroup`이 `ContentView()`를 표시하는 부분을 확인하세요.
-
-                @Code(name: "HandConstellationApp.swift", file: C01-T03-HandConstellationApp-00.swift, reset: true)
-            }
-
-            @Step {
-                `body`의 타입이 `some Scene`인 점에 주목하세요. 화면 하나가 아니라 **씬 목록**을 반환합니다. Chapter 6에서 여기에 몰입형 공간 씬을 하나 더 추가합니다.
-
-                @Code(name: "HandConstellationApp.swift", file: C01-T03-HandConstellationApp-00.swift)
+                클래스에 [`@Observable`](https://developer.apple.com/documentation/observation/observable())이 붙어 있어서 값이 바뀌면 그 값을 읽는 화면이 다시 그려집니다. Chapter 4의 코디네이터도 `isDrawingEnabled`를 읽어 그리기가 꺼져 있으면 점을 찍지 않습니다.
             }
         }
     }
 
     @Section(title: "Simulator에서 실행하기") {
         @ContentAndMedia {
-            손 추적을 만들기 전에 프로젝트 자체가 정상인지 먼저 확인합니다. 이 단계는 Simulator만으로 충분합니다.
-
-            @Image(source: capture-c01-r07.png, alt: "visionOS 27.0 Simulator에서 기본 3D 모델과 Hello, world! 창을 실행한 실제 화면")
+            손 추적 코드를 쓰기 전에 스타터가 그대로 빌드되고 실행되는지 확인합니다. 이 단계는 Simulator만 있으면 됩니다.
         }
 
         @Steps {
             @Step {
-                Xcode 위쪽 도구 막대의 실행 대상 메뉴를 여세요.
+                Xcode 도구 막대 가운데의 실행 대상 메뉴를 열고 Simulator 목록에서 **Apple Vision Pro**를 고르세요. 고르고 나면 도구 막대에 **HandConstellation › Apple Vision Pro**가 표시됩니다.
 
-                @Image(source: capture-c01-r04.png, alt: "실행 대상 목록의 Apple Vision Pro 27.0 Simulator")
+                @Image(source: capture-c01-r05-confirmed.png, alt: "Xcode 도구 막대의 실행 대상이 Apple Vision Pro Simulator로 선택된 화면")
 
-                [capture-r04]: # "CAPTURE_LINKED: R04 | xcode | R04"
-            }
-
-            @Step {
-                runtime 버전이 붙은 Apple Vision Pro **Simulator**를 선택하세요. 캡처의 선택 항목은 Apple Vision Pro 27.0입니다. 연결된 실제 기기나 Any visionOS Device 같은 빌드 전용 대상과 구별합니다.
-
-                @Image(source: capture-c01-r05-confirmed.png, alt: "실행 대상 팝오버 닫은 뒤 Simulator 선택 상태")
+                **Any visionOS Device**는 빌드만 하는 대상이라 실행할 수 없습니다. 실제 Vision Pro를 실행 대상으로 고르는 방법은 Chapter 5에서 다룹니다.
 
                 [capture-r05]: # "CAPTURE_LINKED: R05 | xcode | R05-CONFIRMED"
             }
 
             @Step {
-                **Run** 버튼을 누르세요. 처음 실행할 때는 Simulator 준비와 앱 설치에 시간이 걸릴 수 있습니다.
+                **Run** 버튼(▶)을 클릭하거나 **Command+R**을 누르세요. Simulator가 열리고 제어창에 **대기**, **그리기 꺼짐**, **별자리 0개 · 점 0개 · 선 0개**가 보이면 됩니다.
 
-                @Image(source: capture-c01-r06-ready.png, alt: "Run 버튼과 선택된 Simulator가 보이는 실행 준비 화면")
+                @Image(source: capture-next-rv-window.png, alt: "Simulator에 뜬 제어창. 대기와 그리기 꺼짐 상태이고 별자리 0개·점 0개·선 0개가 표시됩니다.")
 
-                [capture-r06]: # "CAPTURE_LINKED: R06 | xcode | R06-READY"
-            }
+                **문제가 생겼다면**: Simulator runtime이 없다는 오류가 나면 **Xcode › Settings › Components**에서 visionOS Simulator를 설치하세요. **별자리 그리기 시작**을 눌러도 공간이 열리지 않는 것은 몰입형 공간을 아직 등록하지 않았기 때문입니다. 공간을 열 수 없다는 안내가 떠도 괜찮습니다. 등록은 Chapter 4에서 합니다.
 
-            @Step {
-                **Expected Result · 결과 확인** — Simulator에서 기본 창이 열리고 `Hello, world!`가 보여야 합니다. 캡처의 Xcode 27.1 템플릿에는 기본 3D 모델도 함께 표시됩니다. Xcode 빌드 오류가 없어야 합니다. 아직 손 추적을 구현하지 않아 커서·점·선이 없는 것이 정상입니다.
-
-                @Image(source: capture-c01-r07.png, alt: "visionOS Simulator에서 기본 모델과 Hello, world! 실행 확인")
-
-                [capture-r07]: # "CAPTURE_LINKED: R07 | simulator | R07"
-            }
-
-            @Step {
-                **문제가 생겼다면**: runtime이 없다는 오류는 Xcode의 플랫폼·Simulator 설치 상태를 확인하세요. 빌드는 됐는데 창이 없다면 Simulator의 앱 목록에서 HandConstellation을 다시 실행합니다. 손 추적 권한 창이 뜨는 단계는 Chapter 7입니다.
+                [capture-rv-window]: # "CAPTURE_LINKED: RV-WINDOW | simulator | RV-WINDOW"
             }
         }
     }

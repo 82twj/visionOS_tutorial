@@ -10,14 +10,21 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
+from build_starter_project import check as check_starter
 from normalize_docc_navigation import LEGACY_ROUTES, chapter_anchor
 
 
+# Directive arguments only: the lookbehind skips Swift signatures in link URLs
+# such as `task(name:priority:file:line:_:)`.
 REFERENCE_PATTERNS = (
-    r"file:\s*([A-Za-z0-9._-]+)",
-    r"previousFile:\s*([A-Za-z0-9._-]+)",
-    r"source:\s*([A-Za-z0-9._-]+)",
+    r"(?<![\w:])file:\s*([A-Za-z0-9._-]+)",
+    r"(?<![\w:])previousFile:\s*([A-Za-z0-9._-]+)",
+    r"(?<![\w:])source:\s*([A-Za-z0-9._-]+)",
+    r"(?<![\w:])projectFiles:\s*([A-Za-z0-9._-]+)",
 )
+ASSET_SUFFIXES = {".swift", ".plist", ".png", ".gif", ".zip"}
+# ConstellationModel and ExistingPointConnectionDetector ship complete in the
+# starter project, so build_starter_project.py checks them instead.
 FINAL_SNAPSHOTS = {
     "AppModel.swift": "C02-T02-AppModel-12.swift",
     "ControlView.swift": "C02-T04-ControlView-14.swift",
@@ -25,8 +32,6 @@ FINAL_SNAPSHOTS = {
     "HandTrackingService.swift": "C04-T05-HandTrackingService-19.swift",
     "ConstellationConfiguration.swift": "C04-T02-Configuration-07.swift",
     "DwellDetector.swift": "C04-T03-DwellDetector-14.swift",
-    "ExistingPointConnectionDetector.swift": "C04-T06-ExistingPointConnectionDetector-06.swift",
-    "ConstellationModel.swift": "C05-T02-ConstellationModel-14.swift",
     "ConstellationRenderer.swift": "C05-T03-ConstellationRenderer-13.swift",
     "ImmersiveCoordinator.swift": "C06-T03-ImmersiveCoordinator-22.swift",
     "ImmersiveView.swift": "C06-T04-ImmersiveView-04.swift",
@@ -75,7 +80,7 @@ def verify_source(root: Path, catalog: Path, checks: Checks) -> Tuple[list[str],
     assets = {
         path.name
         for path in catalog.iterdir()
-        if path.suffix.lower() in {".swift", ".plist", ".png"}
+        if path.suffix.lower() in ASSET_SUFFIXES
     }
     orphaned = sorted(assets - referenced)
     checks.require(not orphaned, "unreferenced catalog assets: " + ", ".join(orphaned))
@@ -90,6 +95,13 @@ def verify_source(root: Path, catalog: Path, checks: Checks) -> Tuple[list[str],
                 source_path.read_bytes() == snapshot_path.read_bytes(),
                 f"final snapshot differs from app source: {snapshot}",
             )
+
+    live_slugs = {stem.lower() for stem in order}
+    for old_slug, new_slug in LEGACY_ROUTES.items():
+        if old_slug not in live_slugs:
+            checks.require(new_slug in live_slugs, f"legacy route {old_slug} points to a missing page {new_slug}")
+
+    checks.errors.extend(check_starter())
     return order, task_counts
 
 
@@ -128,7 +140,11 @@ def resource_values(value: object, keys: set[str]) -> list[str]:
 
 
 def verify_archive(
-    archive: Path, source_stems: list[str], source_task_counts: dict[str, int], checks: Checks
+    archive: Path,
+    catalog: Path,
+    source_stems: list[str],
+    source_task_counts: dict[str, int],
+    checks: Checks,
 ) -> None:
     overview_path = archive / "data/tutorials/handconstellationtutorials.json"
     overview = load_json(overview_path, checks)
@@ -240,6 +256,16 @@ def verify_archive(
         else:
             checks.require(not callouts, f"{label}: final tutorial unexpectedly has a Next action")
 
+    # `@Tutorial(projectFiles:)` copies each project zip into downloads/.
+    for project_zip in sorted(catalog.glob("*.zip")):
+        copies = list((archive / "downloads").rglob(project_zip.name))
+        checks.require(bool(copies), f"archive has no download for {project_zip.name}")
+        for copy in copies:
+            checks.require(
+                copy.read_bytes() == project_zip.read_bytes(),
+                f"archive download {copy.relative_to(archive)} differs from the catalog",
+            )
+
     checks.require((archive / "index.html").is_file(), "archive has no index.html")
     checks.require((archive / "index/index.json").is_file(), "archive has no search index")
     live_slugs = {identifier.rsplit("/", 1)[-1].lower() for identifier in ordered}
@@ -263,9 +289,10 @@ def main() -> None:
     args = parser.parse_args()
 
     checks = Checks()
-    order, task_counts = verify_source(root, args.catalog.resolve(), checks)
+    catalog = args.catalog.resolve()
+    order, task_counts = verify_source(root, catalog, checks)
     if args.archive:
-        verify_archive(args.archive.resolve(), order, task_counts, checks)
+        verify_archive(args.archive.resolve(), catalog, order, task_counts, checks)
     if checks.errors:
         for error in checks.errors:
             print(f"error: {error}", file=sys.stderr)

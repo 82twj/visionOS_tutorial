@@ -15,13 +15,24 @@ import re
 from pathlib import Path
 from typing import Tuple
 
+# Removed tutorial pages -> the live page that now covers their content. The
+# starter project replaced the project-setup, app-model, control-window and
+# tunable-value pages, and the remaining removed pages were merged into the
+# page that follows them.
 LEGACY_ROUTES = {
-    "creatingtheappmodelfile": "buildingtheappmodel",
-    "renamingcontentviewtocontrolview": "buildingthecontrolwindow",
-    "creatingthehandtrackingservicefile": "startingthehandtrackingsession",
-    "creatingtheinputdetectorfiles": "collectingtunablevalues",
-    "creatingtheconstellationfiles": "storingmultipleconstellations",
+    "creatingthevisionosproject": "readingthestartercode",
+    "buildingtheappmodel": "readingthestartercode",
+    "buildingthecontrolwindow": "readingthestartercode",
+    "creatingtheappmodelfile": "readingthestartercode",
+    "renamingcontentviewtocontrolview": "readingthestartercode",
+    "collectingtunablevalues": "detectingthedwell",
+    "creatingtheinputdetectorfiles": "detectingthedwell",
+    "creatingtheconstellationfiles": "renderingpointsandlines",
+    "detectingtheclosure": "buildingthecoordinatorlifecycle",
+    "storingmultipleconstellations": "buildingthecoordinatorlifecycle",
+    "connectingtheinputpipeline": "buildingthecoordinatorlifecycle",
     "creatingtheimmersivefiles": "buildingthecoordinatorlifecycle",
+    "creatingthehandtrackingservicefile": "startingthehandtrackingsession",
 }
 
 
@@ -195,8 +206,8 @@ def normalize(archive: Path) -> int:
         overview_path.write_text(rendered, encoding="utf-8")
         changed += 1
 
-    # Preserve links to the six preparation pages merged into their following
-    # implementation pages. Relative redirects work with any Pages base path.
+    # Preserve links to removed pages. Relative redirects work with any Pages
+    # base path.
     routes_root = archive / "tutorials/handconstellation"
     live_slugs = {identifier.rsplit("/", 1)[-1].lower() for identifier in ordered}
     for old_slug, new_slug in LEGACY_ROUTES.items():

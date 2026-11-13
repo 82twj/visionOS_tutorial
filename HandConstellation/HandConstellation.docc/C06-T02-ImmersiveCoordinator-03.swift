@@ -106,7 +106,7 @@ final class ImmersiveCoordinator {
     }
 
 
-    // Temporary hooks. The next tutorial implements the input pipeline.
+    // Temporary hooks. The next section fills in the input pipeline.
     private func process(anchor: HandAnchor, appModel: AppModel) {}
     private func applyDrawingState(appModel: AppModel) {}
     private func syncDrawingGuidance(appModel: AppModel) {}

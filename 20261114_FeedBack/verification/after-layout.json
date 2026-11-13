@@ -1,0 +1,16 @@
+{"viewport":"1440x900","source":"local build of the revised catalog (docbuild --warnings-as-errors, normalized), served at /visionOS_tutorial",
+"commonToAllPages":{"heroH1":"572|223|48px","heroContent":"572|223|21px","introContent":"450|223|17px","introMedia":"450|753","stepsLeft":"368|223","stepsRight":"802|631|rgb(52, 52, 56)","step":"368|223|28.05px 34px|24px|rgb(52, 52, 56)","stepLabel":"300|257|15.98px","stepContent":"300|257|19.04px|29.512px","stepGap":"368|223|112px (between consecutive steps; 0px on the last step of a section, same rule as before)","caption":"300|257|19.04px|1px top border","codePre":"787 or 802|631|17px|28.9px (same two values as baseline)"},
+"pages":{
+"buildinghandconstellation":"2,6,0,2,4",
+"readingthestartercode":"3,6,1,1,5",
+"addinghandtrackingpermission":"2,6,1,0,2",
+"startingthehandtrackingsession":"2,8,1,0,5",
+"convertingthefingertiptoworldspace":"2,8,1,1,6",
+"detectingthedwell":"2,10,2,3,8",
+"renderingpointsandlines":"3,11,2,1,10",
+"buildingthecoordinatorlifecycle":"2,7,0,0,6",
+"connectingtherealityviewandappscenes":"3,9,1,0,7",
+"runningonvisionpro":"3,8,0,0,6",
+"drawingthefirstconstellation":"3,8,0,0,5",
+"drawingthesecondconstellation":"3,6,0,0,5"},
+"legend":"counts = sections,steps,visible code panels,tables,captions"}

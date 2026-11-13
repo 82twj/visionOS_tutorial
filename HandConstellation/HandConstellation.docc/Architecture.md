@@ -1,70 +1,83 @@
 # 앱 구조 이해하기
 
-추적 데이터가 RealityKit 엔티티가 되기까지의 책임과 데이터 흐름을 살펴봅니다.
+손 추적 데이터가 RealityKit 엔티티가 되기까지 어떤 타입을 거치는지 살펴봅니다.
 
 ## Overview
 
-Hand Constellation은 프레임마다 바뀌는 ARKit 입력과 오래 유지되는 별자리 상태를 분리합니다. 이 구조는 추적이 잠시 끊기거나 렌더링 방식을 바꾸더라도 체류 판정과 점 연결 규칙을 독립적으로 시험할 수 있게 합니다.
+Hand Constellation은 매 프레임 바뀌는 ARKit 입력과, 오래 남는 별자리 데이터를 서로 다른 타입에 나눠 둡니다. 덕분에 추적이 잠시 끊겨도 저장된 점과 선은 그대로 남고, 머무르기 판정과 점 연결 규칙은 ARKit이나 RealityKit 없이 따로 시험할 수 있습니다.
 
 ```text
 HandTrackingProvider
         │ HandAnchor
         ▼
-HandTrackingService ── 월드 검지 위치
+HandTrackingService ── 검지 끝 월드 좌표
         ▼
 ImmersiveCoordinator
-        ├── DwellDetector ── 확정 위치
-        ├── ExistingPointConnectionDetector ── 모든 기존 점 스냅
-        ├── ConstellationModel ── 별자리별 노드 + 엣지 + 활성 노드
+        ├── ExistingPointConnectionDetector ── 기존 점에 연결할지 판정
+        ├── DwellDetector ── 새 점을 찍을 위치
+        ├── ConstellationModel ── 별자리별 점과 선, 다음 선의 시작점
         └── ConstellationRenderer ── 흰색 점·선·커서·연결 안내
 ```
 
-## 계층별 책임
+## 파일과 작성 위치
 
-### 앱과 Scene
+튜토리얼은 스타터 프로젝트에서 시작합니다. spatial computing과 직접 관련된 코드만 직접 작성하고, 나머지 앱 코드는 스타터에 완성된 채로 들어 있습니다.
 
-`HandConstellationApp`은 제어용 `WindowGroup`과 손 추적용 `ImmersiveSpace`를 선언합니다. `AppModel`은 두 Scene이 공유해야 하는 몰입 상태, 추적 상태, 그리기 상태, 별자리와 점 개수, 초기화 신호를 보관합니다.
+| 파일 | 스타터 상태 | 작성하는 곳 |
+| --- | --- | --- |
+| `AppModel`, `ControlView`, `ConstellationConfiguration`, `ConstellationModel`, `ExistingPointConnectionDetector` | 완성본 | 고치지 않고 그대로 씁니다 |
+| `Info.plist` | 씬 설정만 있음 | Chapter 1에서 손 추적 사용 목적 추가 |
+| `HandTrackingService` | 비어 있음 | Chapter 2 |
+| `DwellDetector` | `update`만 비어 있음 | Chapter 3 |
+| `ConstellationRenderer` | 비어 있음 | Chapter 3 |
+| `ImmersiveCoordinator`, `ImmersiveView` | 비어 있음 | Chapter 4 |
+| `HandConstellationApp` | `WindowGroup`만 있음 | Chapter 4에서 `ImmersiveSpace` 추가 |
 
-`ImmersiveView`는 `RealityView`에 렌더러의 루트 엔티티를 한 번 추가하고, SwiftUI task의 생명 주기에 맞춰 코디네이터를 시작하고 중단합니다.
+## 타입별 역할
 
-### 입력 어댑터
+### 앱과 씬
 
-`HandTrackingService`는 ARKit API에만 집중합니다. 지원 여부와 권한을 확인하고 오른손 검지 끝을 월드 좌표로 변환합니다.
+`HandConstellationApp`은 제어창용 `WindowGroup`과 손 추적용 `ImmersiveSpace`를 선언합니다. 두 씬은 같은 `AppModel`을 받습니다. `AppModel`에는 공간이 열렸는지, 손 추적 상태, 그리기 켜짐 여부, 별자리·점·선 개수, 초기화 요청 번호가 들어 있습니다.
 
-### 순수 도메인 로직
+`ImmersiveView`는 `RealityView`에 렌더러의 루트 엔티티를 한 번 추가하고, `.task`에서 코디네이터를 실행합니다. 공간이 닫히면 task가 취소되면서 추적도 멈춥니다. 그리기 상태와 초기화 요청 번호가 바뀌면 `.onChange`로 코디네이터에 알립니다.
 
-`DwellDetector`, `ExistingPointConnectionDetector`, `ConstellationModel`은 ARKit이나 RealityKit에 의존하지 않습니다. 그래서 호스트 macOS에서도 체류 경계값, 최근접 목표 고정, 중복 엣지 차단과 별자리 분리를 검증할 수 있습니다.
+### 손 추적
 
-### 장면 출력
+`HandTrackingService`는 ARKit만 다룹니다. 손 추적을 지원하는지와 권한을 확인해 세션을 시작하고, 오른손 검지 끝의 위치를 월드 좌표로 바꿉니다.
 
-`ConstellationRenderer`는 커서, 점 컨테이너, 선 컨테이너와 연결 안내 컨테이너를 소유합니다. 사용자가 기존 점 가까이에 오면 해당 목표 하나에 흰색 반투명 대상을 표시하고 현재 출발점부터 목표까지 미리보기 선을 보여 줍니다. 모델이 전달한 값만 확정 렌더링하며 ARKit 세션을 알지 못합니다.
+### ARKit에 의존하지 않는 로직
 
-## 데이터 흐름
+`DwellDetector`, `ExistingPointConnectionDetector`, `ConstellationModel`은 ARKit도 RealityKit도 가져오지 않습니다. 그래서 Mac에서도 머무르기 시간과 반경, 가장 가까운 목표 유지, 중복 선 막기, 별자리 나누기를 단위 테스트로 확인할 수 있습니다.
 
-1. provider가 오른손 `HandAnchor`를 방출합니다.
-2. service가 검지 끝을 월드 위치로 바꿉니다.
-3. 창의 버튼 상태가 그리기 꺼짐이면 입력을 중단합니다.
-4. 그리기가 켜진 동안 기존 점 연결 감지기가 가장 가까운 목표를 먼저 검사합니다.
-5. 연결이 확정되면 model은 새 점 없이 현재 활성 노드와 기존 노드 사이에 엣지를 추가합니다.
-6. 선택한 기존 노드는 새 활성 노드가 되어 다음 가지의 출발점이 됩니다.
-7. 기존 점 목표가 없으면 일반 dwell detector가 새 점 위치를 한 번만 방출합니다.
-8. model은 새 노드와 활성 노드 사이의 엣지를 계산하며 자기 연결과 중복 엣지를 거부합니다.
-9. renderer가 흰색 점과 선, 선택 목표와 미리보기 상태를 루트 엔티티 아래에 반영합니다.
+### 장면 그리기
 
-추적이 손실되면 두 감지기의 진행 상태를 취소하고 커서와 연결 안내를 숨깁니다. 이미 확정한 별자리 데이터는 사용자가 초기화하거나 몰입형 공간을 닫기 전까지 유지합니다.
+`ConstellationRenderer`는 커서, 점, 선, 연결 안내를 담을 엔티티를 루트 엔티티 아래에 가지고 있습니다. 기존 점 가까이에 가면 그 점 하나를 반투명 흰색으로 강조하고, 지금 선이 시작될 점에서 목표까지 미리보기 선을 보여 줍니다. 렌더러는 코디네이터가 넘겨준 값만 그리며 ARKit 세션은 알지 못합니다.
 
-## 설정값 조정
+## 한 프레임에서 일어나는 일
 
-`ConstellationConfiguration.standard`에서 체험의 감도를 한곳에서 조절합니다.
+1. provider가 손 앵커를 보내면 코디네이터는 오른손 앵커만 처리합니다.
+2. 제어창의 그리기 상태를 먼저 반영합니다. 그리기가 꺼져 있으면 여기서 멈춥니다.
+3. 서비스가 검지 끝을 월드 좌표로 바꿉니다. 좌표를 얻지 못하면 진행 중인 머무르기만 취소합니다.
+4. 기존 점 연결 감지기가 지금 별자리의 점 중에서 목표를 찾습니다. 목표에 머무르는 동안에는 새 점 판정으로 넘어가지 않습니다.
+5. 연결이 끝나면 모델은 새 점 없이 지금 시작점과 목표 점 사이에 선을 하나 추가하고, 목표 점을 다음 선의 시작점으로 삼습니다. 이미 선으로 이어진 점이면 선을 더하지 않고 안내만 보여 줍니다.
+6. 기존 점 목표가 없으면 머무르기 감지기가 새 점 위치를 한 번만 내보냅니다.
+7. 모델은 새 점을 저장하고, 시작점이 있으면 두 점을 잇는 선을 만듭니다. 같은 별자리의 점과 3cm보다 가까운 점은 받지 않습니다.
+8. 렌더러가 점과 선, 목표 강조와 미리보기 선을 루트 엔티티 아래에 반영합니다.
 
-| 설정 | 기본값 | 역할 |
+추적이 끊기면 두 감지기의 진행 상태를 취소하고 커서와 연결 안내를 숨깁니다. 이미 만든 별자리는 사용자가 초기화하거나 몰입형 공간을 닫을 때까지 남아 있습니다.
+
+## 설정값
+
+체험의 감도는 `ConstellationConfiguration.standard` 한 곳에서 조절합니다.
+
+| 설정 | 기본값 | 쓰임 |
 | --- | ---: | --- |
-| `dwellDuration` | 0.8초 | 점을 확정하기 위한 체류 시간 |
-| `stabilityRadius` | 0.015m | 같은 체류로 인정하는 흔들림 반경 |
-| `rearmDistance` | 0.03m | 다음 체류를 허용하기 위한 이동 거리 |
-| `connectionSnapDistance` | 0.03m | 기존 점을 연결 목표로 선택하는 진입 반경 |
-| `connectionReleaseDistance` | 0.04m | 목표 고정과 진행을 유지하는 해제 반경 |
-| `minimumPointDistance` | 0.03m | 너무 가까운 점을 모델에서 거부하는 거리 |
-| `maximumPointCount` | 100 | 한 장면에서 허용하는 최대 점 개수 |
+| `dwellDuration` | 0.8초 | 점을 찍거나 기존 점에 연결하기까지 머무르는 시간 |
+| `stabilityRadius` | 0.015m | 같은 자리에 머무른다고 보는 흔들림 반경 |
+| `rearmDistance` | 0.03m | 점을 찍은 뒤 다음 머무르기를 시작하려면 움직여야 하는 거리 |
+| `connectionSnapDistance` | 0.03m | 기존 점을 연결 목표로 고르는 거리 |
+| `connectionReleaseDistance` | 0.04m | 고른 목표를 놓아주는 거리 |
+| `minimumPointDistance` | 0.03m | 모델이 너무 가까운 새 점을 받지 않는 거리 |
+| `maximumPointCount` | 100 | 한 장면에 둘 수 있는 점의 최대 개수 |
 
-실제 기기에서 손 떨림과 사용 거리를 관찰한 뒤 `stabilityRadius`와 `dwellDuration`을 함께 튜닝하세요.
+실제 기기에서 손 떨림과 팔을 뻗는 거리를 관찰한 뒤 `stabilityRadius`와 `dwellDuration`을 함께 조절해 보세요.

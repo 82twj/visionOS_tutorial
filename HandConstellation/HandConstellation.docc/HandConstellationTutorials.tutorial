@@ -1,76 +1,55 @@
 @Tutorials(name: "visionOS 손 추적으로 별자리 그리기") {
     @Intro(title: "검지로 점을 찍고 선을 연결하세요") {
-        ARKit의 손 관절 좌표를 RealityKit 장면으로 전달하고, 체류 제스처로 점을 만들며 현재 별자리의 모든 기존 점을 다시 연결할 수 있는 visionOS 앱을 처음부터 만듭니다. 7개 Chapter를 순서대로 따라가면 Xcode의 시작 코드가 여러 별자리를 그리는 몰입형 앱이 됩니다.
+        오른손 검지 끝을 커서처럼 써서 공중에 별자리를 그리는 visionOS 앱을 만듭니다. 검지를 한곳에 잠시 멈추면 그 자리에 점이 찍히고, 다음 점을 찍으면 앞의 점과 선으로 이어집니다. 이미 찍은 점에서 다시 멈추면 새 점 없이 선만 하나 더 생깁니다.
 
-        중급 이상 난이도입니다. Swift와 SwiftUI를 이미 알고 있다고 가정하고, ARKit·RealityKit·좌표 변환·상태 머신은 사용하기 전에 설명합니다.
+        앱 상태, 제어창 화면, 설정값, 별자리 데이터 모델은 스타터 프로젝트에 미리 들어 있습니다. 직접 작성하는 코드는 ARKit 손 추적, 검지 끝의 월드 좌표 계산, 머무르기 판정, RealityKit 렌더링, 몰입형 공간 연결처럼 공간 컴퓨팅에 꼭 필요한 부분입니다. Swift와 SwiftUI는 이미 알고 있다고 가정합니다.
 
-        Chapter 1과 2에서는 Simulator의 창을, Chapter 3부터 5까지는 빌드와 코드 흐름을 확인합니다. Chapter 6에서는 몰입형 공간 연결과 Simulator의 손 추적 미지원 안내를 확인합니다. 실제 손 추적과 그리기는 Chapter 7에서 Vision Pro로 확인합니다.
+        Chapter 1–4는 Mac과 visionOS Simulator만으로 따라갈 수 있습니다. Simulator에서는 손 추적을 쓸 수 없어서, 검지로 직접 그려 보는 일은 Chapter 5에서 Apple Vision Pro로 합니다.
 
-        @Image(source: constellation-hero.png, alt: "오른손 검지로 두 개의 빛나는 별자리를 그리고 그리기 상태를 제어하는 Hand Constellation 앱")
+        @Image(source: constellation-hero.png, alt: "오른손 검지 끝의 커서로 별자리 두 개를 그리는 모습과 그리기 켜짐 상태를 나타낸 그림")
     }
 
     @Chapter(name: "프로젝트 시작하기") {
-        Xcode에서 visionOS 프로젝트를 만들고, 자동으로 생성된 코드를 읽은 뒤, 손 추적 사용 목적을 설정합니다.
+        완성된 앱이 어떻게 동작하는지 먼저 보고, 스타터 프로젝트를 열어 구성을 살펴본 뒤 손 추적 권한 설명을 추가합니다.
 
-        @Image(source: prerequisites.png, alt: "필요한 사전 지식, 과정에서 설명하는 개념, 확인 환경을 정리한 표")
+        @Image(source: prerequisites.png, alt: "미리 알고 있어야 할 것, 이 과정에서 설명하는 것, 확인 환경, Simulator에서 확인할 수 없는 것을 정리한 안내 그림")
 
         @TutorialReference(tutorial: "doc:BuildingHandConstellation")
-        @TutorialReference(tutorial: "doc:CreatingTheVisionOSProject")
         @TutorialReference(tutorial: "doc:ReadingTheStarterCode")
         @TutorialReference(tutorial: "doc:AddingHandTrackingPermission")
     }
 
-    @Chapter(name: "앱의 상태와 화면 만들기") {
-        창과 몰입형 공간이 함께 볼 공통 상태를 만들고, Xcode의 기본 화면을 제어 창으로 바꿉니다.
-
-        @Image(source: scene-structure.png, alt: "SwiftUI 제어 창에서 혼합 몰입형 공간의 RealityKit 장면을 여는 구조")
-
-        @TutorialReference(tutorial: "doc:BuildingTheAppModel")
-        @TutorialReference(tutorial: "doc:BuildingTheControlWindow")
-    }
-
     @Chapter(name: "손 추적 구현하기") {
-        ARKit 세션을 시작해 권한을 확인하고, 오른손 검지 끝의 위치를 월드 좌표로 바꿉니다.
+        ARKit 세션으로 손 추적을 시작하고, 오른손 검지 끝의 위치를 월드 좌표로 바꿉니다.
 
-        @Image(source: hand-skeleton-joints.png, alt: "오른손 골격에서 검지 끝 관절이 강조된 도해")
+        @Image(source: hand-skeleton-joints.png, alt: "오른손 골격에서 검지 끝 관절이 강조된 그림")
 
         @TutorialReference(tutorial: "doc:StartingTheHandTrackingSession")
         @TutorialReference(tutorial: "doc:ConvertingTheFingertipToWorldSpace")
     }
 
-    @Chapter(name: "점 입력과 연결 구현하기") {
-        검지가 한곳에 머무는 동작을 한 번의 점 입력으로 바꾸고, 임의 기존 점 스냅으로 선을 추가합니다.
+    @Chapter(name: "점과 선 만들기") {
+        검지가 한곳에 머무르면 점을 한 번만 찍도록 판정하고, 찍은 점과 선을 RealityKit 엔티티로 그립니다.
 
-        @Image(source: dwell-states.png, alt: "idle, dwelling, coolingDown 세 상태를 화살표로 이은 체류 판정 상태 머신")
+        @Image(source: dwell-states.png, alt: "idle, dwelling, coolingDown 세 상태와 상태가 바뀌는 조건을 화살표로 나타낸 머무르기 판정 그림")
 
-        @TutorialReference(tutorial: "doc:CollectingTunableValues")
         @TutorialReference(tutorial: "doc:DetectingTheDwell")
-        @TutorialReference(tutorial: "doc:DetectingTheClosure")
-    }
-
-    @Chapter(name: "별자리 모델과 화면 구현하기") {
-        확정된 점과 중복 없는 간선을 그래프로 저장하고, RealityKit 엔티티로 흰 점·선·기존 점 연결 안내를 표현합니다.
-
-        @Image(source: constellation-storage.png, alt: "각 별자리가 ID가 있는 노드와 중복 없는 간선을 가지는 저장 구조 그림")
-
-        @TutorialReference(tutorial: "doc:StoringMultipleConstellations")
         @TutorialReference(tutorial: "doc:RenderingPointsAndLines")
     }
 
     @Chapter(name: "전체 기능 연결하기") {
-        추적, 버튼 상태, 체류, 모델, 렌더러를 안전한 순서로 연결하고 몰입형 공간의 생명주기에 묶습니다.
+        손 추적, 머무르기 판정, 별자리 모델, 렌더러를 코디네이터 하나로 묶고, RealityView와 몰입형 공간을 앱에 등록합니다. 마지막에 Simulator에서 공간이 열리는지 확인합니다.
 
-        @Image(source: input-pipeline.png, alt: "그리기 상태 검사부터 기존 점 연결과 일반 점 확정까지 이어지는 입력 처리 순서도")
+        @Image(source: input-pipeline.png, alt: "한 프레임의 입력을 버튼 상태 반영, 검지 위치 계산, 기존 점 확인, 새 점 머무르기, 모델 반영 순서로 처리하는 순서도")
 
         @TutorialReference(tutorial: "doc:BuildingTheCoordinatorLifecycle")
-        @TutorialReference(tutorial: "doc:ConnectingTheInputPipeline")
         @TutorialReference(tutorial: "doc:ConnectingTheRealityViewAndAppScenes")
     }
 
     @Chapter(name: "Vision Pro에서 실행하기") {
-        Apple Vision Pro에서 권한 허용, 검지 커서, Dwell, 기존 점 연결, 분리와 초기화를 순서대로 확인합니다. 이 Chapter는 실기기 전용입니다. 아래 그림은 첫 실습의 목표인 점 4개·선 5개를 설명하는 개념도입니다.
+        Apple Vision Pro에 앱을 설치하고 손 추적 권한을 허용한 뒤, 별자리 두 개를 직접 그려 봅니다. 이 Chapter는 실제 기기가 있어야 합니다.
 
-        @Image(source: device-closed-triangle.png, alt: "개념도: 첫 실습의 최종 기준인 점 4개와 선 5개의 그래프")
+        @Image(source: device-closed-triangle.png, alt: "개념도: 첫 실습에서 만드는 점 4개와 선 5개짜리 별자리. 기존 점을 다시 이어 선만 추가한 모습")
 
         @TutorialReference(tutorial: "doc:RunningOnVisionPro")
         @TutorialReference(tutorial: "doc:DrawingTheFirstConstellation")

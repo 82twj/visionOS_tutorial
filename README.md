@@ -27,7 +27,15 @@ ARKit의 visionOS Hand Tracking으로 오른손 검지 끝을 인식하고, 공�
 
 Xcode Settings > Components에서 visionOS 플랫폼과 필요한 Simulator runtime을 먼저 설치하세요.
 
+## 스타터 프로젝트
+
+튜토리얼은 spatial computing에 필요한 코드(ARKit 손 추적과 권한, 관절 좌표 변환, 머무르기 판정, RealityKit 렌더링, RealityView·ImmersiveSpace 연결)만 직접 작성합니다. 앱 상태, 제어창 UI, 설정값, 별자리 그래프 모델, 기존 점 연결 감지기는 [`StarterProject/HandConstellation`](StarterProject/HandConstellation)에 완성본으로 들어 있습니다. 튜토리얼 첫 두 페이지의 **Project files** 버튼은 같은 내용을 담은 `HandConstellation-Starter.zip`을 내려받습니다.
+
+스타터의 Swift 파일과 zip은 `Scripts/build_starter_project.py`가 앱 소스와 튜토리얼 스냅샷에서 만듭니다. 앱 소스를 고친 뒤에는 `./Scripts/verify-snapshots.sh --generate`로 함께 갱신하세요.
+
 ## 실행하기
+
+완성 앱을 실행하는 방법입니다. 튜토리얼을 따라 하려면 위의 스타터 프로젝트로 시작하세요.
 
 1. `HandConstellation.xcodeproj`를 Xcode에서 엽니다.
 2. HandConstellation 타깃의 Signing & Capabilities에서 Team을 선택합니다.
@@ -45,22 +53,23 @@ HandConstellation/
 ├── ControlView.swift                 시작·종료·그리기 전환·초기화 창
 ├── ImmersiveView.swift               RealityView와 추적 task
 ├── HandTrackingService.swift         권한·ARKitSession·검지 좌표
-├── ConstellationConfiguration.swift  체류·거리·크기 조절 값
-├── DwellDetector.swift               체류 상태 머신
-├── ExistingPointConnectionDetector.swift  모든 기존 점의 스냅과 연결 체류 판정
+├── ConstellationConfiguration.swift  머무르기·거리·크기 설정값
+├── DwellDetector.swift               머무르기 상태 머신
+├── ExistingPointConnectionDetector.swift  기존 점 목표 고르기와 연결 판정
 ├── ConstellationModel.swift          점 노드·선 엣지 그래프 규칙
 ├── ConstellationRenderer.swift       흰색 점·선·커서·연결 피드백
 ├── ImmersiveCoordinator.swift        전체 데이터 흐름 연결
 └── HandConstellation.docc/           DocC 튜토리얼과 참조 문서
+StarterProject/HandConstellation/     튜토리얼을 시작하는 스타터 Xcode 프로젝트
 DocumentationTheme/                   확대된 단계·코드 패널용 DocC 렌더 테마
-Scripts/                              코드 스냅샷·튜토리얼 이미지 생성과 검증
+Scripts/                              코드 스냅샷·스타터·튜토리얼 이미지 생성과 검증
 ```
 
 설계 근거와 조사 결과는 [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md), 완성 튜토리얼은 [DocC 카탈로그](HandConstellation/HandConstellation.docc/HandConstellation.md)에서 확인할 수 있습니다.
 
 ## 검증하기
 
-호스트 macOS에서 ARKit과 무관한 체류·기존 점 연결·그래프 모델 테스트 23개를 실행합니다.
+호스트 macOS에서 ARKit과 무관한 머무르기·기존 점 연결·그래프 모델 테스트 23개를 실행합니다.
 
 ```shell
 swift test
@@ -105,9 +114,9 @@ xcodebuild \
   docbuild
 ```
 
-튜토리얼은 7개 Chapter와 19개 실습 페이지로 나뉩니다. Chapter 1~6은 Xcode의 초기 코드에서 시작해 앱을 완성하고, Chapter 7은 Apple Vision Pro에서 권한 허용, 임의 기존 점 연결, 버튼 기반 그리기 전환과 별자리 분리를 확인합니다. 파일 생성은 해당 기능을 구현하는 첫 단계에 포함하고, AppModel·제어창·기존 점 연결은 작은 코드 변경으로 나누어 설명합니다. 각 코드 단계에서 이전 코드와 달라진 줄을 강조합니다. 아키텍처, 체류 판정, 기존 점 스냅, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
+튜토리얼은 5개 Chapter와 12개 실습 페이지로 나뉩니다. Chapter 1은 스타터 프로젝트를 열어 실행하고 손 추적 권한 설명을 추가합니다. Chapter 2~4는 손 추적 서비스, 머무르기 판정, RealityKit 렌더러, 코디네이터와 몰입형 공간을 작성해 Simulator에서 공간 열기까지 확인하고, Chapter 5는 Apple Vision Pro에서 권한 허용, 기존 점 연결, 그리기 전환과 별자리 분리를 확인합니다. 코드를 쓰는 단계는 이전 코드와 달라진 줄을, 코드를 읽는 단계는 설명하는 줄을 강조합니다. 문제 해결 안내는 각 결과 단계의 캡션(구분선 아래)에 있습니다. 아키텍처, 머무르기 판정, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
 
-빌드한 아카이브에는 아래 후처리를 실행해야 합니다. 한국어 Chapter 이름의 DocC 경로 충돌로 생기는 다음 링크와 소속 Chapter 오류를 목차 기준으로 바로잡고, 삭제된 파일 준비 페이지 6개의 이전 주소도 연결합니다. GitHub Actions는 이 절차를 자동 실행합니다.
+빌드한 아카이브에는 아래 후처리를 실행해야 합니다. 한국어 Chapter 이름의 DocC 경로 충돌로 생기는 다음 링크와 소속 Chapter 오류를 목차 기준으로 바로잡고, 삭제되거나 합쳐진 페이지 13개의 이전 주소를 새 페이지로 연결합니다. GitHub Actions는 이 절차를 자동 실행합니다.
 
 ```shell
 python3 Scripts/normalize_docc_navigation.py /path/to/HandConstellation.doccarchive
@@ -129,7 +138,7 @@ workflow는 저장소 이름을 `DOCC_HOSTING_BASE_PATH`로 자동 설정합니�
 
 ## 튜토리얼 자료 다시 만들기
 
-튜토리얼의 코드 스냅샷과 개념 그림은 스크립트로 생성합니다. `xcode-info-actual.png`와 `control-window-simulator.png`는 실제 화면 캡처이며 그림 생성기가 덮어쓰지 않습니다. 앱 소스를 고친 뒤에는 다음을 실행해 스냅샷을 다시 만들고 참조를 검사하세요.
+튜토리얼의 코드 스냅샷과 개념 그림은 스크립트로 생성합니다. `capture-*.png`는 실제 Xcode·Simulator 화면 캡처이며 그림 생성기가 덮어쓰지 않습니다. 앱 소스를 고친 뒤에는 다음을 실행해 스냅샷을 다시 만들고 참조를 검사하세요.
 
 ```shell
 ./Scripts/verify-snapshots.sh --generate
@@ -137,21 +146,21 @@ workflow는 저장소 이름을 `DOCC_HOSTING_BASE_PATH`로 자동 설정합니�
 
 `./Scripts/verify-snapshots.sh`를 옵션 없이 실행하면 파일을 수정하지 않고 검사만 합니다.
 
-각 파일의 마지막 스냅샷은 실제 앱 소스와 바이트 단위로 같아야 하며, 스크립트가 이를 검사합니다. 그림을 다시 만들려면 다음을 실행합니다.
+튜토리얼에서 작성하는 파일의 마지막 스냅샷은 실제 앱 소스와 바이트 단위로 같아야 하고, 스타터 프로젝트의 파일과 zip은 앱 소스·첫 스냅샷과 일치해야 합니다. 스크립트가 둘 다 검사합니다. 코드를 읽는 단계의 강조 기준 파일(`HL-*.swift`)도 같은 스크립트가 만듭니다. 그림을 다시 만들려면 다음을 실행합니다. `--only`로 고친 그림만 다시 쓸 수 있습니다.
 
 ```shell
-python3 Scripts/generate_images.py
+python3 Scripts/generate_images.py --only interaction-dwell,fingertip-world-example
 ```
 
 ## 현재 검증 범위
 
-- visionOS SDK 대상 앱과 테스트 번들 컴파일 성공
+- visionOS SDK 대상 앱, 스타터 프로젝트, 튜토리얼 Chapter 2·3·4 끝 상태 컴파일 성공
 - `swift test`: 23개 테스트 통과
 - DocC 아카이브 경고 없이 빌드 성공
-- 코드 스냅샷 97개를 재현하며 모든 Swift 스냅샷이 문법 검사를 통과
-- 각 파일의 마지막 스냅샷이 실제 앱 소스와 일치
-- 생성된 19개 페이지의 본문·자료 참조·18개 다음 링크·7개 Chapter와 이전 주소 6개를 검사
-- 실제 Xcode 26.6 권한 설정과 visionOS 26.5 Simulator 대기 화면을 문서에 포함
-- 실제 기기 손 추적 동작과 Chapter 7의 캡처는 Apple Vision Pro에서 최종 확인 필요
+- 모든 코드 스냅샷과 강조 기준 파일이 Swift 문법 검사를 통과하고, 작성 파일의 마지막 스냅샷이 실제 앱 소스와 일치
+- 스타터 프로젝트 파일과 zip이 앱 소스·첫 스냅샷과 일치
+- 생성된 12개 페이지의 본문·자료 참조·다음 링크·5개 Chapter와 이전 주소 13개를 검사
+- 실제 Xcode 27.1 화면과 visionOS Simulator 실행 화면을 문서에 포함
+- 실제 기기 손 추적 동작과 Chapter 5의 캡처는 Apple Vision Pro에서 최종 확인 필요
 
-2026-09-12 피드백 대응의 범위와 순서는 [상세 수정 계획](TUTORIAL_FEEDBACK_IMPLEMENTATION_PLAN.md), 실제 확인 결과는 [수정 검증 기록](TUTORIAL_FEEDBACK_VERIFICATION.md)을 참고하세요.
+2026-11-14 피드백 대응은 [피드백 매칭 기록](20261114_FeedBack/FEEDBACK_MATCHING.md), [수정 계획](TUTORIAL_20261114_REVISION_PLAN.md), [검증 기록](20261114_FeedBack/verification/VERIFICATION.md)을 참고하세요. 이전 피드백 대응은 [2026-09-12 수정 계획](TUTORIAL_FEEDBACK_IMPLEMENTATION_PLAN.md)과 [검증 기록](TUTORIAL_FEEDBACK_VERIFICATION.md)에 있습니다.

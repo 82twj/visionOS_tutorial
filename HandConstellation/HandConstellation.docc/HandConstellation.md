@@ -1,25 +1,24 @@
 # ``HandConstellation``
 
-visionOS의 ARKit 손 추적과 RealityKit을 사용해 공중에 점과 선으로 별자리를 그립니다.
+visionOS의 ARKit 손 추적과 RealityKit으로 공중에 점을 찍고 선으로 이어 별자리를 그립니다.
 
 ## Overview
 
-Hand Constellation은 오른손 검지 끝을 커서로 사용합니다. 새 위치에 검지를 머물게 하면 흰색 점과 선을 만들고, 현재 별자리의 어느 기존 점에 머물러도 새 점 없이 선만 다시 연결합니다. 연결한 기존 점이 새 출발점이므로 그 지점에서 가지를 계속 그릴 수 있습니다. 공간은 그리기 꺼짐 상태로 시작하며 창의 버튼으로만 켜고 끕니다.
+Hand Constellation은 오른손 검지 끝을 커서로 씁니다. 빈 곳에 검지를 잠시 멈추면 흰 점이 찍히고, 다음 점을 찍을 때마다 앞의 점과 선으로 이어집니다. 이미 찍은 점에서 다시 멈추면 새 점 없이 선만 추가되고, 그 점에서 다음 선을 이어 그릴 수 있습니다.
 
-그리기를 끄면 진행 중인 체류를 취소하고 현재 별자리를 마칩니다. 다시 켠 뒤 만드는 첫 점은 이전 별자리와 연결되지 않으므로 한 번의 세션에서 여러 별자리를 만들 수 있습니다.
+입력은 제어창의 **그리기 켜기**·**그리기 끄기** 버튼으로 켜고 끕니다. 그리기를 껐다가 다시 켜면 다음 점부터 새 별자리가 시작되므로, 한 번 실행하는 동안 별자리를 여러 개 그릴 수 있습니다. **초기화**는 모든 별자리를 지웁니다.
 
-이 샘플은 다음 흐름을 작은 타입들로 나누어 설명합니다.
+튜토리얼은 스타터 프로젝트에서 시작합니다. 앱 상태(`AppModel`), 제어창(`ControlView`), 설정값(`ConstellationConfiguration`), 별자리 데이터 모델(`ConstellationModel`), 기존 점 연결 감지기(`ExistingPointConnectionDetector`)는 스타터에 들어 있고, 다음 공간 컴퓨팅 코드를 직접 작성합니다.
 
-1. `ARKitSession`과 `HandTrackingProvider`가 오른손 관절 업데이트를 전달합니다.
-2. 손 앵커와 검지 끝 관절의 변환을 곱해 월드 좌표를 계산합니다.
-3. 그리기가 켜진 동안 `DwellDetector`가 위치의 안정성과 체류 시간을 검사합니다.
-4. `ExistingPointConnectionDetector`가 모든 기존 점의 최근접 목표 고정과 연결 체류를 일반 점 입력과 분리합니다.
-5. `ConstellationModel`이 점 노드와 선 엣지, 현재 출발점과 중복 연결 규칙을 결정합니다.
-6. `ConstellationRenderer`가 흰색 점과 선뿐 아니라 선택 목표와 미리보기 선을 장면에 추가합니다.
+1. `ARKitSession`과 `HandTrackingProvider`로 오른손 관절 업데이트를 받습니다.
+2. 손 앵커 변환과 검지 끝 관절 변환을 곱해 검지 끝의 월드 좌표를 구합니다.
+3. `DwellDetector`가 검지가 한곳에 머물렀는지 판단해 점을 한 번만 찍습니다.
+4. `ConstellationRenderer`가 점과 선을 RealityKit 엔티티로 그립니다.
+5. `ImmersiveCoordinator`와 `ImmersiveView`가 손 추적, 머무르기 판정, 렌더링을 몰입형 공간의 생명주기에 묶습니다.
 
-체류 시간, 안정 반경, 재활성화 거리, 기존 점 스냅 반경과 점·선 크기 같은 조절 값은 `ConstellationConfiguration` 한 곳에 모여 있습니다.
+과정은 5개 Chapter로 되어 있습니다. Chapter 1–4는 Mac과 visionOS Simulator에서 진행하고, 실제 손 추적과 그리기는 Chapter 5에서 Apple Vision Pro로 확인합니다.
 
-> Important: ARKit 손 추적 데이터는 몰입형 공간에서 사용합니다. 실제 손 추적과 권한 흐름은 Apple Vision Pro에서 확인하세요.
+> Important: ARKit 손 추적은 몰입형 공간이 열려 있을 때만 데이터를 보냅니다. Simulator에서는 손 추적을 쓸 수 없으므로 실제 동작은 Apple Vision Pro에서 확인하세요.
 
 ## Topics
 
@@ -27,6 +26,7 @@ Hand Constellation은 오른손 검지 끝을 커서로 사용합니다. 새 위
 
 - <doc:HandConstellationTutorials>
 - <doc:BuildingHandConstellation>
+- <doc:ReadingTheStarterCode>
 - <doc:RunningOnVisionPro>
 
 ### 설계 이해하기
