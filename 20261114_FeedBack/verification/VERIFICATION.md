@@ -75,3 +75,11 @@
 - Chapter 5(Vision Pro) 캡처와 실제 기기 손 추적 동작 확인은 기기에서 촬영해야 한다(이전과 같음).
 - 재사용한 Xcode 캡처 몇 장에는 캡처 프로젝트의 파일 머리말(작성자 이름)과 Resources 폴더가 보인다. 스타터 파일에는 머리말이 없다. 필요하면 스타터 프로젝트로 다시 캡처한다.
 - 손으로 그린 개념도 몇 장(`dwell-progress`, `complete-experience`, `constellation-hero`)에 이전 표현이나 예시 개수가 남아 있다. 본문 설명과는 충돌하지 않는다.
+
+## 배포 확인
+
+커밋 0de1d3f를 main에 push했고 GitHub Actions **Deploy DocC to GitHub Pages**(실행 43486699796)가 모든 단계(스냅샷 검사 → 스타터 프로젝트 빌드 → DocC 빌드 → 정규화·검증 → 배포)를 통과했다. 배포된 https://82twj.github.io/visionOS_tutorial/ 에서 다시 확인한 결과는 다음과 같다.
+
+- 12페이지 모두 1440×900에서 레이아웃 기준값과 차이 0건(히어로, Section 설명·미디어, Step 열·패널, Step 카드·글꼴, 캡션 19.04px·구분선 1px, 코드 17px).
+- 스타터 zip(`downloads/com.example.HandConstellation/HandConstellation-Starter.zip`) 200 응답, 22,296바이트.
+- 삭제한 7개 페이지 주소가 각각 새 페이지(readingthestartercode, detectingthedwell, buildingthecoordinatorlifecycle)로 리디렉션된다.
