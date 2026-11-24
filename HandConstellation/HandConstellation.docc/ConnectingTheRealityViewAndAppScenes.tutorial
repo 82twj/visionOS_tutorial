@@ -131,23 +131,21 @@
 
     @Assessments {
         @MultipleChoice {
-            공간이 실제로 열렸을 때만 제어창의 상태를 `.open`으로 바꾸는 코드는 어느 것인가요?
+            `let result = await openImmersiveSpace(id: AppModel.immersiveSpaceID)` 다음 줄에서, 공간이 실제로 열렸을 때만 제어창의 상태를 `.open`으로 바꾸려면 어떤 조건을 써야 하나요?
 
             @Choice(isCorrect: false) {
                 ```swift
-                await openImmersiveSpace(id: AppModel.immersiveSpaceID)
-                appModel.immersiveSpaceState = .open
+                if result != .userCancelled
                 ```
 
                 @Justification(reaction: "다시 생각해 보세요.") {
-                    결과를 확인하지 않아서, 사용자가 취소했거나 시스템이 열지 못했을 때도 열린 것으로 표시됩니다.
+                    시스템이 공간을 열지 못한 `.error`도 이 조건을 통과합니다. 취소가 아니라는 것만으로는 열렸다고 볼 수 없습니다.
                 }
             }
 
             @Choice(isCorrect: false) {
                 ```swift
-                let result = await openImmersiveSpace(id: AppModel.immersiveSpaceID)
-                if result != .error { appModel.immersiveSpaceState = .open }
+                if result != .error
                 ```
 
                 @Justification(reaction: "다시 생각해 보세요.") {
@@ -157,8 +155,7 @@
 
             @Choice(isCorrect: true) {
                 ```swift
-                let result = await openImmersiveSpace(id: AppModel.immersiveSpaceID)
-                if case .opened = result { appModel.immersiveSpaceState = .open }
+                if case .opened = result
                 ```
 
                 @Justification(reaction: "맞습니다!") {
