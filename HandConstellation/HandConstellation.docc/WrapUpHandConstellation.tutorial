@@ -1,0 +1,52 @@
+@Article(time: 5) {
+    @Intro(title: "마무리: Hand Constellation 완성하기") {
+        오른손 검지로 공중에 점을 찍고 선을 이어 별자리를 그리는 앱을 끝까지 만들었습니다. 스타터 프로젝트에 손 추적, 머무르기 판정, RealityKit 렌더링, 몰입형 공간을 차례로 더했고, 마지막 Chapter에서 Vision Pro나 Simulator 입력 패드로 별자리 두 개를 그려 봤습니다.
+
+        @Image(source: constellation-hero.png, alt: "오른손 검지 끝의 커서로 공중에 별자리 두 개를 그린 모습. 제어창에는 별자리 2개 · 점 7개 · 선 8개가 표시됩니다.")
+    }
+
+    @ContentAndMedia {
+        ## 배운 내용 돌아보기
+
+        이 앱은 매 프레임 들어오는 검지 위치를 같은 순서로 처리합니다. 손 앵커에서 검지 끝의 월드 좌표를 구하고, 기존 점에 연결하려는 것인지 먼저 확인한 뒤, 그렇지 않을 때만 머무르기로 새 점을 찍습니다. 판정은 ARKit과 RealityKit을 모르는 작은 타입에 두었기 때문에 테스트로 확인할 수 있었고, 같은 처리 순서에 입력 패드의 위치를 넣어 기기 없이도 그려 볼 수 있었습니다.
+
+        완성 프로젝트는 [저장소](https://github.com/82twj/visionOS_tutorial)의 루트에 있는 `HandConstellation.xcodeproj`입니다. 내 앱이 본문과 다르게 동작하면 이 프로젝트의 같은 파일과 비교해 보세요.
+
+        ### 다룬 주제
+
+        - Info 탭에 손 추적 사용 목적을 적고 `ARKitSession`과 `HandTrackingProvider`로 손 추적 시작하기
+        - 손 앵커와 관절의 변환을 곱해 검지 끝의 월드 좌표 구하기
+        - 세 가지 상태로 머무르기를 판정하고 테스트로 확인하기
+        - 흰색 `UnlitMaterial` 엔티티로 점·선·커서를 그리고 `#Preview`로 확인하기
+        - 기존 점 연결을 새 점보다 먼저 처리하는 코디네이터 만들기
+        - `ImmersiveSpace`와 `RealityView`를 등록하고 `openImmersiveSpace`로 공간 열고 닫기
+    }
+
+    @ContentAndMedia {
+        ## 더 해 보기
+
+        ### 앱 바꿔 보기
+
+        - 제어창에 그릴 손을 고르는 버튼을 더해 왼손잡이도 쓸 수 있게 해 보세요. 고른 손을 `AppModel`에 저장하고, 코디네이터의 반복문과 `rightIndexFingerTipPosition(from:)`이 `.right` 대신 그 값을 보게 바꿉니다.
+        - 기기에서 `stabilityRadius`(1.5cm)와 `connectionSnapDistance`(3cm)를 바꿔 가며 그려 보세요. 팔을 뻗은 자세에서 손 떨림이 얼마나 되는지, 기존 점을 얼마나 정확히 겨눌 수 있는지에 따라 알맞은 값이 달라집니다.
+        - 별자리마다 다른 색을 써 보세요. 지금은 모든 점과 선이 흰색 재질 하나를 함께 씁니다. 코디네이터가 별자리 번호를 넘기고, 렌더러가 그 번호로 재질을 고르게 바꿉니다.
+        - 그린 별자리를 저장해 보세요. 모델의 점 위치와 선 목록을 `Codable`로 파일에 저장했다가, 공간을 다시 열 때 렌더러로 다시 그립니다.
+
+        ### 도전 과제
+
+        두 손으로 동시에 그려 보세요. 왼손과 오른손이 각자 별자리를 그리려면 손마다 머무르기 감지기와 기존 점 연결 감지기를 따로 두고, 모델도 손마다 지금 그리는 별자리를 기억해야 합니다. 커서도 두 개가 필요합니다. 완성 프로젝트의 `ImmersiveCoordinatorTests`처럼 가짜 위치를 넣는 테스트로 두 손의 점과 선이 섞이지 않는지 먼저 확인한 뒤 기기에서 그려 보세요.
+
+        ### 더 알아보기
+
+        - [Setting up access to ARKit data](https://developer.apple.com/documentation/visionos/setting-up-access-to-arkit-data)
+        - [`HandTrackingProvider`](https://developer.apple.com/documentation/arkit/handtrackingprovider)
+        - [`NSHandsTrackingUsageDescription`](https://developer.apple.com/documentation/bundleresources/information-property-list/nshandstrackingusagedescription)
+        - [Running your app on simulated or physical devices](https://developer.apple.com/documentation/xcode/running-your-app-on-simulated-or-physical-devices)
+    }
+
+    @ContentAndMedia {
+        ## 다음 단계
+
+        Simulator로만 따라 했다면 Vision Pro를 준비한 뒤 <doc:RunningOnVisionPro>부터 다시 진행해 권한 창과 실제 손 추적을 확인하세요. 기기에서는 여러 번 그려 보며 0.8초와 1.5cm가 내 손에 맞는지 살피고, 앱을 바꿀 때마다 완성 프로젝트의 코디네이터 테스트(`./Scripts/run-simulator-tests.sh`)로 Chapter 5의 순서가 그대로 동작하는지 확인해 보세요.
+    }
+}

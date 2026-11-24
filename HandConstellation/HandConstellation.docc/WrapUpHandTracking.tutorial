@@ -1,0 +1,53 @@
+@Article(time: 5) {
+    @Intro(title: "마무리: 손 추적 구현하기") {
+        Chapter 2에서는 ARKit에서 손 데이터를 받아 오른손 검지 끝의 월드 좌표를 구하는 `HandTrackingService`를 완성했습니다. 아직 이 서비스를 부르는 곳이 없어서 화면은 그대로입니다.
+
+        @Image(source: fingertip-world-example.png, alt: "손 앵커 (0.20, 1.10, −0.50)와 앵커 기준 검지 끝 (0.03, 0.09, −0.08)의 변환을 곱해 월드 좌표 (0.23, 1.19, −0.58)를 columns.3에서 읽는 숫자 예시")
+    }
+
+    @ContentAndMedia {
+        ## 배운 내용 돌아보기
+
+        `start()`는 기기가 손 추적을 지원하는지 먼저 보고, 권한을 조회해 아직 정하지 않았을 때만 요청한 뒤 세션을 실행합니다. 지원하지 않는 경우와 거부된 경우를 서로 다른 오류로 던지므로, Chapter 4에서 제어창에 상황에 맞는 안내를 띄울 수 있습니다.
+
+        `rightIndexFingerTipPosition(from:)`는 믿을 수 없는 손 앵커를 걸러 낸 뒤, 손 앵커의 변환과 검지 끝 관절의 변환을 곱해 월드 위치를 만듭니다. 손이 돌아가 있으면 두 위치를 더한 값과 실제 위치가 달라진다는 것을 숫자로 확인했습니다.
+
+        ### 다룬 주제
+
+        - `ARKitSession`과 `HandTrackingProvider`로 손 추적을 시작하고 멈추기
+        - `isSupported`로 손 추적 지원 여부 확인하기
+        - `queryAuthorization(for:)`와 `requestAuthorization(for:)`로 권한 확인하기
+        - 손 앵커와 손 골격에서 추적 중인 검지 끝 관절 찾기
+        - 두 4×4 변환을 곱하고 `columns.3`에서 위치 꺼내기
+        - 몰입형 공간의 `RealityView`와 ARKit이 같은 원점을 쓴다는 것
+    }
+
+    @ContentAndMedia {
+        ## 더 해 보기
+
+        ### 앱 바꿔 보기
+
+        아래 변경은 실제 손 추적을 거치므로 Chapter 4를 마친 뒤 Vision Pro에서 차이를 볼 수 있습니다. Simulator 입력 패드는 손 추적 서비스를 거치지 않습니다. 확인한 뒤에는 원래대로 되돌려 두세요.
+
+        - `rightIndexFingerTipPosition(from:)`에서 `.indexFingerTip`을 `.thumbTip`으로 바꿔 엄지 끝을 커서로 써 보세요.
+        - 관절의 변환을 곱하지 않고 `anchor.originFromAnchorTransform.columns.3`만 써 보세요. 커서가 검지 끝이 아니라 손 앵커가 있는 손목 근처에 나타납니다.
+        - `.right`를 `.left`로 바꿔 왼손으로 그려 보세요. Chapter 4에서 작성할 반복문도 오른손 앵커만 넘기므로 그곳도 함께 바꿔야 합니다.
+
+        ### 도전 과제
+
+        엄지 끝과 검지 끝을 맞대는 집기 동작을 감지해 보세요. `.thumbTip`의 월드 위치를 검지 끝과 같은 방법으로 구하고, `simd_distance`로 두 위치의 거리를 잽니다. 거리가 2cm보다 가까우면 `true`를 돌려주는 메서드를 `HandTrackingService`에 추가하면, Chapter 4를 마친 뒤 머무르기 대신 집기로 점을 찍게 바꿔 볼 수 있습니다.
+
+        ### 더 알아보기
+
+        - [Setting up access to ARKit data](https://developer.apple.com/documentation/visionos/setting-up-access-to-arkit-data)
+        - [`HandTrackingProvider`](https://developer.apple.com/documentation/arkit/handtrackingprovider)
+        - [`HandAnchor`](https://developer.apple.com/documentation/arkit/handanchor)
+        - [`HandSkeleton`](https://developer.apple.com/documentation/arkit/handskeleton)
+    }
+
+    @ContentAndMedia {
+        ## 다음 단계
+
+        Chapter 3에서는 검지 끝 위치가 한곳에 0.8초 머물렀을 때 점을 한 번만 찍는 판정을 작성합니다. 이어서 찍은 점과 선을 RealityKit 엔티티로 그리고, 테스트와 Xcode 미리보기로 결과를 처음 눈으로 확인합니다. 손 추적 서비스와 이 부품들은 Chapter 4에서 하나로 잇습니다.
+    }
+}

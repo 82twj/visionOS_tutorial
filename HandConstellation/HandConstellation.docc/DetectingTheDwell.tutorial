@@ -1,132 +1,216 @@
-@Tutorial(time: 10) {
+@Tutorial {
     @Intro(title: "검지를 잠시 멈추면 점 찍기") {
-        손 추적은 검지 위치를 1초에 약 90번 보냅니다. 위치가 올 때마다 점을 찍으면 손이 지나간 자리마다 점이 생깁니다. 그래서 이 앱은 검지가 한자리에 0.8초 동안 머물렀을 때만 점을 하나 찍습니다. 이 동작을 머무르기(dwell)라고 부릅니다.
+        손 추적은 검지 위치를 1초에 수십 번 보냅니다. 위치가 올 때마다 점을 찍으면 손이 지나간 자리마다 점이 생깁니다. 그래서 이 앱은 검지가 한자리에 0.8초 동안 머물렀을 때만 점을 하나 찍습니다. 이 동작을 머무르기(dwell)라고 부릅니다.
 
-        스타터의 `DwellDetector.swift`에는 필요한 타입과 속성이 이미 들어 있고, 위치를 받아 상태를 바꾸는 `update` 메서드만 없습니다. 이 페이지에서는 준비된 타입을 먼저 읽은 뒤 `update`를 작성합니다. 점이 실제로 찍히는 모습은 Chapter 4에서 연결한 뒤 Chapter 5에서 Vision Pro로 확인합니다.
+        스타터의 `DwellDetector.swift`에는 타입과 기준값이 준비되어 있고, 위치를 받아 판정하는 `update` 메서드만 없습니다. 준비된 타입을 읽고 `update`를 작성한 뒤, 스타터에 들어 있는 테스트 6개를 Simulator에서 실행해 판정이 맞는지 확인합니다.
 
-        @Image(source: dwell-states.png, alt: "idle, dwelling, coolingDown 세 상태와 상태를 바꾸는 조건을 화살표로 이은 그림")
+        @Image(source: interaction-dwell.png, alt: "검지 끝의 커서가 한자리에 머무르는 동안 커지고, 0.8초가 되면 그 자리에 흰 점이 찍히는 그림")
     }
 
-    @Section(title: "스타터에 준비된 타입 읽기") {
+    @Section(title: "준비된 타입 읽기") {
         @ContentAndMedia {
-            `DwellDetector`는 늘 세 상태 중 하나에 있습니다.
+            `DwellDetector`는 늘 세 상태 중 하나에 있습니다. `idle`은 지켜보는 위치가 없는 상태, `dwelling`은 검지가 머무는 시간을 재는 상태, `coolingDown`은 방금 찍은 자리에 점이 또 찍히지 않게 기다리는 상태입니다.
 
-            | 상태 | 하는 일 | 다음 상태로 가는 때 |
-            | --- | --- | --- |
-            | `idle` | 아직 지켜보는 위치가 없습니다. | 위치가 들어오면 바로 `dwelling`으로 갑니다. |
-            | `dwelling` | 검지가 1.5cm 안에 머무는 시간을 잽니다. | 0.8초가 되면 점을 찍고 `coolingDown`으로 갑니다. 1.5cm 밖으로 나가면 새 자리에서 다시 잽니다. |
-            | `coolingDown` | 방금 점을 찍은 자리에서 점이 또 찍히지 않게 기다립니다. | 3cm 이상 멀어지면 `dwelling`으로 갑니다. |
+            그림의 화살표는 상태가 바뀌는 조건입니다. 조건에 쓰는 값은 0.8초, 1.5cm, 3cm이고 모두 스타터에 들어 있습니다.
 
-            기준이 되는 세 값은 스타터의 `ConstellationConfiguration`에 있습니다. 거리 단위는 미터입니다.
-
-            | 설정 | 값 | 뜻 |
-            | --- | --- | --- |
-            | `dwellDuration` | 0.8초 | 이만큼 머무르면 점을 찍습니다 |
-            | `stabilityRadius` | 0.015 (1.5cm) | 머무르는 동안 이 정도 흔들림은 괜찮습니다 |
-            | `rearmDistance` | 0.030 (3cm) | 점을 찍은 뒤 이만큼 움직여야 다음 점을 잽니다 |
-
-            같은 파일의 `connectionSnapDistance`(3cm)와 `connectionReleaseDistance`(4cm)는 스타터에 들어 있는 기존 점 연결 감지기가 쓰는 값입니다. 이 페이지에서는 다루지 않습니다.
-
-            @Image(source: tunable-values.png, alt: "ConstellationConfiguration의 머무르기 값과 점·선 크기 값을 정리한 그림")
+            @Image(source: dwell-states.png, alt: "idle, dwelling, coolingDown 세 상태와 상태가 바뀌는 조건을 화살표로 이은 그림. 검지 위치를 잃으면 dwelling과 coolingDown 모두 idle로 돌아갑니다.")
         }
 
         @Steps {
             @Step {
-                Project navigator에서 `DwellDetector.swift`를 여세요. 상태 타입, 기준값, initializer, 보조 메서드는 이미 있고 `update` 메서드만 없습니다.
+                Project navigator에서 `DwellDetector.swift`를 여세요. 강조된 `Phase`와 `Snapshot`은 감지기가 위치를 하나 받을 때마다 바깥에 돌려주는 결과입니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-00.swift, reset: true)
+                @Code(name: "DwellDetector.swift", file: C03-DwellDetector-00-phase.swift, previousFile: HL-DwellDetector-phase.swift)
 
-                맨 아래의 `hasFiniteComponents` 확장은 Chapter 2에서 검지 좌표를 검사할 때 이미 썼습니다.
+                `progress`는 커서 크기를 정하는 0–1 사이의 값입니다. `committedPosition`은 점을 찍어야 하는 한 번에만 값이 있고, 나머지 때는 `nil`입니다.
             }
 
             @Step {
-                강조된 `Phase`와 `Snapshot`은 `update`가 위치를 받을 때마다 바깥에 돌려줄 결과를 담습니다.
+                강조된 `State`를 읽으세요. 감지기 안에서만 쓰는 상태입니다. `dwelling`은 머무르기를 시작한 위치와 시각을, `coolingDown`은 점을 찍은 위치를 함께 기억합니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-00-phase.swift, previousFile: HL-DwellDetector-phase.swift)
+                @Code(name: "DwellDetector.swift", file: C03-DwellDetector-00-state.swift, previousFile: HL-DwellDetector-state.swift)
 
-                `progress`는 커서 크기가 되고, `committedPosition`은 점을 찍어야 하는 바로 그 한 번에만 값이 있습니다. 나머지 때는 늘 `nil`이므로 코디네이터는 이 값이 있을 때만 점을 추가합니다.
+                그 아래의 기준값 세 개는 `let`이라 감지기를 만든 뒤에는 바뀌지 않습니다. 위치가 들어올 때마다 바뀌는 것은 `state` 하나입니다.
             }
 
             @Step {
-                `State`는 안에서만 쓰는 상태입니다. `dwelling`은 머무르기를 시작한 위치와 시각을, `coolingDown`은 마지막으로 점을 찍은 위치를 함께 기억합니다. 이렇게 case에 붙여 두는 값을 associated value라고 합니다.
+                `ConstellationConfiguration.swift`를 열고 강조된 세 줄을 확인하세요. 머무를 시간은 0.8초, 머무르는 동안 흔들려도 되는 범위는 1.5cm, 점을 찍은 뒤 움직여야 하는 거리는 3cm입니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-00-state.swift, previousFile: HL-DwellDetector-state.swift)
+                @Code(name: "ConstellationConfiguration.swift", file: C03-Configuration-dwell.swift, previousFile: HL-Configuration-dwell.swift)
 
-                세 기준값은 `let`이라 만든 뒤에는 바뀌지 않습니다. 위치가 들어올 때마다 바뀌는 것은 `state` 하나뿐입니다.
-            }
-
-            @Step {
-                세 기준값의 기본값은 `ConstellationConfiguration.swift`에 있습니다. `DwellDetector`의 initializer는 따로 값을 넘기지 않으면 `ConstellationConfiguration.standard`에서 이 세 값을 가져옵니다.
-
-                @Code(name: "ConstellationConfiguration.swift", file: C04-T02-Configuration-07.swift, previousFile: HL-Configuration-dwell.swift)
-
-                값을 바꿔 보고 싶다면 이 파일만 고치면 됩니다. 예를 들어 `dwellDuration`을 0.5로 줄이면 점이 더 빨리 찍힙니다.
+                거리 단위는 미터입니다. `DwellDetector`의 `init`은 값을 따로 넘기지 않으면 이 세 값을 가져옵니다.
             }
         }
     }
 
-    @Section(title: "update로 상태 바꾸기") {
+    @Section(title: "머무른 시간 재기") {
         @ContentAndMedia {
-            `update(position:at:)`는 새 검지 위치가 들어올 때마다 불립니다. 현재 상태를 보고 다음 상태를 정한 뒤, 결과를 `Snapshot`으로 돌려줍니다. 아래 표는 검지를 한자리에 가만히 두었을 때 무슨 일이 일어나는지 보여 줍니다.
+            `update(position:at:)`는 검지 위치가 들어올 때마다 불립니다. 지금 상태를 보고 다음 상태를 정한 뒤 결과를 `Snapshot`으로 돌려줍니다.
 
-            | 들어온 위치 | 상태 | 진행률 | 점 찍기 |
-            | --- | --- | --- | --- |
-            | 첫 위치 | `dwelling` 시작 | 0 | 안 함 |
-            | 0.4초 뒤, 1.5cm 안 | `dwelling` | 0.5 | 안 함 |
-            | 0.8초 뒤, 1.5cm 안 | `coolingDown` | 1 | 이때 한 번 |
-            | 같은 자리에서 계속 | `coolingDown` | 0 | 안 함 |
-            | 3cm 이상 움직임 | 새 `dwelling` 시작 | 0 | 안 함 |
+            검지를 한자리에 두면 첫 위치에서 머무르기가 시작됩니다. 0.4초 뒤에는 진행률이 0.5가 되고, 0.8초가 되는 순간 1이 되면서 점이 한 번 찍힙니다. 그동안 커서는 그림처럼 커집니다.
 
-            진행률이 0에서 1로 오르는 동안 커서가 점점 커지고, 1이 되는 순간 점이 생깁니다.
-
-            @Image(source: dwell-progress.png, alt: "검지 커서가 0초부터 0.8초까지 점점 커지다가 점으로 바뀌는 네 단계")
+            @Image(source: dwell-progress.png, alt: "검지 커서가 0초부터 0.8초까지 점점 커지다가 흰 점으로 바뀌는 네 단계")
         }
 
         @Steps {
             @Step {
-                `update(position:at:)`를 선언하세요. 먼저 위치와 시각이 제대로 된 숫자인지(`NaN`이나 무한대가 아닌지) 확인하고, 아니면 `trackingLost()`로 상태를 지운 뒤 `idleSnapshot`을 돌려줍니다.
+                `init` 아래에 `update(position:at:)`를 추가하세요. 위치나 시각이 유한한 숫자가 아니면 `trackingLost()`로 상태를 지웁니다. `.idle`에서는 들어온 위치와 시각을 기억하고 머무르기를 시작합니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-01.swift, previousFile: C04-T07-DwellDetector-00.swift)
+                @Code(name: "DwellDetector.swift", file: C03-DwellDetector-01.swift, previousFile: C03-DwellDetector-00.swift)
 
-                `switch`의 `default` 갈래는 세 상태를 하나씩 채우는 동안 빌드가 되도록 넣어 둔 임시 코드입니다. `.coolingDown`을 채우는 마지막 코드 단계에서 지웁니다.
+                `default:` 세 줄은 `switch`가 모든 상태를 다루도록 넣어 둔 임시 줄입니다. `.coolingDown`을 쓸 때 지웁니다.
             }
 
             @Step {
-                `.idle`을 채우세요. 들어온 위치와 시각을 머무르기의 시작점으로 저장하고, 진행률 0인 `dwelling` 결과를 돌려줍니다. 아직 점을 찍지 않으므로 `committedPosition`은 `nil`입니다.
+                `.idle` 아래에 `.dwelling`을 추가하세요. 시작한 뒤 지난 시간으로 진행률을 구합니다. 0.8초가 되면 상태를 `.coolingDown`으로 바꾸고 `committedPosition`에 위치를 담아 돌려줍니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-02.swift, previousFile: C04-T07-DwellDetector-01.swift)
+                @Code(name: "DwellDetector.swift", file: C03-DwellDetector-02.swift, previousFile: C03-DwellDetector-01.swift)
+
+                점을 찍는 위치는 지금 위치가 아니라 머무르기를 시작한 `center`입니다. `1e-9`는 0.1초씩 더한 시간이 0.8에 살짝 못 미치는 부동소수점 오차를 넘기려고 더합니다.
+            }
+        }
+    }
+
+    @Section(title: "움직임과 중복 걸러 내기") {
+        @ContentAndMedia {
+            지금까지 쓴 코드는 시간만 봅니다. 그래서 손을 움직이는 중에도 0.8초가 지나면 점이 찍히고, 점을 하나 찍고 나면 다음 점을 재지 않습니다.
+
+            거리 기준 두 개가 이 문제를 풉니다. 머무르는 동안 1.5cm를 벗어나면 처음부터 다시 세고, 점을 찍은 뒤에는 3cm 이상 떨어져야 다음 머무르기를 시작합니다.
+
+            @Image(source: interaction-next-point.png, alt: "점 A에서 3cm 이상 옮긴 자리에 다시 0.8초 머물러 점 B와 A–B 선이 생기는 그림")
+        }
+
+        @Steps {
+            @Step {
+                `.dwelling`의 맨 앞에 거리 검사를 넣으세요. 검지가 `center`에서 `stabilityRadius`(1.5cm)보다 멀어지면 새 위치를 중심으로 0초부터 다시 셉니다.
+
+                @Code(name: "DwellDetector.swift", file: C03-DwellDetector-03.swift, previousFile: C03-DwellDetector-02.swift)
             }
 
             @Step {
-                `.dwelling`을 추가하고, 검지가 시작점에서 1.5cm 넘게 벗어났다면 새 위치에서 시간을 처음부터 다시 재세요. 손을 옮기는 도중에 점이 찍히지 않는 것은 이 조건 덕분입니다.
+                임시 `default:`를 지우고 `.coolingDown`을 쓰세요. 점을 찍은 자리에서 `rearmDistance`(3cm) 이상 떨어지기 전에는 진행률 0만 돌려주고, 떨어지면 그 위치에서 새 머무르기를 시작합니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-03.swift, previousFile: C04-T07-DwellDetector-02.swift)
+                @Code(name: "DwellDetector.swift", file: C03-DwellDetector-04.swift, previousFile: C03-DwellDetector-03.swift)
 
-                1.5cm 안에 머물러 있을 때의 처리는 다음 단계에서 채웁니다. 그때까지는 진행률 0을 돌려주는 임시 줄을 둡니다.
+                기준이 1.5cm가 아니라 3cm라서, 찍은 점 근처에서 손이 조금 떨려도 점이 또 생기지 않습니다. Command+B로 빌드해 오류가 없는지 확인하세요.
+            }
+        }
+    }
+
+    @Section(title: "테스트로 판정 확인하기") {
+        @ContentAndMedia {
+            감지기는 화면에 아무것도 그리지 않아서 앱을 실행해도 달라지는 것이 없습니다. 대신 스타터의 `HandConstellationTests`에 든 테스트 6개가 정해진 위치와 시각을 `update`에 넣고 결과를 검사합니다. 테스트는 [XCTest](https://developer.apple.com/documentation/xctest)로 작성되어 있습니다.
+
+            검지로 점을 찍는 모습은 Chapter 4에서 Simulator로 확인합니다.
+        }
+
+        @Steps {
+            @Step {
+                Project navigator의 `HandConstellationTests` 폴더에서 `DwellDetectorTests.swift`를 여세요. 강조된 테스트는 같은 위치를 10.0초, 10.8초, 12.0초에 넣고 점이 10.8초에 한 번만 찍히는지 검사합니다.
+
+                @Code(name: "DwellDetectorTests.swift", file: C03-DwellDetectorTests-commit.swift, previousFile: HL-DwellDetectorTests-commit.swift)
+
+                `update`가 없던 스타터에서는 이 파일이 빌드되지 않았습니다. 테스트는 Command+U를 누를 때만 빌드되므로 그동안 Command+B에는 영향이 없었습니다.
             }
 
             @Step {
-                임시 줄을 지우고, 1.5cm 안에 머물렀을 때 지난 시간과 0–1 사이의 진행률을 계산하세요. 0.8초가 안 됐으면 진행률만 돌려주고, 0.8초가 되면 `.coolingDown`으로 넘어가면서 시작점을 `committedPosition`에 담아 돌려줍니다. 점은 이 한 번만 찍힙니다.
+                실행 대상을 Apple Vision Pro Simulator로 두고 **Product > Test**(Command+U)를 실행하세요. 테스트가 끝나면 도구 막대에 Test Completed가 나오고, 테스트마다 줄 번호 옆에 초록색 체크가 붙습니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T07-DwellDetector-04.swift, previousFile: C04-T07-DwellDetector-03.swift)
+                @Image(source: capture-dwell-01-tests.png, alt: "Xcode에서 DwellDetectorTests를 실행한 뒤의 화면. 도구 막대에 Test Completed가 보이고, 편집기의 테스트마다 줄 번호 옆에 초록색 체크가 붙어 있습니다.")
 
-                `1e-9`를 더하는 것은 부동소수점 계산 오차 때문입니다. 0.8초가 지났는데도 0.7999999…처럼 계산되어 한 프레임 늦게 점이 찍히는 일을 막습니다.
+                **문제가 생겼다면**: `testLeavingStabilityRadiusRestartsDwell`이 실패하면 1.5cm 검사를, `testMovingFarEnoughRearmsDetector`가 실패하면 `.coolingDown`을 다시 확인하세요.
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            검지를 한자리에 2초 동안 그대로 두어도 점이 하나만 찍히는 이유는 무엇인가요?
+
+            @Choice(isCorrect: false) {
+                0.8초에 점을 찍고 `.idle`로 돌아가, 손이 움직일 때까지 위치를 받지 않기 때문입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `.idle`은 위치가 들어오면 곧바로 `.dwelling`을 시작합니다. `.idle`로 돌아갔다면 1.6초에 점이 하나 더 찍힙니다.
+                }
             }
 
-            @Step {
-                임시 `default` 갈래를 `.coolingDown`으로 바꾸세요. 마지막으로 점을 찍은 자리에서 3cm 이상 멀어졌을 때만 새 머무르기를 시작합니다. 그 전까지는 진행률 0을 돌려주므로 커서도 커지지 않습니다.
+            @Choice(isCorrect: true) {
+                0.8초에 점을 찍고 `.coolingDown`으로 가서, 3cm 이상 떨어질 때까지 점을 찍지 않기 때문입니다.
 
-                @Code(name: "DwellDetector.swift", file: C04-T03-DwellDetector-14.swift, previousFile: C04-T07-DwellDetector-04.swift)
+                @Justification(reaction: "맞습니다!") {
+                    `.coolingDown`은 찍은 자리에서 `rearmDistance` 이상 멀어질 때까지 `committedPosition`을 `nil`로 돌려줍니다.
+                }
             }
 
-            @Step {
-                **Command+B**로 빌드하세요. Build Succeeded가 뜨면 됩니다. 이 감지기는 점을 찍을 위치만 알려 주고 화면에 직접 그리지는 않습니다. 점을 그리는 렌더러는 다음 페이지에서 만듭니다.
+            @Choice(isCorrect: false) {
+                0.8초에 점을 찍고 `.dwelling`에 남지만, 진행률이 1에서 멈춰 더 찍히지 않기 때문입니다.
 
-                @Image(source: capture-next-dw-build-result.png, alt: "Xcode에서 DwellDetector.swift를 빌드해 Build Succeeded가 표시된 화면")
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `.dwelling`에 남아 있다면 지난 시간이 계속 0.8초를 넘으므로 위치가 올 때마다 점이 찍힙니다.
+                }
+            }
+        }
 
-                **문제가 생겼다면**: `switch`가 모든 경우를 다루지 않는다는 오류가 나면 `.idle`, `.dwelling`, `.coolingDown` 세 갈래가 모두 있는지 확인하세요. 앞 단계에서 임시로 넣었던 줄이 남아 있다면 지웁니다.
+        @MultipleChoice {
+            `.coolingDown`에서 다음 머무르기를 시작해도 되는지 검사하는 코드는 무엇인가요?
 
-                [capture-dw-build-result]: # "CAPTURE_LINKED: DW-BUILD-RESULT | xcode | DW-BUILD-RESULT"
+            @Choice(isCorrect: false) {
+                ```swift
+                guard simd_distance(committedPosition, position) > stabilityRadius else { … }
+                ```
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    1.5cm는 머무르는 동안의 떨림을 같은 자리로 보는 범위입니다. 이 값을 쓰면 찍은 점 바로 옆에서 손이 조금만 움직여도 점이 또 생깁니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                ```swift
+                guard timestamp - startedAt >= dwellDuration else { … }
+                ```
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `.coolingDown`은 시간을 재지 않습니다. 시간이 지나면 풀리게 하면 검지를 그대로 둔 자리에 점이 다시 찍힙니다.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                ```swift
+                guard simd_distance(committedPosition, position) >= rearmDistance else { … }
+                ```
+
+                @Justification(reaction: "맞습니다!") {
+                    찍은 자리에서 3cm 이상 떨어져야 새 머무르기를 시작합니다. 그 전에는 진행률 0만 돌려줍니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            검지가 한자리에 0.5초 머문 뒤 옆으로 2cm 움직여 그 자리에 멈췄습니다. 점은 언제 찍히나요?
+
+            @Choice(isCorrect: true) {
+                움직인 자리에서 0초부터 다시 세어, 0.8초를 더 머물러야 찍힙니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    2cm는 `stabilityRadius` 1.5cm를 넘습니다. 그래서 새 위치를 중심으로 머무르기를 다시 시작합니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                앞의 0.5초가 이어지므로, 움직인 자리에서 0.3초만 더 머물면 찍힙니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    1.5cm를 벗어나면 `startedAt`이 새 시각으로 바뀝니다. 앞에서 머문 시간은 이어지지 않습니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                3cm를 넘지 않았으므로, 처음 자리로 돌아가 0.3초를 더 머물러야 찍힙니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    3cm는 점을 찍은 뒤 `.coolingDown`에서 쓰는 기준입니다. 아직 점을 찍지 않았으므로 1.5cm 기준만 적용됩니다.
+                }
             }
         }
     }

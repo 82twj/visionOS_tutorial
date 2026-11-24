@@ -3,8 +3,6 @@ import SwiftUI
 /// The window interface for opening, closing, and resetting the experience.
 struct ControlView: View {
     @Environment(AppModel.self) private var appModel
-    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
-    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -80,10 +78,7 @@ struct ControlView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(appModel.isDrawingEnabled ? .orange : .green)
-                .disabled(
-                    appModel.immersiveSpaceState != .open
-                        || appModel.trackingStatus != .tracking
-                )
+                .disabled(appModel.immersiveSpaceState != .open || !appModel.isInputAvailable)
 
                 Button(role: .destructive) {
                     appModel.requestReset()
@@ -100,6 +95,15 @@ struct ControlView: View {
         }
         .padding(28)
         .frame(width: 560)
+        #if targetEnvironment(simulator)
+        .ornament(
+            visibility: appModel.immersiveSpaceState == .open ? .visible : .hidden,
+            attachmentAnchor: .scene(.trailing),
+            contentAlignment: .leading
+        ) {
+            SimulatorInputPad()
+        }
+        #endif
     }
 
     private var primaryButtonTitle: String {
@@ -175,6 +179,10 @@ struct ControlView: View {
             return "확인 필요"
         case .idle:
             return "대기"
+        #if targetEnvironment(simulator)
+        case .simulated:
+            return "Simulator 입력"
+        #endif
         }
     }
 
@@ -188,6 +196,10 @@ struct ControlView: View {
             return "exclamationmark.triangle.fill"
         case .idle:
             return "pause.circle"
+        #if targetEnvironment(simulator)
+        case .simulated:
+            return "cursorarrow.rays"
+        #endif
         }
     }
 
@@ -201,38 +213,15 @@ struct ControlView: View {
             return .red
         case .idle:
             return .secondary
+        #if targetEnvironment(simulator)
+        case .simulated:
+            return .green
+        #endif
         }
     }
 
     private func toggleImmersiveSpace() async {
-        switch appModel.immersiveSpaceState {
-        case .closed:
-            appModel.setDrawingEnabled(false)
-            appModel.immersiveSpaceState = .transitioning
-            let result = await openImmersiveSpace(id: AppModel.immersiveSpaceID)
-            switch result {
-            case .opened:
-                appModel.immersiveSpaceState = .open
-            case .userCancelled:
-                appModel.immersiveSpaceState = .closed
-            case .error:
-                appModel.immersiveSpaceState = .closed
-                appModel.trackingStatus = .failed("Immersive Space를 열 수 없습니다.")
-            @unknown default:
-                appModel.immersiveSpaceState = .closed
-            }
-        case .open:
-            appModel.immersiveSpaceState = .transitioning
-            await dismissImmersiveSpace()
-            appModel.immersiveSpaceState = .closed
-            appModel.trackingStatus = .idle
-            appModel.setDrawingEnabled(false)
-            appModel.pointCount = 0
-            appModel.edgeCount = 0
-            appModel.constellationCount = 0
-        case .transitioning:
-            break
-        }
+        // Chapter 4에서 작성합니다.
     }
 }
 

@@ -1,160 +1,157 @@
-@Tutorial(time: 10) {
+@Tutorial {
     @Intro(title: "오른손 검지 끝을 월드 좌표로 바꾸기") {
-        ARKit이 알려 주는 관절 위치는 "검지 끝은 손목에서 앞으로 8cm"처럼 손을 기준으로 한 값입니다. 그런데 RealityKit 장면에 점을 놓으려면 "방 안의 어디"인지, 즉 월드 좌표가 필요합니다.
+        ARKit이 주는 관절 위치는 손을 기준으로 한 값입니다. 공간에 점을 놓으려면 몰입형 공간의 원점을 기준으로 한 위치가 필요하고, 이 위치를 월드 좌표라고 부릅니다.
 
-        이 페이지에서는 먼저 숫자 예시로 두 좌표계를 어떻게 잇는지 살펴보고, 손 앵커 하나를 받아 오른손 검지 끝의 월드 위치를 돌려주는 메서드를 `HandTrackingService.swift`에 추가합니다. 이번에도 확인은 Xcode 빌드까지입니다.
+        손 앵커 하나를 받아 오른손 검지 끝의 월드 좌표를 돌려주는 메서드를 `HandTrackingService`에 추가하고, 숫자를 넣어 계산을 따라가 봅니다. 이번에도 결과는 빌드로 확인합니다.
 
-        @Image(source: fingertip-world-transform.png, alt: "두 개의 4×4 변환을 곱해 얻은 행렬의 네 번째 열에서 위치를 꺼내는 과정 그림")
+        @Image(source: fingertip-world-transform.png, alt: "손 앵커 변환과 관절 변환을 곱해 검지 관절의 월드 변환을 얻고, 결과 행렬의 columns.3에서 x, y, z 위치를 꺼내는 그림")
     }
 
-    @Section(title: "좌표 변환 이해하기") {
+    @Section(title: "검지 끝 관절 찾기") {
         @ContentAndMedia {
-            ARKit은 손마다 손 앵커를 하나씩 줍니다. 손 앵커는 손목 근처에 있는 기준점이고, 손을 따라 움직이고 회전합니다. 위치를 얻는 데는 두 값이 쓰입니다. [`originFromAnchorTransform`](https://developer.apple.com/documentation/arkit/handanchor/originfromanchortransform)은 손 앵커가 월드의 어디에 있고 어느 쪽을 향하는지 알려 주고, [`anchorFromJointTransform`](https://developer.apple.com/documentation/arkit/handskeleton/joint/anchorfromjointtransform)은 관절이 손 앵커에서 얼마나 떨어져 있는지 알려 줍니다.
-
-            좌표의 단위는 미터이고, x는 오른쪽, y는 위쪽, −z는 앞쪽입니다. 같은 검지 끝을 두 경우로 계산해 보면 다음과 같습니다.
-
-            | 값 | x | y | z |
-            | --- | --- | --- | --- |
-            | 손 앵커의 월드 위치 | 0.20 | 1.10 | −0.50 |
-            | 손 앵커에서 본 검지 끝 | 0.03 | 0.09 | −0.08 |
-            | 검지 끝의 월드 위치 (손이 회전하지 않았을 때) | 0.23 | 1.19 | −0.58 |
-            | 검지 끝의 월드 위치 (손을 y축 기준 왼쪽으로 90° 돌렸을 때) | 0.12 | 1.19 | −0.53 |
-
-            손이 회전하지 않았을 때는 두 위치를 더한 값과 같습니다. 하지만 손을 돌리면 손 앵커에서 본 값은 그대로인데 월드에서 가리키는 방향이 바뀝니다. 그래서 숫자를 더하지 않고 4×4 변환 행렬을 곱합니다. 곱셈은 손 앵커에서 본 값을 손의 방향대로 돌린 다음, 손 앵커 위치만큼 옮겨 줍니다.
+            [`HandAnchor`](https://developer.apple.com/documentation/arkit/handanchor)는 손 하나의 위치와 방향, 그리고 관절이 담긴 [`HandSkeleton`](https://developer.apple.com/documentation/arkit/handskeleton)을 줍니다. 손이 시야를 벗어나거나 가려지면 `isTracked`가 `false`가 되고, 이런 값으로 위치를 만들면 커서가 엉뚱한 곳으로 튑니다.
         }
 
         @Steps {
             @Step {
-                두 변환의 이름을 오른쪽에서 왼쪽으로 읽어 보세요. `originFromAnchorTransform`은 손 앵커 → 월드(origin), `anchorFromJointTransform`은 관절 → 손 앵커로 바꾸는 변환입니다. 둘을 곱하면 관절 → 월드로 한 번에 바꾸는 변환이 됩니다.
+                그림에서 검지 끝 관절 [`.indexFingerTip`](https://developer.apple.com/documentation/arkit/handskeleton/jointname/indexfingertip)을 찾아보세요. 이 관절의 위치가 커서와 새 점의 위치가 됩니다.
 
-                @Image(source: fingertip-world-transform.png, alt: "손 앵커 변환과 관절 변환을 곱해 월드 변환을 얻고, 결과 행렬의 columns.3에서 위치를 꺼내는 그림")
+                @Image(source: hand-skeleton-joints.png, alt: "오른손 골격에서 검지 끝 관절이 강조된 그림. 관절마다 추적 여부와 손 앵커 기준 변환이 들어 있다는 설명이 붙어 있습니다.")
 
-                손을 움직이면 앞의 값이 바뀌고, 손가락을 굽히면 뒤의 값이 바뀝니다.
+                관절마다 지금 추적 중인지(`isTracked`)와, 손 앵커를 기준으로 한 4×4 변환(`anchorFromJointTransform`)이 들어 있습니다.
             }
 
             @Step {
-                숫자로 확인해 보세요. 손 앵커가 (0.20, 1.10, −0.50)에 있고 검지 끝이 손 앵커에서 (0.03, 0.09, −0.08) 떨어져 있다면, 곱한 행렬의 네 번째 열 `columns.3`의 x, y, z는 (0.23, 1.19, −0.58)입니다. 이 값이 검지 끝의 월드 위치입니다.
+                `stop()` 아래에 `rightIndexFingerTipPosition(from:)`를 추가하세요. 오른손이 아니거나, 손이 추적 중이 아니거나, 골격이 없거나, 검지 끝 관절이 추적되지 않으면 `nil`을 돌려줍니다.
 
-                @Image(source: fingertip-world-example.png, alt: "손 앵커 위치 (0.20, 1.10, −0.50)에 앵커 기준 검지 끝 (0.03, 0.09, −0.08)을 적용해 월드 위치 (0.23, 1.19, −0.58)을 얻는 예시")
+                @Code(name: "HandTrackingService.swift", file: C02-HandTrackingService-05.swift, previousFile: C02-HandTrackingService-04.swift)
 
-                앞의 세 열 `columns.0`–`columns.2`에는 회전과 크기가 들어 있습니다. 위치만 필요하므로 네 번째 열만 씁니다.
-            }
-
-            @Step {
-                이번에는 손을 y축 기준으로 왼쪽으로 90° 돌렸다고 해 봅시다. 손 앵커에서 본 검지 끝은 (0.03, 0.09, −0.08) 그대로입니다. 하지만 이제 손의 오른쪽은 월드의 앞쪽(−z)을, 손의 앞쪽은 월드의 왼쪽(−x)을 향하므로 검지 끝의 월드 위치는 (0.12, 1.19, −0.53)입니다. 단순히 더해서는 이 값이 나오지 않습니다.
-
-                @Image(source: fingertip-world-rotation.png, alt: "손을 y축으로 90° 돌리면 같은 앵커 기준 값이 월드 위치 (0.12, 1.19, −0.53)을 가리키는 예시")
-
-                행렬 곱셈은 순서를 바꾸면 결과가 달라집니다. 손 앵커 변환을 왼쪽에 두어 `originFromAnchorTransform * anchorFromJointTransform`으로 씁니다.
+                손 전체는 보여도 검지만 다른 손가락에 가려질 때가 있어 관절도 따로 확인합니다. 끝의 주석과 `return nil`은 다음 단계에서 지웁니다.
             }
         }
     }
 
-    @Section(title: "메서드로 옮기기") {
+    @Section(title: "월드 좌표로 바꾸기") {
         @ContentAndMedia {
-            계산하기 전에 받은 값을 믿을 수 있는지부터 확인합니다. 손이 카메라 시야 밖으로 나가거나 다른 물체에 가려지면 [`HandAnchor`](https://developer.apple.com/documentation/arkit/handanchor)는 `isTracked`로 추적 중이 아니라고 알려 줍니다. 이런 값으로 위치를 만들면 커서가 엉뚱한 곳으로 튑니다.
+            [`originFromAnchorTransform`](https://developer.apple.com/documentation/arkit/handanchor/originfromanchortransform)은 손 앵커가 월드의 어디에서 어느 쪽을 향하는지, [`anchorFromJointTransform`](https://developer.apple.com/documentation/arkit/handskeleton/joint/anchorfromjointtransform)은 관절이 손 앵커에서 어디에 있는지 알려 줍니다. 두 변환을 곱하면 관절의 월드 위치가 나옵니다.
 
-            메서드는 위치를 만들 수 없을 때 `nil`을 돌려줍니다. 코디네이터는 Chapter 4에서 `nil`을 받으면 커서를 숨기고 머무르기를 취소합니다.
+            몰입형 공간의 `RealityView`는 ARKit과 같은 원점을 씁니다. 그래서 이렇게 구한 위치를 Chapter 4에서 엔티티의 위치로 그대로 씁니다.
         }
 
         @Steps {
             @Step {
-                `HandTrackingService.swift`에 이어서 `rightIndexFingerTipPosition(from:)` 메서드를 추가하세요. 먼저 오른손인지, 손이 지금 추적 중인지, 손 골격 데이터가 있는지 확인하고, 하나라도 아니면 `nil`을 돌려줍니다.
+                임시 줄을 지우고 손 앵커의 변환과 검지 끝 관절의 변환을 곱하세요. 네 번째 열 `columns.3`에서 위치를 꺼내고, 스타터에 있는 `hasFiniteComponents`로 유한한 값일 때만 돌려줍니다.
 
-                @Code(name: "HandTrackingService.swift", file: C03-T03-HandTrackingService-08.swift, previousFile: C03-T02-HandTrackingService-07.swift)
+                @Code(name: "HandTrackingService.swift", file: C02-HandTrackingService-06.swift, previousFile: C02-HandTrackingService-05.swift)
 
-                마지막 줄의 `return nil`은 임시로 둔 줄입니다. 마지막 코드 단계에서 계산한 위치를 돌려주도록 바꿉니다.
+                두 변환의 이름을 오른쪽에서 왼쪽으로 읽으면 관절→손 앵커→월드로 이어집니다. Command+B로 빌드해 오류가 없는지 확인하세요.
             }
 
             @Step {
-                손 골격에서 [`.indexFingerTip`](https://developer.apple.com/documentation/arkit/handskeleton/jointname/indexfingertip) 관절을 꺼내고, 이 관절도 추적 중인지 확인하세요. 손 전체는 보이는데 검지만 다른 손가락에 가려지는 경우가 있습니다.
+                방금 쓴 곱셈에 숫자를 넣어 보세요. 손이 회전하지 않았고 손 앵커가 (0.20, 1.10, −0.50), 검지 끝이 손 앵커에서 (0.03, 0.09, −0.08)에 있으면 `columns.3`은 (0.23, 1.19, −0.58)입니다.
 
-                @Code(name: "HandTrackingService.swift", file: C03-T03-HandTrackingService-09.swift, previousFile: C03-T03-HandTrackingService-08.swift)
+                @Image(source: fingertip-world-example.png, alt: "손 앵커 (0.20, 1.10, −0.50)와 앵커 기준 검지 끝 (0.03, 0.09, −0.08)의 변환을 곱해 월드 좌표 (0.23, 1.19, −0.58)를 columns.3에서 읽는 숫자 예시")
+
+                단위는 미터이고 x는 오른쪽, y는 위쪽, −z는 앞쪽입니다. 손이 회전하지 않았을 때는 두 위치를 더한 값과 같습니다.
             }
 
             @Step {
-                두 변환을 곱하고, 결과 행렬의 `columns.3`에서 x, y, z를 꺼내 `SIMD3<Float>` 위치를 만드세요. 앞에서 숫자로 따라가 본 계산과 같습니다.
+                이번에는 손 앵커가 y축을 중심으로 90° 돌았다고 해 보세요(위에서 보면 시계 반대 방향). 손 앵커에서 본 검지 끝은 그대로지만, 월드 위치는 (0.12, 1.19, −0.53)입니다.
 
-                @Code(name: "HandTrackingService.swift", file: C03-T03-HandTrackingService-10.swift, previousFile: C03-T03-HandTrackingService-09.swift)
-            }
+                @Image(source: fingertip-world-rotation.png, alt: "손 앵커가 y축으로 90° 돌아가면 같은 앵커 기준 값이 월드 위치 (0.12, 1.19, −0.53)을 가리키고, 그냥 더한 값 (0.23, 1.19, −0.58)과 어긋나는 숫자 예시")
 
-            @Step {
-                임시 `return nil`을 지우고, 세 성분이 모두 유한한 수일 때만 위치를 돌려주세요. `hasFiniteComponents`는 스타터의 `DwellDetector.swift` 맨 아래에 이미 들어 있는 도우미입니다.
-
-                @Code(name: "HandTrackingService.swift", file: C04-T05-HandTrackingService-19.swift, previousFile: C03-T03-HandTrackingService-10.swift)
-
-                `NaN`이나 무한대가 거리 계산에 들어가면 그 뒤의 판정이 모두 틀어지므로 여기서 걸러 냅니다.
-            }
-
-            @Step {
-                **Command+B**로 빌드하세요. Build Succeeded가 뜨면 됩니다. 커서가 실제로 검지를 따라 움직이는지는 Chapter 4에서 코디네이터에 연결한 뒤, Chapter 5의 <doc:DrawingTheFirstConstellation>에서 Vision Pro로 확인합니다.
-
-                @Image(source: capture-next-wt-build-result.png, alt: "Xcode에서 rightIndexFingerTipPosition 메서드를 작성한 뒤 Build Succeeded가 표시된 화면")
-
-                **문제가 생겼다면**: 곱셈 순서를 바꾸면 빌드는 되지만 점이 엉뚱한 곳에 생깁니다. `anchor.originFromAnchorTransform`이 앞, `indexFingerTip.anchorFromJointTransform`이 뒤인지 확인하세요. `hasFiniteComponents`를 찾을 수 없다면 `DwellDetector.swift` 맨 아래의 확장이 지워지지 않았는지 확인합니다.
-
-                [capture-wt-build-result]: # "CAPTURE_LINKED: WT-BUILD-RESULT | xcode | WT-BUILD-RESULT"
+                곱셈은 손의 회전으로 상대 위치를 먼저 돌린 뒤 손 앵커 위치를 더합니다. 곱하는 순서를 바꾸면 빌드는 되지만 손의 회전이 반영되지 않아 점이 어긋납니다.
             }
         }
     }
 
     @Assessments {
         @MultipleChoice {
-            `HandTrackingProvider.isSupported` 검사와 권한 검사는 어떻게 다른가요?
-
-            @Choice(isCorrect: true) {
-                앞은 이 기기에서 손 추적을 쓸 수 있는지를, 뒤는 사용자가 사용을 허락했는지를 확인합니다.
-
-                @Justification(reaction: "맞습니다!") {
-                    손 추적을 지원하지 않는 기기에서는 권한을 물어볼 필요가 없습니다.
-                }
-            }
-
-            @Choice(isCorrect: false) {
-                둘은 같은 검사라서 하나만 있어도 됩니다.
-
-                @Justification(reaction: "다시 생각해 보세요.") {
-                    손 추적을 지원하는 기기에서도 사용자가 권한을 거부할 수 있습니다.
-                }
-            }
-        }
-
-        @MultipleChoice {
             손 앵커의 월드 위치에 손 앵커에서 본 검지 끝 위치를 그냥 더하면 안 되는 이유는 무엇인가요?
 
             @Choice(isCorrect: false) {
-                두 값의 단위가 달라서입니다.
+                손 앵커의 위치는 미터, 관절의 위치는 센티미터 단위라서 먼저 맞춰야 하기 때문입니다.
 
                 @Justification(reaction: "다시 생각해 보세요.") {
-                    두 값 모두 미터 단위입니다.
+                    두 값 모두 미터 단위입니다. 단위가 같아도 손이 돌아가 있으면 더한 값이 틀립니다.
                 }
             }
 
             @Choice(isCorrect: true) {
-                손이 회전하면 손 앵커에서 본 값이 월드에서는 다른 방향을 가리키기 때문입니다.
+                손이 회전하면 손 앵커에서 본 같은 값이 월드에서는 다른 방향을 가리키기 때문입니다.
 
                 @Justification(reaction: "맞습니다!") {
-                    변환 행렬을 곱하면 손의 회전과 위치가 함께 반영됩니다. 손을 90° 돌린 예시에서 더한 값은 (0.23, 1.19, −0.58)이지만 실제 위치는 (0.12, 1.19, −0.53)입니다.
+                    90° 돌린 예시에서 그냥 더한 값은 (0.23, 1.19, −0.58)이지만 실제 위치는 (0.12, 1.19, −0.53)입니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                `anchorFromJointTransform`에는 위치 없이 관절의 회전만 들어 있기 때문입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    이 변환에도 네 번째 열에 위치가 들어 있습니다. 예시의 (0.03, 0.09, −0.08)이 그 값입니다.
                 }
             }
         }
 
         @MultipleChoice {
-            두 변환을 곱한 행렬에서 위치는 어디에 있나요?
+            검지 끝의 월드 위치를 꺼내는 코드로 맞는 것은 무엇인가요?
 
             @Choice(isCorrect: false) {
-                `columns.0`의 x, y, z
+                ```swift
+                (indexFingerTip.anchorFromJointTransform * anchor.originFromAnchorTransform).columns.3
+                ```
 
                 @Justification(reaction: "다시 생각해 보세요.") {
-                    앞의 세 열에는 회전과 크기가 들어 있습니다.
+                    곱하는 순서가 바뀌었습니다. 빌드는 되지만 손의 회전이 위치에 반영되지 않습니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                ```swift
+                (anchor.originFromAnchorTransform * indexFingerTip.anchorFromJointTransform).columns.0
+                ```
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    앞의 세 열에는 회전과 크기가 들어 있습니다. 위치는 네 번째 열에 있습니다.
                 }
             }
 
             @Choice(isCorrect: true) {
-                `columns.3`의 x, y, z
+                ```swift
+                (anchor.originFromAnchorTransform * indexFingerTip.anchorFromJointTransform).columns.3
+                ```
 
                 @Justification(reaction: "맞습니다!") {
-                    4×4 변환 행렬의 네 번째 열이 이동, 즉 위치입니다.
+                    관절→손 앵커→월드로 이어 붙인 변환의 네 번째 열이 검지 끝의 월드 위치입니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            이 메서드가 돌려준 위치를 Chapter 4에서 엔티티의 `position`에 변환 없이 넣을 수 있는 이유는 무엇인가요?
+
+            @Choice(isCorrect: true) {
+                몰입형 공간의 `RealityView`가 ARKit과 같은 원점을 쓰기 때문입니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    두 좌표계의 원점이 같으므로 ARKit에서 구한 월드 좌표가 곧 장면 안의 위치입니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                RealityKit이 ARKit 좌표를 받으면 장면 좌표로 알아서 바꿔 주기 때문입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    따로 바꿔 주는 단계는 없습니다. 처음부터 같은 원점을 쓰기 때문에 바꿀 필요가 없습니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                엔티티를 손 앵커의 자식으로 두어 손을 기준으로 위치를 정하기 때문입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    점은 손을 따라 움직이지 않고 공간에 남아야 합니다. 그래서 원점을 기준으로 한 월드 좌표를 씁니다.
                 }
             }
         }

@@ -1,96 +1,150 @@
-@Tutorial(time: 8) {
+@Tutorial {
     @Intro(title: "ARKit 손 추적 세션 시작하기") {
-        Hand Constellation은 오른손 검지 끝으로 점을 찍습니다. 그러려면 먼저 ARKit에서 손 데이터를 받아야 합니다. 이 페이지에서는 스타터에 비어 있는 `HandTrackingService.swift`에 손 추적을 시작하고 멈추는 코드를 작성합니다.
+        검지 끝으로 점을 찍으려면 먼저 ARKit에서 손 데이터를 받아야 합니다. 스타터에서 `import Foundation` 한 줄뿐인 `HandTrackingService.swift`에 손 추적을 시작하고 멈추는 서비스를 작성합니다.
 
-        손 추적을 시작하기 전에 두 가지를 확인합니다. 이 기기가 손 추적을 지원하는지, 그리고 사용자가 권한을 허용했는지입니다. 이번 페이지는 Xcode 빌드까지만 확인하고, 권한 창은 Chapter 5에서 Vision Pro로 확인합니다.
+        서비스는 손 추적을 시작하기 전에 기기의 지원 여부와 사용자의 권한을 차례로 확인합니다. 이번에는 빌드까지 해 보고, 권한 창은 Chapter 5에서 Vision Pro로 봅니다.
 
-        @Image(source: hand-skeleton-joints.png, alt: "오른손 골격과 관절이 제공하는 정보를 정리한 도해")
+        @Image(source: hand-skeleton-joints.png, alt: "오른손 골격에서 검지 끝 관절이 강조된 그림. 관절마다 추적 여부와 손 앵커 기준 변환이 들어 있다는 설명이 붙어 있습니다.")
     }
 
-    @Section(title: "ARKit의 두 타입 이해하기") {
+    @Section(title: "손 추적 서비스 만들기") {
         @ContentAndMedia {
-            visionOS에서 손 추적을 하려면 ARKit의 두 타입이 필요합니다.
+            [`ARKitSession`](https://developer.apple.com/documentation/arkit/arkitsession)은 권한을 묻고 데이터 제공자를 실행합니다. [`HandTrackingProvider`](https://developer.apple.com/documentation/arkit/handtrackingprovider)는 그 세션 위에서 돌면서 손 앵커를 계속 보내 줍니다.
 
-            [`ARKitSession`](https://developer.apple.com/documentation/arkit/arkitsession)은 권한을 묻고 데이터 제공자를 실행하는 세션입니다. [`HandTrackingProvider`](https://developer.apple.com/documentation/arkit/handtrackingprovider)는 이 세션 위에서 돌아가면서 손의 위치와 관절 정보를 담은 손 앵커(`HandAnchor`)를 계속 보내 줍니다. 세션 하나에 여러 제공자를 올릴 수 있지만, 이 앱은 손 추적 제공자 하나만 씁니다.
-
-            ARKit 데이터는 앱이 몰입형 공간을 열었을 때만 들어옵니다. 그래서 여기서 만드는 서비스는 Chapter 4에서 몰입형 공간이 열릴 때 시작하도록 연결합니다.
+            ARKit 데이터는 앱이 [몰입형 공간을 열었을 때만](https://developer.apple.com/documentation/visionos/setting-up-access-to-arkit-data) 들어옵니다. 그래서 이 서비스는 Chapter 4에서 공간이 열릴 때 시작합니다.
         }
 
         @Steps {
             @Step {
-                Project navigator에서 스타터의 `HandTrackingService.swift`를 여세요. 아직 `import Foundation` 한 줄만 있는 빈 파일입니다.
+                `HandTrackingService.swift`를 열고 `ARKit`과 `simd`를 import하세요. 그 아래에 실패 이유를 나타내는 `HandTrackingServiceError`를 추가합니다.
 
-                @Image(source: capture-c03-ht-f10.png, alt: "Xcode에서 import Foundation만 있는 HandTrackingService.swift를 연 화면")
+                @Code(name: "HandTrackingService.swift", file: C02-HandTrackingService-01.swift, previousFile: C02-HandTrackingService-00.swift)
 
-                [capture-ht-f10]: # "CAPTURE_LINKED: HT-F10 | xcode | HT-F10"
+                지원하지 않는 경우와 권한이 없는 경우를 나눠 두면, Chapter 4의 코디네이터가 제어창에 서로 다른 안내를 띄울 수 있습니다.
             }
 
             @Step {
-                `ARKit`과 `simd`를 import하고, 실패 이유를 담을 `HandTrackingServiceError`를 추가하세요. 손 추적을 지원하지 않는 경우와 권한이 없는 경우를 나눠 두면 제어창에서 상황에 맞는 안내를 보여 줄 수 있습니다.
+                `@MainActor` 클래스 `HandTrackingService`를 만들고 `provider`와 `session`을 속성으로 두세요. `start()`를 추가해 [`isSupported`](https://developer.apple.com/documentation/arkit/handtrackingprovider/issupported)로 지원 여부부터 확인합니다.
 
-                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-01.swift, previousFile: C03-T01-HandTrackingService-00.swift)
-            }
+                @Code(name: "HandTrackingService.swift", file: C02-HandTrackingService-02.swift, previousFile: C02-HandTrackingService-01.swift)
 
-            @Step {
-                `@MainActor` 클래스 `HandTrackingService`를 선언하고 제공자와 세션을 속성으로 두세요. `provider`는 Chapter 4의 코디네이터가 손 앵커를 받아 가야 하므로 공개하고, `session`은 이 클래스 안에서만 씁니다.
-
-                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-02.swift, previousFile: C03-T02-HandTrackingService-01.swift)
-
-                아직 아무 일도 일어나지 않습니다. 두 객체를 만들어 두기만 했으므로 권한 요청도, 손 데이터 수신도 시작되지 않습니다.
+                `provider`는 Chapter 4의 코디네이터가 손 앵커를 읽어 가므로 `private`으로 두지 않습니다. Simulator에서는 `isSupported`가 `false`라 여기서 `unsupported`를 던집니다.
             }
         }
     }
 
-    @Section(title: "지원 여부와 권한 확인하기") {
+    @Section(title: "권한을 확인하고 세션 실행하기") {
         @ContentAndMedia {
-            `start()` 메서드는 다음 순서로 진행합니다.
-
-            1. 이 기기가 손 추적을 지원하는지 [`HandTrackingProvider.isSupported`](https://developer.apple.com/documentation/arkit/handtrackingprovider/issupported)로 확인합니다. Simulator는 손 추적을 지원하지 않습니다.
-            2. [`queryAuthorization(for:)`](https://developer.apple.com/documentation/arkit/arkitsession/queryauthorization(for:))로 현재 권한 상태를 보고, 아직 묻지 않았다면 [`requestAuthorization(for:)`](https://developer.apple.com/documentation/arkit/arkitsession/requestauthorization(for:))로 권한 창을 띄웁니다.
-            3. 둘 다 통과하면 [`run(_:)`](https://developer.apple.com/documentation/arkit/arkitsession/run(_:))으로 세션을 실행합니다.
-
-            지원 여부를 먼저 보는 데는 이유가 있습니다. 손 추적이 안 되는 기기에서 권한부터 확인하면, 실제 원인은 기기인데 사용자에게 "권한이 거부됐다"고 잘못 알려 줄 수 있습니다. 권한 창에는 Chapter 1에서 Info 탭에 적은 사용 목적 문장이 표시됩니다.
+            권한은 지원 여부를 확인한 다음에 봅니다. 순서가 바뀌면 손 추적이 안 되는 기기에서 원인을 권한 문제로 잘못 알릴 수 있습니다. 권한 창은 사용자에게 한 번만 뜨므로, 지금 상태를 먼저 조회하고 아직 정하지 않았을 때만 요청합니다.
         }
 
         @Steps {
             @Step {
-                `start()` 메서드를 추가하고, 첫 줄에서 `HandTrackingProvider.isSupported`를 확인하세요. 지원하지 않으면 `.unsupported` 오류를 던지고 멈춥니다.
+                `start()`에 권한 확인을 이어서 쓰세요. [`queryAuthorization(for:)`](https://developer.apple.com/documentation/arkit/arkitsession/queryauthorization(for:))로 상태를 보고, `.notDetermined`일 때만 [`requestAuthorization(for:)`](https://developer.apple.com/documentation/arkit/arkitsession/requestauthorization(for:))로 요청합니다. 결과가 `.allowed`가 아니면 오류를 던집니다.
 
-                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-03.swift, previousFile: C03-T02-HandTrackingService-02.swift)
+                @Code(name: "HandTrackingService.swift", file: C02-HandTrackingService-03.swift, previousFile: C02-HandTrackingService-02.swift)
 
-                Simulator에서는 여기서 멈춥니다. Chapter 4에서 Simulator로 실행했을 때 제어창에 손 추적 미지원 안내가 뜨는 것도 이 줄 때문입니다.
+                권한 창에는 Chapter 1에서 Info 탭에 적은 문장이 나옵니다. 거부한 사용자가 다시 그리려면 설정 앱에서 직접 허용해야 합니다.
             }
 
             @Step {
-                현재 권한 상태를 조회하고, 아직 정하지 않은 상태(`.notDetermined`)라면 권한을 요청하세요. 최종 결과가 `.allowed`가 아니면 `.authorizationDenied` 오류를 던집니다.
+                두 검사를 통과하면 [`run(_:)`](https://developer.apple.com/documentation/arkit/arkitsession/run(_:))으로 세션을 실행하세요. 공간이 닫힐 때 부를 `stop()`도 추가합니다.
 
-                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-05.swift, previousFile: C03-T02-HandTrackingService-03.swift)
+                @Code(name: "HandTrackingService.swift", file: C02-HandTrackingService-04.swift, previousFile: C02-HandTrackingService-03.swift)
 
-                한 번 거부한 사용자에게는 권한 창이 다시 뜨지 않고, 사용자가 설정 앱에서 직접 바꿔야 합니다. 그래서 요청은 `.notDetermined`일 때만 하고, 거부된 경우에는 오류를 던져 제어창에 안내를 띄웁니다.
+                `run`은 데이터 제공을 시작할 뿐이고, 손 앵커는 `provider.anchorUpdates`로 들어옵니다. Command+B로 빌드해 오류가 없는지 확인하세요.
+            }
+        }
+    }
+
+    @Assessments {
+        @MultipleChoice {
+            `HandTrackingProvider.isSupported` 검사와 권한 검사는 무엇이 다른가요?
+
+            @Choice(isCorrect: false) {
+                앞은 권한 창을 띄워 허락을 받고, 뒤는 이미 받은 허락을 다시 확인합니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `isSupported`는 권한 창을 띄우지 않습니다. 창은 `requestAuthorization(for:)`가 띄웁니다.
+                }
             }
 
-            @Step {
-                두 검사를 통과했다면 `session.run([provider])`로 손 추적을 시작하세요. 이 줄이 성공하면 `provider`가 손 앵커를 보내기 시작합니다.
+            @Choice(isCorrect: true) {
+                앞은 기기가 손 추적을 할 수 있는지, 뒤는 사용자가 허락했는지를 봅니다.
 
-                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-06.swift, previousFile: C03-T02-HandTrackingService-05.swift)
-
-                손 앵커를 하나씩 받아 처리하는 반복문은 Chapter 4의 코디네이터에 작성합니다.
+                @Justification(reaction: "맞습니다!") {
+                    손 추적을 지원하는 기기에서도 사용자는 권한을 거부할 수 있습니다. 그래서 두 검사가 모두 필요합니다.
+                }
             }
 
-            @Step {
-                세션을 멈추는 `stop()` 메서드를 추가하세요. 몰입형 공간을 닫을 때 이 메서드를 불러 손 추적을 끝냅니다.
+            @Choice(isCorrect: false) {
+                앞은 Simulator인지, 뒤는 실제 기기인지를 가려내는 검사입니다.
 
-                @Code(name: "HandTrackingService.swift", file: C03-T02-HandTrackingService-07.swift, previousFile: C03-T02-HandTrackingService-06.swift)
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `isSupported`는 실행 환경이 손 추적을 지원하는지를 봅니다. 권한 검사는 기기 종류와 관계없이 사용자의 선택을 봅니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            `authorization`에는 `queryAuthorization(for:)`로 조회한 상태가 들어 있습니다. 처음 앱을 쓰는 사용자에게 권한 창이 뜨도록 `requestAuthorization(for:)` 앞에 둘 조건은 무엇인가요?
+
+            @Choice(isCorrect: true) {
+                ```swift
+                authorization == .notDetermined
+                ```
+
+                @Justification(reaction: "맞습니다!") {
+                    처음 앱을 쓰는 사용자는 아직 정하지 않은 상태라서 이때 한 번 요청합니다.
+                }
             }
 
-            @Step {
-                **Command+B**로 빌드하세요. Build Succeeded가 뜨면 됩니다. 아직 `start()`를 부르는 곳이 없어서 앱을 실행해도 권한 창은 뜨지 않습니다. Chapter 4에서 코디네이터가 `start()`를 부르도록 연결하고, 실제 권한 창은 Chapter 5에서 Vision Pro로 확인합니다.
+            @Choice(isCorrect: false) {
+                ```swift
+                authorization == .denied
+                ```
 
-                @Image(source: capture-c03-ht-build-result.png, alt: "Xcode에서 start와 stop을 작성한 HandTrackingService.swift를 빌드해 Build Succeeded가 표시된 화면")
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    처음 앱을 쓰는 사용자는 요청 없이 거부로 끝나고, 거부한 사용자에게는 창이 다시 뜨지 않습니다.
+                }
+            }
 
-                **문제가 생겼다면**: `HandTrackingProvider`나 `ARKitSession`을 찾을 수 없다는 오류가 나면 파일 맨 위에 `import ARKit`이 있는지 확인하세요. Xcode 도구 막대의 실행 대상이 visionOS(Apple Vision Pro)가 아닐 때도 같은 오류가 납니다.
+            @Choice(isCorrect: false) {
+                ```swift
+                authorization == nil
+                ```
 
-                [capture-ht-build-result]: # "CAPTURE_LINKED: HT-BUILD-RESULT | xcode | HT-BUILD-RESULT"
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    조회 결과가 없을 때도 `?? .notDetermined`로 값을 넣었으므로 `authorization`은 `nil`이 되지 않고, 창도 뜨지 않습니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            Simulator에서 `start()`를 부르면 어떻게 되나요?
+
+            @Choice(isCorrect: false) {
+                권한 창이 뜨고, 허용을 누르면 세션이 실행되지만 손 앵커는 오지 않습니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    지원 여부를 먼저 확인하므로 Simulator에서는 권한을 묻는 단계까지 가지 않습니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                권한 조회 결과가 `.denied`로 와서 `authorizationDenied`를 던집니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    권한을 조회하기 전에 지원 여부에서 멈추므로 권한 오류가 아니라 `unsupported`가 납니다.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                `isSupported`가 `false`라 권한을 묻기 전에 `unsupported`를 던집니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    Simulator에는 손 추적이 없습니다. Chapter 4의 코디네이터는 이 오류를 받으면 Simulator 입력 패드로 넘어갑니다.
+                }
             }
         }
     }

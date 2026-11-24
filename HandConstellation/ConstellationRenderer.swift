@@ -1,4 +1,5 @@
 import RealityKit
+import SwiftUI
 import UIKit
 import simd
 
@@ -14,15 +15,19 @@ final class ConstellationRenderer {
 
     private let pointContainer = Entity()
     private let lineContainer = Entity()
-    private let guidanceContainer = Entity()
-    private let cursor: ModelEntity
-    private let connectionTarget: ModelEntity
     private let pointMesh: MeshResource
-    private let pointMaterial: UnlitMaterial
-    private let lineMaterial: UnlitMaterial
-    private let previewLineMaterial: UnlitMaterial
-    private let pointCursorMaterial: UnlitMaterial
-    private let connectionCursorMaterial: UnlitMaterial
+    private let lineRadius: Float
+    private let pointMaterial = UnlitMaterial(color: UIColor.white)
+    private let lineMaterial = UnlitMaterial(color: UIColor.white.withAlphaComponent(0.92))
+
+    private let cursor: ModelEntity
+    private let pointCursorMaterial = UnlitMaterial(color: UIColor.white.withAlphaComponent(0.72))
+    private let connectionCursorMaterial = UnlitMaterial(color: UIColor.white)
+
+    // 기존 점 연결 안내에 쓰는 엔티티와 재질입니다. 스타터 프로젝트가 제공합니다.
+    private let guidanceContainer = Entity()
+    private let connectionTarget = ModelEntity()
+    private let previewLineMaterial = UnlitMaterial(color: UIColor.white.withAlphaComponent(0.35))
     private var previewLine: ModelEntity?
     private var previewSegment: ConstellationModel.Segment?
 
@@ -30,37 +35,19 @@ final class ConstellationRenderer {
         rootEntity.name = "ConstellationRoot"
         pointContainer.name = "Points"
         lineContainer.name = "Lines"
-        guidanceContainer.name = "ConnectionGuidance"
+        rootEntity.addChild(lineContainer)
+        rootEntity.addChild(pointContainer)
 
         pointMesh = .generateSphere(radius: configuration.pointRadius)
-        pointMaterial = UnlitMaterial(color: UIColor.white)
-        lineMaterial = UnlitMaterial(color: UIColor.white.withAlphaComponent(0.92))
-        previewLineMaterial = UnlitMaterial(
-            color: UIColor.white.withAlphaComponent(0.35)
-        )
-        pointCursorMaterial = UnlitMaterial(
-            color: UIColor.white.withAlphaComponent(0.72)
-        )
-        connectionCursorMaterial = UnlitMaterial(color: UIColor.white)
+        lineRadius = configuration.lineRadius
 
         let cursorMesh = MeshResource.generateSphere(radius: configuration.cursorRadius)
         cursor = ModelEntity(mesh: cursorMesh, materials: [pointCursorMaterial])
         cursor.name = "IndexFingerCursor"
         cursor.isEnabled = false
-
-        let targetMesh = MeshResource.generateSphere(radius: configuration.pointRadius * 1.65)
-        let targetMaterial = UnlitMaterial(
-            color: UIColor.white.withAlphaComponent(0.18)
-        )
-        connectionTarget = ModelEntity(mesh: targetMesh, materials: [targetMaterial])
-        connectionTarget.name = "ExistingPointConnectionTarget"
-        connectionTarget.isEnabled = false
-
-        rootEntity.addChild(lineContainer)
-        rootEntity.addChild(pointContainer)
-        rootEntity.addChild(guidanceContainer)
-        guidanceContainer.addChild(connectionTarget)
         rootEntity.addChild(cursor)
+
+        prepareConnectionGuidance(pointRadius: configuration.pointRadius)
     }
 
     /// Moves the fingertip cursor and grows it as dwell progress increases.
@@ -84,6 +71,70 @@ final class ConstellationRenderer {
         cursor.isEnabled = false
     }
 
+    /// Builds a thin cylinder that spans two points.
+    private func makeLine(
+        from start: SIMD3<Float>,
+        to end: SIMD3<Float>,
+        radius: Float,
+        material: UnlitMaterial
+    ) -> ModelEntity? {
+        let offset = end - start
+        let length = simd_length(offset)
+        guard length.isFinite, length > .ulpOfOne else { return nil }
+
+        let mesh = MeshResource.generateCylinder(height: length, radius: radius)
+        let line = ModelEntity(mesh: mesh, materials: [material])
+        line.position = (start + end) / 2
+        line.orientation = simd_quatf(
+            from: SIMD3<Float>(0, 1, 0),
+            to: offset / length
+        )
+        return line
+    }
+
+    private func addLine(from start: SIMD3<Float>, to end: SIMD3<Float>) {
+        guard let line = makeLine(
+            from: start,
+            to: end,
+            radius: lineRadius,
+            material: lineMaterial
+        ) else { return }
+        lineContainer.addChild(line)
+    }
+
+    /// Adds a rendered point and an optional segment from the active point.
+    func addPoint(at position: SIMD3<Float>, segment: ConstellationModel.Segment?) {
+        if let segment {
+            addLine(from: segment.start, to: segment.end)
+        }
+
+        let point = ModelEntity(mesh: pointMesh, materials: [pointMaterial])
+        point.position = position
+        pointContainer.addChild(point)
+    }
+
+    /// Adds only an edge to an existing point; no point entity is duplicated.
+    func connectExistingPoint(with segment: ConstellationModel.Segment) {
+        addLine(from: segment.start, to: segment.end)
+        showConnectionCompletion(at: segment.end)
+    }
+
+    /// Removes all committed entities and transient guidance while preserving the cursor.
+    func reset() {
+        for child in Array(pointContainer.children) {
+            child.removeFromParent()
+        }
+        for child in Array(lineContainer.children) {
+            child.removeFromParent()
+        }
+        hideConnectionGuidance()
+        hideCursor()
+    }
+}
+
+// MARK: - 기존 점 연결 안내 (스타터 프로젝트 제공)
+
+extension ConstellationRenderer {
     /// Highlights one locked existing point and previews the prospective edge.
     func showConnectionGuidance(
         sourcePoint: SIMD3<Float>,
@@ -124,75 +175,43 @@ final class ConstellationRenderer {
         removePreviewLine()
     }
 
-    /// Adds a rendered point and an optional segment from the active point.
-    func addPoint(
-        at position: SIMD3<Float>,
-        segment: ConstellationModel.Segment?,
-        lineRadius: Float
-    ) {
-        if let segment {
-            addLine(from: segment.start, to: segment.end, radius: lineRadius)
-        }
+    /// Gives the highlight sphere its shape and adds the guidance entities to the tree.
+    private func prepareConnectionGuidance(pointRadius: Float) {
+        let targetMesh = MeshResource.generateSphere(radius: pointRadius * 1.65)
+        let targetMaterial = UnlitMaterial(color: UIColor.white.withAlphaComponent(0.18))
+        connectionTarget.model = ModelComponent(mesh: targetMesh, materials: [targetMaterial])
+        connectionTarget.name = "ExistingPointConnectionTarget"
+        connectionTarget.isEnabled = false
 
-        let point = ModelEntity(mesh: pointMesh, materials: [pointMaterial])
-        point.position = position
-        pointContainer.addChild(point)
-    }
-
-    /// Adds only an edge to an existing point; no point entity is duplicated.
-    func connectExistingPoint(
-        with segment: ConstellationModel.Segment,
-        lineRadius: Float
-    ) {
-        addLine(from: segment.start, to: segment.end, radius: lineRadius)
-        showConnectionCompletion(at: segment.end)
-    }
-
-    /// Removes all committed entities and transient guidance while preserving the cursor.
-    func reset() {
-        for child in Array(pointContainer.children) {
-            child.removeFromParent()
-        }
-        for child in Array(lineContainer.children) {
-            child.removeFromParent()
-        }
-        hideConnectionGuidance()
-        hideCursor()
-    }
-
-    private func addLine(from start: SIMD3<Float>, to end: SIMD3<Float>, radius: Float) {
-        guard let line = makeLine(
-            from: start,
-            to: end,
-            radius: radius,
-            material: lineMaterial
-        ) else { return }
-        lineContainer.addChild(line)
-    }
-
-    private func makeLine<M: Material>(
-        from start: SIMD3<Float>,
-        to end: SIMD3<Float>,
-        radius: Float,
-        material: M
-    ) -> ModelEntity? {
-        let offset = end - start
-        let length = simd_length(offset)
-        guard length.isFinite, length > .ulpOfOne else { return nil }
-
-        let mesh = MeshResource.generateCylinder(height: length, radius: radius)
-        let line = ModelEntity(mesh: mesh, materials: [material])
-        line.position = (start + end) / 2
-        line.orientation = simd_quatf(
-            from: SIMD3<Float>(0, 1, 0),
-            to: offset / length
-        )
-        return line
+        guidanceContainer.name = "ConnectionGuidance"
+        guidanceContainer.addChild(connectionTarget)
+        rootEntity.addChild(guidanceContainer)
     }
 
     private func removePreviewLine() {
         previewLine?.removeFromParent()
         previewLine = nil
         previewSegment = nil
+    }
+}
+
+#Preview {
+    RealityView { content in
+        let renderer = ConstellationRenderer()
+        let a = SIMD3<Float>(-0.10, 0.08, 0)
+        let b = SIMD3<Float>(0.08, 0.10, 0)
+        let c = SIMD3<Float>(0.11, -0.07, 0)
+        let d = SIMD3<Float>(-0.08, -0.09, 0)
+
+        // 점 A, B, C, D를 차례로 찍고 D–A, A–C 선을 더합니다.
+        renderer.addPoint(at: a, segment: nil)
+        renderer.addPoint(at: b, segment: .init(start: a, end: b))
+        renderer.addPoint(at: c, segment: .init(start: b, end: c))
+        renderer.addPoint(at: d, segment: .init(start: c, end: d))
+        renderer.connectExistingPoint(with: .init(start: d, end: a))
+        renderer.connectExistingPoint(with: .init(start: a, end: c))
+        renderer.hideConnectionGuidance()
+
+        content.add(renderer.rootEntity)
     }
 }

@@ -1,100 +1,182 @@
-@Tutorial(time: 10, projectFiles: HandConstellation-Starter.zip) {
+@Tutorial(projectFiles: HandConstellation-Starter.zip) {
     @Intro(title: "스타터 프로젝트 살펴보고 실행하기") {
-        내려받은 스타터 프로젝트를 Xcode로 열고, 어떤 파일이 완성되어 있고 어떤 파일을 직접 채울지 확인합니다. 이어서 앱 진입점과 앱 전체가 함께 쓰는 `AppModel`을 읽고, visionOS Simulator에서 실행해 제어창이 뜨는지 봅니다.
+        스타터 프로젝트에는 앱 상태, 제어창 화면, 설정값, 별자리 데이터 모델이 완성된 채로 들어 있습니다. 손 추적과 공간 표현처럼 직접 작성할 부분만 비어 있습니다.
 
-        이 페이지에서는 코드를 고치지 않습니다. 오른쪽 코드 패널에서 강조된 줄이 각 단계에서 설명하는 부분입니다.
+        프로젝트를 Xcode로 열어 제공된 파일을 몇 개 읽어 보고, visionOS Simulator에서 실행해 제어창이 뜨는지 확인합니다. 아직 코드는 고치지 않습니다.
 
-        @Image(source: capture-next-rv-window.png, alt: "visionOS Simulator에서 스타터 프로젝트를 실행해 대기 상태의 제어창이 뜬 화면")
+        @Image(source: starter-project-files.png, alt: "스타터 프로젝트의 파일을 완성본, 일부 제공, 빈 파일, 테스트로 나누고 각 파일을 채우는 Chapter를 표시한 그림")
     }
 
     @Section(title: "스타터 프로젝트 열기") {
         @ContentAndMedia {
-            스타터 프로젝트의 파일은 완성본, 일부만 작성된 파일, 빈 파일 세 가지로 나뉩니다. 완성본은 고치지 않고 필요할 때 읽기만 하며, 나머지는 표에 적힌 Chapter에서 채웁니다. 빈 파일에는 `import Foundation` 한 줄만 들어 있습니다.
-
-            | 파일 | 스타터 상태 | 작성 Chapter |
-            | --- | --- | --- |
-            | AppModel, ControlView, ConstellationConfiguration, ConstellationModel, ExistingPointConnectionDetector | 완성본 | 작성하지 않음 |
-            | HandConstellationApp | `WindowGroup`만 있음 | Chapter 4 (`ImmersiveSpace` 추가) |
-            | DwellDetector | `update` 메서드만 없음 | Chapter 3 |
-            | HandTrackingService | 빈 파일 | Chapter 2 |
-            | ConstellationRenderer | 빈 파일 | Chapter 3 |
-            | ImmersiveCoordinator, ImmersiveView | 빈 파일 | Chapter 4 |
-            | Info | 장면 설정만 있음 | Chapter 1 (손 추적 설명 추가) |
-
-            @Image(source: starter-project-files.png, alt: "스타터 프로젝트의 파일을 완성본, 일부만 작성된 파일, 직접 작성할 파일로 나누고 각 파일을 작성할 Chapter를 표시한 그림")
+            스타터는 받은 그대로 빌드되고 실행됩니다. 직접 채울 곳에는 `// Chapter 3에서 작성합니다.`처럼 작성할 Chapter를 적은 주석이 있습니다. `HandTrackingService.swift`와 `ImmersiveView.swift`는 아직 `import Foundation` 한 줄뿐입니다.
         }
 
         @Steps {
             @Step {
-                `HandConstellation-Starter` 폴더의 `HandConstellation.xcodeproj`를 더블클릭해 Xcode로 여세요. 왼쪽 Project navigator에 표의 파일이 모두 보이고, `HandConstellationApp.swift`를 선택하면 `WindowGroup` 하나만 있는 코드가 열립니다.
+                페이지 맨 위의 **Project files**를 눌러 스타터를 내려받고 압축을 푸세요. `HandConstellation-Starter` 폴더의 `HandConstellation.xcodeproj`를 열고 Project navigator에서 파일 목록을 확인하세요.
 
-                @Image(source: capture-next-rv-app.png, alt: "Xcode에서 스타터 프로젝트를 열어 Project navigator의 파일 목록과 WindowGroup만 있는 HandConstellationApp.swift를 표시한 화면")
+                @Image(source: capture-starter-01-project-navigator.png, alt: "Xcode에서 스타터 프로젝트를 열어 Project navigator에 HandConstellation 그룹과 HandConstellationTests 그룹의 파일이 모두 보이는 화면")
 
-                스타터의 Team은 None으로 비어 있습니다. Simulator에서 실행할 때는 서명 팀이 필요 없으니 그대로 두세요. 실제 Vision Pro에 설치할 서명 팀은 Chapter 5에서 설정합니다.
-
-                [capture-rv-app]: # "CAPTURE_LINKED: RV-APP | xcode | RV-APP"
+                `SimulatorInputPad.swift`는 Simulator에서 검지 대신 쓰는 입력 패드이고, Chapter 4에서 공간을 열면 나타납니다. 머무르기 테스트가 든 `HandConstellationTests`는 Chapter 3에서 실행합니다.
             }
         }
     }
 
-    @Section(title: "앱 진입점과 공유 상태 읽기") {
+    @Section(title: "제공된 파일 살펴보기") {
         @ContentAndMedia {
-            visionOS 앱도 SwiftUI의 [`App`](https://developer.apple.com/documentation/swiftui/app) 프로토콜로 시작합니다. 앱 진입점에는 창이나 몰입형 공간 같은 장면(scene)을 나열하고, 여러 장면이 함께 봐야 하는 값은 `AppModel` 하나에 모아 둡니다.
+            visionOS 앱도 SwiftUI의 [`App`](https://developer.apple.com/documentation/swiftui/app) 프로토콜로 시작합니다. 제어창은 [`WindowGroup`](https://developer.apple.com/documentation/swiftui/windowgroup)으로, 점과 선을 그리는 공간은 [`ImmersiveSpace`](https://developer.apple.com/documentation/swiftui/immersivespace)로 띄웁니다. 두 장면이 함께 보는 값은 `AppModel` 하나에 모읍니다.
 
-            제어창은 [`WindowGroup`](https://developer.apple.com/documentation/swiftui/windowgroup)으로, 손으로 그리는 공간은 [`ImmersiveSpace`](https://developer.apple.com/documentation/swiftui/immersivespace)로 띄웁니다. 스타터에는 아직 제어창만 있습니다.
-
-            @Image(source: scene-structure.png, alt: "WindowGroup으로 띄운 제어창의 별자리 그리기 시작 버튼이 RealityView와 ARKitSession을 담은 혼합 몰입형 공간을 여는 구조")
+            @Image(source: scene-structure.png, alt: "WindowGroup으로 띄운 제어창이 openImmersiveSpace로 RealityView와 ARKit이 동작하는 혼합 몰입형 공간을 열고, 두 장면이 같은 AppModel을 보는 구조")
         }
 
         @Steps {
             @Step {
-                방금 연 `HandConstellationApp.swift`에서 강조된 `body`를 보세요. 타입이 `some Scene`이라는 것은 이 자리에 장면을 여러 개 나열할 수 있다는 뜻이고, 지금은 제어창인 `ControlView`를 띄우는 `WindowGroup` 하나만 있습니다.
+                `HandConstellationApp.swift`를 열어 강조된 `body`를 보세요. 지금은 제어창 `ControlView`를 띄우는 `WindowGroup` 하나만 있습니다.
 
-                @Code(name: "HandConstellationApp.swift", file: C02-T03-HandConstellationApp-02-scenes.swift, previousFile: HL-HandConstellationApp-scenes.swift)
+                @Code(name: "HandConstellationApp.swift", file: C01-HandConstellationApp-scenes.swift, previousFile: HL-HandConstellationApp-scenes.swift)
 
-                Chapter 4에서 이 목록에 몰입형 공간을 여는 `ImmersiveSpace`를 추가합니다.
+                `some Scene` 자리에는 장면을 여러 개 나열할 수 있습니다. Chapter 4에서 이 목록에 몰입형 공간을 등록합니다.
             }
 
             @Step {
-                이번에는 강조된 두 줄을 보세요. `@State`로 `AppModel`을 하나 만들고, `.environment(appModel)`로 제어창에 전달합니다. Chapter 4에서 추가할 몰입형 공간에도 같은 객체를 전달하므로 창과 공간은 언제나 같은 상태를 봅니다.
+                강조된 두 줄을 보세요. `@State`로 `AppModel`을 하나 만들고, `.environment(appModel)`로 제어창에 넘깁니다.
 
-                @Code(name: "HandConstellationApp.swift", file: C02-T03-HandConstellationApp-02.swift, previousFile: HL-HandConstellationApp-environment.swift)
+                @Code(name: "HandConstellationApp.swift", file: C01-HandConstellationApp-environment.swift, previousFile: HL-HandConstellationApp-environment.swift)
+
+                Chapter 4에서 등록할 몰입형 공간에도 같은 객체를 넘깁니다. 그래서 제어창과 공간은 언제나 같은 상태를 봅니다.
             }
 
             @Step {
-                `AppModel.swift`를 열어 강조된 부분을 보세요. `DrawingState`와 `isDrawingEnabled`·`setDrawingEnabled`·`toggleDrawing`이 그리기 켜짐·꺼짐을 저장하고 바꾸는 코드이고, 제어창의 **그리기 켜기** 버튼이 `toggleDrawing()`을 부릅니다. 위쪽의 `immersiveSpaceID`는 몰입형 공간을 등록하고 열 때 쓰는 이름입니다.
+                `AppModel.swift`를 열어 강조된 부분을 보세요. `immersiveSpaceID`는 몰입형 공간의 이름이고, `drawingState`는 그리기가 켜져 있는지를 저장합니다.
 
-                @Code(name: "AppModel.swift", file: C02-T02-AppModel-12.swift, previousFile: HL-AppModel-drawing.swift)
+                @Code(name: "AppModel.swift", file: C01-AppModel-drawing.swift, previousFile: HL-AppModel-drawing.swift)
 
-                클래스에 [`@Observable`](https://developer.apple.com/documentation/observation/observable())이 붙어 있어서 값이 바뀌면 그 값을 읽는 화면이 다시 그려집니다. Chapter 4의 코디네이터도 `isDrawingEnabled`를 읽어 그리기가 꺼져 있으면 점을 찍지 않습니다.
+                **그리기 켜기** 버튼은 `toggleDrawing()`으로 이 값만 바꿉니다. 클래스에 [`@Observable`](https://developer.apple.com/documentation/observation/observable())이 붙어 있어 값이 바뀌면 화면이 다시 그려지고, Chapter 4의 코디네이터도 이 값을 읽습니다.
+            }
+
+            @Step {
+                `ControlView.swift`를 열어 강조된 줄을 보세요. **별자리 그리기 시작** 버튼은 `toggleImmersiveSpace()`를 부르지만, 이 메서드의 본문은 비어 있습니다.
+
+                @Code(name: "ControlView.swift", file: C01-ControlView-toggle.swift, previousFile: HL-ControlView-toggle.swift)
+
+                그래서 지금은 버튼을 눌러도 아무 일도 일어나지 않습니다. 몰입형 공간을 열고 닫는 코드는 Chapter 4에서 작성합니다.
             }
         }
     }
 
     @Section(title: "Simulator에서 실행하기") {
         @ContentAndMedia {
-            손 추적 코드를 쓰기 전에 스타터가 그대로 빌드되고 실행되는지 확인합니다. 이 단계는 Simulator만 있으면 됩니다.
+            코드를 쓰기 전에 스타터가 그대로 실행되는지 확인합니다. 이 단계에는 Mac과 visionOS Simulator만 있으면 됩니다.
         }
 
         @Steps {
             @Step {
-                Xcode 도구 막대 가운데의 실행 대상 메뉴를 열고 Simulator 목록에서 **Apple Vision Pro**를 고르세요. 고르고 나면 도구 막대에 **HandConstellation › Apple Vision Pro**가 표시됩니다.
+                도구 막대 가운데의 실행 대상이 **Apple Vision Pro**인지 확인하세요. 다른 대상이 보이면 그 자리를 눌러 메뉴를 열고 visionOS Simulator 목록에서 **Apple Vision Pro**를 고릅니다.
 
-                @Image(source: capture-c01-r05-confirmed.png, alt: "Xcode 도구 막대의 실행 대상이 Apple Vision Pro Simulator로 선택된 화면")
+                @Image(source: capture-starter-02-run-destination.png, alt: "Xcode 도구 막대의 Run 버튼과, 실행 대상이 HandConstellation › Apple Vision Pro로 선택된 자리를 밝게 표시한 화면")
 
-                **Any visionOS Device**는 빌드만 하는 대상이라 실행할 수 없습니다. 실제 Vision Pro를 실행 대상으로 고르는 방법은 Chapter 5에서 다룹니다.
-
-                [capture-r05]: # "CAPTURE_LINKED: R05 | xcode | R05-CONFIRMED"
+                스타터에는 서명 팀이 지정되어 있지 않지만 Simulator에서는 그대로 실행됩니다. Vision Pro에 설치할 서명은 Chapter 5에서 설정합니다.
             }
 
             @Step {
-                **Run** 버튼(▶)을 클릭하거나 **Command+R**을 누르세요. Simulator가 열리고 제어창에 **대기**, **그리기 꺼짐**, **별자리 0개 · 점 0개 · 선 0개**가 보이면 됩니다.
+                **Command+R**로 실행하세요. Simulator에 제어창이 뜨고 **대기**, **그리기 꺼짐**, **별자리 0개 · 점 0개 · 선 0개**가 보입니다. **별자리 그리기 시작**은 아직 눌러도 반응하지 않습니다.
 
-                @Image(source: capture-next-rv-window.png, alt: "Simulator에 뜬 제어창. 대기와 그리기 꺼짐 상태이고 별자리 0개·점 0개·선 0개가 표시됩니다.")
+                @Image(source: capture-starter-03-control-window.jpg, alt: "Simulator에 뜬 스타터의 제어창. 대기와 그리기 꺼짐 상태이고 별자리 0개 · 점 0개 · 선 0개가 표시되며 그리기 켜기와 초기화 버튼은 흐리게 꺼져 있습니다.")
 
-                **문제가 생겼다면**: Simulator runtime이 없다는 오류가 나면 **Xcode › Settings › Components**에서 visionOS Simulator를 설치하세요. **별자리 그리기 시작**을 눌러도 공간이 열리지 않는 것은 몰입형 공간을 아직 등록하지 않았기 때문입니다. 공간을 열 수 없다는 안내가 떠도 괜찮습니다. 등록은 Chapter 4에서 합니다.
+                **문제가 생겼다면**: visionOS Simulator가 없다는 오류가 나면 **Xcode › Settings › Components**에서 visionOS를 내려받은 뒤 다시 실행하세요.
+            }
+        }
+    }
 
-                [capture-rv-window]: # "CAPTURE_LINKED: RV-WINDOW | simulator | RV-WINDOW"
+    @Assessments {
+        @MultipleChoice {
+            앱 진입점에서 `AppModel`을 `@State`로 하나 만들고 `.environment`로 넘기는 이유는 무엇인가요?
+
+            @Choice(isCorrect: false) {
+                `@State`로 만든 값은 앱을 종료했다가 다시 열어도 그대로 남기 때문입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `@State`는 앱이 실행되는 동안 값을 들고 있을 뿐이고, 앱을 종료하면 사라집니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                환경으로 넘겨야만 `@Observable` 클래스의 변화가 화면에 반영되기 때문입니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    화면이 다시 그려지는 것은 `@Observable` 덕분입니다. 환경은 객체를 여러 화면에 나눠 주는 통로입니다.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                제어창과 나중에 등록할 몰입형 공간이 같은 상태 객체 하나를 보게 하기 위해서입니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    두 장면에 같은 `AppModel`을 넘기므로 제어창에서 바꾼 값을 공간 쪽 코드가 그대로 읽습니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            스타터를 Simulator에서 실행하고 **별자리 그리기 시작**을 누르면 어떻게 되나요?
+
+            @Choice(isCorrect: true) {
+                아무 일도 일어나지 않고 제어창은 대기, 그리기 꺼짐 상태 그대로입니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    버튼이 부르는 `toggleImmersiveSpace()`의 본문이 비어 있습니다. Chapter 4에서 채웁니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                몰입형 공간을 찾지 못했다는 확인 필요 안내가 제어창에 뜹니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    공간을 여는 코드 자체가 아직 없으므로 공간을 찾으려는 시도도 일어나지 않습니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                빈 몰입형 공간이 열리고 **그리기 켜기** 버튼이 활성화됩니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `body`에 `WindowGroup`만 있어서 열 수 있는 몰입형 공간이 등록되어 있지 않습니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            제어창의 **그리기 켜기** 버튼을 누르면 실행되는 코드는 무엇인가요?
+
+            @Choice(isCorrect: false) {
+                ```swift
+                appModel.setDrawingEnabled(true)
+                ```
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    이 버튼은 켜기와 끄기를 모두 맡으므로 항상 `true`를 넣지 않습니다. `setDrawingEnabled`는 다른 메서드 안에서 불립니다.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                ```swift
+                appModel.toggleDrawing()
+                ```
+
+                @Justification(reaction: "맞습니다!") {
+                    `toggleDrawing()`은 지금 값을 뒤집어 `setDrawingEnabled`에 넘깁니다. 그래서 같은 버튼이 켜기와 끄기를 오갑니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                ```swift
+                Task { await toggleImmersiveSpace() }
+                ```
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    이 코드는 몰입형 공간을 열고 닫는 **별자리 그리기 시작** 버튼의 동작입니다.
+                }
             }
         }
     }

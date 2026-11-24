@@ -1,175 +1,229 @@
-@Tutorial(time: 12) {
+@Tutorial {
     @Intro(title: "RealityKit으로 점과 선 그리기") {
-        이제 별자리를 눈에 보이게 그릴 차례입니다. 점은 작은 흰 구, 선은 두 점을 잇는 가는 흰 원기둥, 커서는 검지 끝을 따라다니는 작은 구로 그립니다.
+        감지기가 점을 찍을 위치를 알려 주어도, 그 위치에 무언가를 그리기 전에는 아무것도 보이지 않습니다. 이 앱은 점을 작은 흰 구로, 선을 두 점을 잇는 가는 흰 원기둥으로, 커서를 검지 끝을 따라다니는 반투명한 구로 그립니다.
 
-        이 페이지에서는 스타터에 비어 있는 `ConstellationRenderer.swift`에 이 엔티티들을 만들고 옮기는 렌더러를 작성합니다. 렌더러는 그리기만 하고, 언제 점을 찍을지는 앞 페이지의 감지기와 Chapter 4의 코디네이터가 정합니다. 렌더러를 실제 장면에 붙이는 일도 Chapter 4에서 합니다.
+        스타터의 `ConstellationRenderer.swift`에서 비어 있는 곳을 RealityKit 코드로 채우고, 마지막에 `#Preview`로 점 4개와 선 5개짜리 별자리를 Xcode 캔버스에 띄워 봅니다. 렌더러를 몰입형 공간에 붙이는 일은 Chapter 4에서 합니다.
 
-        @Image(source: entity-tree.png, alt: "rootEntity 아래에 선, 점, 기존 점 연결 안내 컨테이너와 커서가 자식으로 붙은 구조도")
+        @Image(source: constellation-hero.png, alt: "흰 점과 선으로 그린 별자리 두 개와 검지 끝의 커서를 나타낸 그림")
     }
 
-    @Section(title: "엔티티 트리 이해하기") {
+    @Section(title: "엔티티 트리와 스타터 코드 읽기") {
         @ContentAndMedia {
-            RealityKit에서 장면에 놓이는 것은 모두 [`Entity`](https://developer.apple.com/documentation/realitykit/entity)입니다. 엔티티는 위치·회전·크기를 갖고, 다른 엔티티를 자식으로 둘 수 있습니다. 부모를 옮기거나 지우면 자식도 함께 따라갑니다.
+            RealityKit 장면에 놓이는 것은 모두 [`Entity`](https://developer.apple.com/documentation/realitykit/entity)입니다. 엔티티는 위치·회전·크기를 갖고 다른 엔티티를 자식으로 둘 수 있습니다. 부모를 옮기거나 지우면 자식도 함께 따라갑니다.
 
-            눈에 보이는 물체는 [`ModelEntity`](https://developer.apple.com/documentation/realitykit/modelentity)로 만듭니다. 모양을 정하는 [`MeshResource`](https://developer.apple.com/documentation/realitykit/meshresource)와 표면을 정하는 재질을 함께 넘깁니다. 이 앱은 조명의 영향을 받지 않는 [`UnlitMaterial`](https://developer.apple.com/documentation/realitykit/unlitmaterial)을 씁니다. mesh도 재질도 없는 `Entity`는 자식을 담는 빈 그룹, 즉 컨테이너로 씁니다.
+            렌더러는 `rootEntity` 하나 아래에 선 컨테이너, 점 컨테이너, 커서, 기존 점 연결 안내를 붙입니다. 장면에는 `rootEntity`만 추가합니다.
+
+            @Image(source: entity-tree.png, alt: "rootEntity 아래에 선 컨테이너, 점 컨테이너, 커서, 스타터가 제공하는 기존 점 연결 안내 컨테이너가 자식으로 붙은 구조도")
         }
 
         @Steps {
             @Step {
-                Project navigator에서 스타터의 `ConstellationRenderer.swift`를 여세요. 아직 `import Foundation` 한 줄만 있습니다.
+                `ConstellationRenderer.swift`를 여세요. 강조된 `init`, `updateCursor`, `hideCursor`, `makeLine`, `connectExistingPoint` 다섯 곳의 본문이 비어 있습니다.
 
-                @Image(source: capture-next-cr-f10.png, alt: "Xcode에서 import Foundation만 있는 ConstellationRenderer.swift를 연 화면")
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-00-stubs.swift, previousFile: HL-ConstellationRenderer-stubs.swift)
 
-                [capture-cr-f10]: # "CAPTURE_LINKED: CR-F10 | xcode | CR-F10"
+                메서드를 통째로 빼지 않고 본문만 비워 둔 것은 스타터의 다른 코드가 이 메서드들을 부르기 때문입니다. 그래서 스타터는 지금도 빌드됩니다.
             }
 
             @Step {
-                렌더러가 만들 엔티티 트리입니다. 장면에는 `rootEntity` 하나만 추가하고, 선·점·연결 안내 컨테이너와 커서는 모두 그 아래에 붙입니다. `rootEntity`를 `RealityView`에 추가하는 일은 Chapter 4에서 합니다.
+                강조된 부분은 스타터가 제공하는 기존 점 연결 안내입니다. 연결하려는 점을 감싸는 반투명한 구와 그 점까지 이어질 미리보기 선을 그립니다. 고치지 않고 그대로 씁니다.
 
-                @Image(source: entity-tree.png, alt: "rootEntity 아래의 lineContainer, pointContainer, guidanceContainer, cursor")
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-00-guidance.swift, previousFile: HL-ConstellationRenderer-guidance.swift)
 
-                컨테이너를 나눠 두면 **초기화** 때 선과 점 컨테이너의 자식만 지우고 커서는 그대로 쓸 수 있습니다. 커서는 검지 위치를 받기 전까지 보이지 않도록 꺼 둔 채로 시작합니다.
-            }
-        }
-    }
-
-    @Section(title: "엔티티와 재질 준비하기") {
-        @ContentAndMedia {
-            점은 모두 같은 크기의 구이므로 mesh와 재질을 initializer에서 한 번만 만들고, 점을 찍을 때마다 같은 것을 다시 씁니다. 커서도 미리 하나 만들어 두고 켜고 끄기만 합니다.
-        }
-
-        @Steps {
-            @Step {
-                `RealityKit`, `UIKit`, `simd`를 import하고 `@MainActor` 클래스 `ConstellationRenderer`를 선언하세요. 장면에 추가할 `rootEntity`, 점과 선을 담을 컨테이너, 커서, 점 mesh와 재질을 속성으로 둡니다.
-
-                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-02.swift, previousFile: C05-T01-ConstellationRenderer-00.swift)
-
-                RealityKit 엔티티는 메인 스레드에서 다뤄야 하므로 `@MainActor`를 붙입니다. 속성을 채우는 initializer는 다음 두 단계에 걸쳐 작성하므로, 그때까지 보이는 오류는 그냥 두어도 됩니다.
+                안내를 언제 켜고 끌지는 Chapter 4의 코디네이터가 정합니다. 미리보기 선은 곧 작성할 `makeLine`으로 만듭니다.
             }
 
             @Step {
-                initializer를 추가하세요. 엔티티에 이름을 붙이고, [`generateSphere(radius:)`](https://developer.apple.com/documentation/realitykit/meshresource/generatesphere(radius:))로 점 mesh를 만든 뒤, 점과 선의 재질을 만듭니다.
+                `ConstellationConfiguration.swift`를 열고 강조된 세 줄을 확인하세요. 반지름이 점은 6mm, 선은 1.5mm, 커서는 5mm입니다.
 
-                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-04.swift, previousFile: C05-T03-ConstellationRenderer-02.swift)
-
-                이름은 Xcode의 RealityKit 디버거에서 트리를 볼 때 도움이 됩니다. 재질은 우선 색이 있는 `SimpleMaterial`로 두고, 이 페이지 마지막 코드 단계에서 모두 흰색 `UnlitMaterial`로 바꿉니다.
-            }
-
-            @Step {
-                커서를 만드세요. 커서 크기의 구 mesh와 `UnlitMaterial`로 `ModelEntity`를 만들고, 이름을 붙인 뒤 `isEnabled = false`로 꺼 둡니다.
-
-                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-05.swift, previousFile: C05-T03-ConstellationRenderer-04.swift)
-
-                `UnlitMaterial`은 조명을 받지 않아 어떤 방에서든 같은 밝기로 보입니다. 커서는 늘 잘 보여야 하므로 처음부터 이 재질을 씁니다.
-            }
-
-            @Step {
-                선 컨테이너, 점 컨테이너, 커서를 `rootEntity`의 자식으로 붙여 트리를 완성하세요.
-
-                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-06.swift, previousFile: C05-T03-ConstellationRenderer-05.swift)
-
-                붙이는 순서는 트리 안의 순서일 뿐이고, 무엇이 앞에 보이는지는 각 엔티티의 3D 위치로 정해집니다. 연결 안내 컨테이너는 이 페이지 마지막 코드 단계에서 붙입니다.
+                @Code(name: "ConstellationConfiguration.swift", file: C03-Configuration-rendering.swift, previousFile: HL-Configuration-rendering.swift)
             }
         }
     }
 
-    @Section(title: "점, 선, 커서 그리기") {
+    @Section(title: "점, 선, 커서 준비하기") {
         @ContentAndMedia {
-            두 점 사이의 선은 원기둥으로 그립니다. [`generateCylinder(height:radius:)`](https://developer.apple.com/documentation/realitykit/meshresource/generatecylinder(height:radius:))로 만든 원기둥은 원점을 중심으로 y축 방향으로 서 있습니다. 그래서 선을 그릴 때는 원기둥의 길이를 두 점 사이 거리로 정하고, 두 점의 중간에 놓은 뒤, y축이 두 점을 잇는 방향을 향하도록 돌립니다. 회전은 [`simd_quatf(from:to:)`](https://developer.apple.com/documentation/simd/simd_quatf/init(from:to:))로 구합니다.
+            눈에 보이는 물체는 [`ModelEntity`](https://developer.apple.com/documentation/realitykit/modelentity)로 만듭니다. 모양을 정하는 [`MeshResource`](https://developer.apple.com/documentation/realitykit/meshresource)와 표면을 정하는 재질을 함께 넘깁니다. 메시도 재질도 없는 `Entity`는 자식을 담는 컨테이너로 씁니다.
 
-            예를 들어 A(0, 1, −0.5)에서 B(0.06, 1.08, −0.5)로 선을 그린다면 다음과 같습니다.
-
-            | 계산 | 식 | 결과 |
-            | --- | --- | --- |
-            | 두 점의 차이 | B − A | (0.06, 0.08, 0) |
-            | 길이 | `simd_length` | 0.10 (10cm) |
-            | 놓을 위치 | (A + B) / 2 | (0.03, 1.04, −0.5) |
-            | 방향 | 차이 ÷ 길이 | (0.6, 0.8, 0) |
-            | 회전 | y축 (0, 1, 0) → (0.6, 0.8, 0) | 오른쪽으로 약 37° 기울임 |
+            재질은 [`UnlitMaterial`](https://developer.apple.com/documentation/realitykit/unlitmaterial)을 씁니다. 조명의 영향을 받지 않아 어느 방에서나 같은 흰색으로 보입니다.
         }
 
         @Steps {
             @Step {
-                `updateCursor(position:progress:)`와 `hideCursor()`를 추가하세요. 커서를 검지 위치로 옮기고, 머무르기 진행률(0–1)에 따라 크기를 0.75배에서 1.5배까지 키운 뒤 켭니다.
+                `rootEntity` 속성 아래에 점과 선에 쓸 속성을 추가하세요. `init`에서는 주석을 지우고 두 컨테이너에 이름을 붙여 `rootEntity`에 넣은 뒤, 설정값으로 점 메시와 선 굵기를 정합니다.
 
-                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-08.swift, previousFile: C05-T03-ConstellationRenderer-06.swift)
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-01.swift, previousFile: C03-ConstellationRenderer-00.swift)
 
-                커서가 커지는 것을 보고 사용자는 곧 점이 찍힌다는 것을 압니다. `hideCursor()`는 그리기를 끄거나 손 추적이 끊겼을 때 부릅니다.
+                컨테이너를 나누면 초기화할 때 점과 선만 통째로 비울 수 있습니다. 점 메시는 [`generateSphere(radius:)`](https://developer.apple.com/documentation/realitykit/meshresource/generatesphere(radius:))로 한 번 만들어 모든 점이 함께 씁니다.
             }
 
             @Step {
-                `addPoint(at:segment:lineRadius:)`와 `reset()`을 추가하세요. 이전 점과 이을 선분이 함께 오면 선부터 그리고, 미리 만들어 둔 mesh와 재질로 점을 만들어 점 컨테이너에 넣습니다. `reset()`은 두 컨테이너의 자식만 지웁니다.
+                커서 속성과 커서 재질 두 개를 추가하고, `init`에서 커서를 만들어 `rootEntity`에 넣으세요. 검지 위치를 받기 전에는 보이지 않도록 `isEnabled`를 `false`로 둡니다.
 
-                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-10.swift, previousFile: C05-T03-ConstellationRenderer-08.swift)
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-02.swift, previousFile: C03-ConstellationRenderer-01.swift)
 
-                `ConstellationModel.Segment`는 스타터의 별자리 모델이 돌려주는 두 점입니다. 별자리의 첫 점에는 선분이 없어 `nil`이 옵니다. 아직 없는 `addLine`은 다음 단계에서 만듭니다.
+                재질이 둘인 것은 커서가 두 모드로 보이기 때문입니다. 새 점을 찍을 때는 불투명도 0.72의 흰색, 기존 점에 연결할 때는 불투명한 흰색입니다.
             }
 
             @Step {
-                선 하나를 그리는 `addLine(from:to:radius:)`를 추가하세요. 위의 표처럼 두 점의 거리로 원기둥 길이를 정하고, 중점에 놓은 뒤, y축을 두 점을 잇는 방향으로 돌립니다.
+                `updateCursor`와 `hideCursor`의 주석을 지우고 본문을 쓰세요. 커서를 검지 위치로 옮기고, 0–1 사이로 자른 진행률만큼 크기를 키운 뒤 모드에 맞는 재질을 입혀 켭니다.
 
-                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-11.swift, previousFile: C05-T03-ConstellationRenderer-10.swift)
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-03.swift, previousFile: C03-ConstellationRenderer-02.swift)
 
-                두 점이 거의 같은 자리에 있으면 방향을 정할 수 없으므로, 길이가 0에 가까울 때는 선을 그리지 않고 돌아갑니다.
+                새 점 모드에서는 0.72배에서 1.42배까지, 기존 점 연결 모드에서는 1.0배에서 1.85배까지 커집니다. 커서가 커지는 것을 보고 곧 점이 찍힌다는 것을 알 수 있습니다.
+            }
+        }
+    }
+
+    @Section(title: "점과 선 그리기") {
+        @ContentAndMedia {
+            선은 두 점 사이에 놓은 가는 원기둥입니다. [`generateCylinder(height:radius:)`](https://developer.apple.com/documentation/realitykit/meshresource/generatecylinder(height:radius:))로 만든 원기둥은 원점에 y축 방향으로 서 있습니다.
+
+            그래서 높이를 두 점 사이의 거리로 정하고, 두 점의 중점으로 옮긴 뒤, y축이 두 점을 잇는 방향을 향하도록 돌립니다. 회전은 [`simd_quatf(from:to:)`](https://developer.apple.com/documentation/simd/simd_quatf/init(from:to:))로 구합니다.
+
+            @Image(source: line-between-points.png, alt: "y축으로 선 원기둥을 A(0, 1, −0.5)와 B(0.06, 1.08, −0.5) 사이로 옮기고 약 37도 기울이는 과정을 길이 0.10, 중점, 방향과 함께 나타낸 그림")
+        }
+
+        @Steps {
+            @Step {
+                `makeLine`의 임시 본문을 지우고 원기둥을 만드는 코드를 쓰세요. 두 점 사이의 거리를 높이로 주고, 중점에 놓고, y축을 두 점의 방향으로 돌립니다. 거리가 0이면 방향을 정할 수 없어 `nil`을 돌려줍니다.
+
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-04.swift, previousFile: C03-ConstellationRenderer-03.swift)
+
+                A(0, 1, −0.5)에서 B(0.06, 1.08, −0.5)로 그으면 길이는 0.10, 중점은 (0.03, 1.04, −0.5), 방향은 (0.6, 0.8, 0)입니다. 원기둥은 y축에서 약 37° 기울어집니다.
             }
 
             @Step {
-                기존 점 연결 안내를 추가하고 재질을 모두 흰색 `UnlitMaterial`로 바꾸세요. `guidanceContainer`에는 목표 점을 감싸는 반투명 구와 미리보기 선이 들어가고, `connectExistingPoint(with:lineRadius:)`는 새 점 없이 선만 추가합니다.
+                `makeLine` 아래에 `addLine`과 `addPoint`를 추가하고 `connectExistingPoint`의 본문을 쓰세요. 새 점은 구 하나와, 첫 점이 아니면 직전 점에서 오는 선 하나를 장면에 더합니다.
 
-                @Code(name: "ConstellationRenderer.swift", file: C05-T03-ConstellationRenderer-13.swift, previousFile: C05-T03-ConstellationRenderer-11.swift)
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-05.swift, previousFile: C03-ConstellationRenderer-04.swift)
 
-                커서는 `CursorMode`에 따라 크기와 밝기가 달라집니다. 원기둥을 만드는 부분은 `makeLine`으로 따로 빼서 실제 선과 미리보기 선이 함께 씁니다. 모든 요소가 흰색이라 불투명도와 크기만으로 서로를 구분합니다.
+                `segment`는 스타터의 별자리 모델이 돌려주는 선의 두 끝점이고, 별자리의 첫 점에서는 `nil`입니다. 기존 점에 연결할 때는 선만 더하고 점은 만들지 않습니다.
             }
 
             @Step {
-                **Command+B**로 빌드하세요. Build Succeeded가 뜨면 됩니다. 아직 `rootEntity`를 장면에 붙이지 않았으므로 화면에는 아무것도 그려지지 않습니다. Chapter 4에서 `RealityView`에 추가하고, Chapter 5에서 Vision Pro로 점과 선을 확인합니다.
+                `connectExistingPoint` 아래에 `reset`을 추가하세요. 두 컨테이너의 자식을 모두 떼어 내고 연결 안내와 커서를 숨깁니다. Chapter 4에서 **초기화** 버튼이 이 메서드를 부릅니다.
 
-                @Image(source: capture-next-cr-build-result.png, alt: "Xcode에서 ConstellationRenderer.swift를 빌드해 Build Succeeded가 표시된 화면")
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-06.swift, previousFile: C03-ConstellationRenderer-05.swift)
 
-                **문제가 생겼다면**: `UIColor`를 찾을 수 없다면 `import UIKit`을, `simd_quatf`를 찾을 수 없다면 `import simd`를 확인하세요. Xcode 설정에 따라 캡처처럼 `.standard`에 노란 경고가 하나 보일 수 있는데, 빌드를 막지 않으므로 그대로 진행해도 됩니다.
+                `children`을 `Array`로 복사해서 도는 것은 떼어 내는 동안 원래 컬렉션이 바뀌기 때문입니다. Command+B로 빌드해 오류가 없는지 확인하세요.
+            }
+        }
+    }
 
-                [capture-cr-build-result]: # "CAPTURE_LINKED: CR-BUILD-RESULT | xcode | CR-BUILD-RESULT"
+    @Section(title: "캔버스에서 미리 보기") {
+        @ContentAndMedia {
+            렌더러는 아직 어느 화면에도 붙어 있지 않아서 앱을 실행해도 보이는 것이 없습니다. `#Preview`는 Xcode 캔버스에 화면 하나를 띄우는 매크로입니다.
+
+            그 안에서 렌더러를 만들고 점과 선을 직접 추가하면, 손 추적 없이도 방금 쓴 코드가 그리는 결과를 볼 수 있습니다.
+        }
+
+        @Steps {
+            @Step {
+                파일 맨 아래에 `#Preview`를 추가하세요. `RealityView` 안에서 렌더러를 만들어 점 A, B, C, D를 차례로 찍고, D–A와 A–C 선을 더한 뒤 `rootEntity`를 `content`에 추가합니다.
+
+                @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-07.swift, previousFile: C03-ConstellationRenderer-06.swift)
+
+                `connectExistingPoint`가 연결 완료 표시를 켜므로 마지막에 `hideConnectionGuidance()`로 끕니다. `RealityView`는 Chapter 4에서 다룹니다.
+            }
+
+            @Step {
+                캔버스에 점 4개와 선 5개로 된 흰 별자리가 나타나는지 확인하세요. 캔버스가 보이지 않으면 **Editor > Canvas**(Option+Command+Return)로 엽니다.
+
+                @Image(source: capture-renderer-01-preview.png, alt: "Xcode 캔버스에 흰 점 4개와 선 5개로 된 별자리가 미리보기로 표시된 화면")
+
+                **문제가 생겼다면**: 미리보기가 멈춰 있으면 Option+Command+P로 다시 시작하세요. 실행 대상이 Apple Vision Pro Simulator인지도 확인하세요.
             }
         }
     }
 
     @Assessments {
         @MultipleChoice {
-            **초기화** 버튼을 눌러 점과 선을 모두 지워도 커서 엔티티가 남아 있는 이유는 무엇인가요?
+            점과 선의 재질로 `UnlitMaterial`을 쓰는 이유는 무엇인가요?
 
-            @Choice(isCorrect: true) {
-                점과 선을 각각의 컨테이너에 담고, `reset()`이 그 두 컨테이너의 자식만 지우기 때문입니다.
+            @Choice(isCorrect: false) {
+                스스로 빛을 내는 재질이라, 어두운 방에서 주변 물체까지 밝혀 주기 때문입니다.
 
-                @Justification(reaction: "맞습니다!") {
-                    커서는 컨테이너가 아니라 `rootEntity`에 바로 붙어 있어서 지워지지 않고, 숨겼다가 다시 쓸 수 있습니다.
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `UnlitMaterial`은 조명 계산을 하지 않을 뿐입니다. 주변을 비추는 광원이 되지는 않습니다.
                 }
             }
 
             @Choice(isCorrect: false) {
-                커서가 `rootEntity` 밖에 있기 때문입니다.
+                방의 조명을 그대로 받는 재질이라, 주변과 어울리는 음영이 생기기 때문입니다.
 
                 @Justification(reaction: "다시 생각해 보세요.") {
-                    커서도 `rootEntity`의 자식입니다. 장면에는 `rootEntity` 하나만 추가합니다.
+                    조명을 받아 음영이 생기는 것은 다른 재질의 특징입니다. 그런 재질을 쓰면 어두운 방에서 점이 어둡게 보입니다.
+                }
+            }
+
+            @Choice(isCorrect: true) {
+                조명의 영향을 받지 않는 재질이라, 방이 밝든 어둡든 같은 흰색으로 보이기 때문입니다.
+
+                @Justification(reaction: "맞습니다!") {
+                    점, 선, 커서는 어디서나 또렷하게 보여야 하므로 조명과 상관없이 정한 색 그대로 그립니다.
                 }
             }
         }
 
         @MultipleChoice {
-            두 점을 잇는 원기둥을 돌릴 때 `simd_quatf(from:to:)`의 `from`에 y축 `(0, 1, 0)`을 넣는 이유는 무엇인가요?
+            두 점을 잇는 원기둥의 회전을 구하는 코드는 무엇인가요? `offset`은 `end - start`이고 `length`는 그 길이입니다.
+
+            @Choice(isCorrect: true) {
+                ```swift
+                simd_quatf(from: SIMD3<Float>(0, 1, 0), to: offset / length)
+                ```
+
+                @Justification(reaction: "맞습니다!") {
+                    `generateCylinder`로 만든 원기둥은 y축 방향으로 서 있습니다. y축에서 두 점을 잇는 방향으로 가는 회전을 구합니다.
+                }
+            }
 
             @Choice(isCorrect: false) {
-                visionOS에서 위쪽이 항상 선의 방향이기 때문입니다.
+                ```swift
+                simd_quatf(from: SIMD3<Float>(0, 0, 1), to: offset / length)
+                ```
 
                 @Justification(reaction: "다시 생각해 보세요.") {
-                    선의 방향은 두 점에 따라 달라집니다. `to`에 그 방향을 넣습니다.
+                    원기둥은 z축이 아니라 y축 방향으로 만들어집니다. z축을 기준으로 돌리면 선이 두 점을 지나지 않습니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                ```swift
+                simd_quatf(from: offset / length, to: SIMD3<Float>(0, 1, 0))
+                ```
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    두 점의 방향을 y축으로 되돌리는 반대 회전입니다. `from`에는 원기둥의 원래 방향인 y축이 와야 합니다.
+                }
+            }
+        }
+
+        @MultipleChoice {
+            점 A, B, C를 차례로 찍은 뒤 C에서 기존 점 A에 연결했습니다. 점 컨테이너와 선 컨테이너에는 엔티티가 몇 개씩 들어 있나요?
+
+            @Choice(isCorrect: false) {
+                점 4개와 선 3개입니다. 연결할 때 A 자리에 구가 하나 더 생깁니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    `connectExistingPoint`는 선만 더합니다. 이미 있는 점 위에 구를 또 만들지 않습니다.
                 }
             }
 
             @Choice(isCorrect: true) {
-                `generateCylinder(height:radius:)`로 만든 원기둥이 처음에 y축 방향으로 서 있기 때문입니다.
+                점 3개와 선 3개입니다. 연결할 때는 C–A 선 하나만 더 생깁니다.
 
                 @Justification(reaction: "맞습니다!") {
-                    원기둥의 원래 방향인 y축에서 두 점을 잇는 방향으로 가는 회전을 구하면 선이 두 점 사이에 정확히 놓입니다.
+                    B와 C를 찍을 때 A–B, B–C 선이 하나씩 생기고, 기존 점에 연결할 때는 `addLine`으로 C–A 선만 더합니다.
+                }
+            }
+
+            @Choice(isCorrect: false) {
+                점 3개와 선 2개입니다. C–A 선은 연결 안내 컨테이너에 들어갑니다.
+
+                @Justification(reaction: "다시 생각해 보세요.") {
+                    연결한 선도 `addLine`으로 선 컨테이너에 들어갑니다. 안내 컨테이너에는 연결하기 전의 미리보기 선만 들어갑니다.
                 }
             }
         }

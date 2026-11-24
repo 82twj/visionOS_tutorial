@@ -24,7 +24,8 @@ let package = Package(
                 "HandTrackingService.swift",
                 "ImmersiveCoordinator.swift",
                 "ImmersiveView.swift",
-                "Info.plist"
+                "Info.plist",
+                "SimulatorInputPad.swift"
             ],
             sources: [
                 "ExistingPointConnectionDetector.swift",
@@ -36,7 +37,9 @@ let package = Package(
         .testTarget(
             name: "HandConstellationCoreTests",
             dependencies: ["HandConstellationCore"],
-            path: "HandConstellationTests"
+            path: "HandConstellationTests",
+            // Needs RealityKit; Scripts/run-simulator-tests.sh runs it on the visionOS Simulator.
+            exclude: ["ImmersiveCoordinatorTests.swift"]
         )
     ]
 )

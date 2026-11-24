@@ -1,100 +1,374 @@
 #!/usr/bin/env python3
 """Regenerates the DocC tutorial code snapshots from the shipping app sources.
 
-Every snapshot is assembled from line ranges of the real Swift files so that the
-last snapshot of each file is byte-for-byte identical to the app source.
+A file the reader writes is described as a list of regions of the real source,
+each tagged with the step that adds it. The snapshot for step N is the source
+with every later region left out, so the last snapshot of a file is the app
+source itself and step 0 is the file as the starter project ships it. A region
+can name the placeholder that stands in its place until its step arrives; the
+starter's stubs (``// Chapter 3에서 작성합니다.``) are such placeholders.
+
+Regions are found by the exact text of their first and last lines, searched in
+file order, so editing a source file only breaks the generator where an anchor
+line itself changes.
 
 Highlight bases (``HL-*.swift``) are a target snapshot with the lines to
 highlight removed. A read-only step passes the base as ``previousFile`` so DocC
 highlights exactly those lines, because DocC marks the lines that are new
-relative to ``previousFile``.
+relative to ``previousFile``. DocC keeps one set of highlights per ``file:``
+name on a page, so every read-only step gets its own byte-identical copy of the
+state it shows.
 
-Files that the starter project ships complete (ConstellationModel,
-ExistingPointConnectionDetector) have no snapshots; build_starter_project.py
-checks them instead.
+    python3 Scripts/generate_snapshots.py            # rewrite the catalog snapshots
+    python3 Scripts/generate_snapshots.py --report   # also print the step table
+    python3 Scripts/generate_snapshots.py --check    # verify the catalog, write nothing
+
+build_starter_project.py and verify_snapshot_builds.py import this module for
+the starter state and the ordered step states.
 """
 
+from __future__ import annotations
+
+import difflib
+import json
+import shutil
+import subprocess
+import sys
+import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "HandConstellation"
+TESTS = ROOT / "HandConstellationTests"
 OUT = SRC / "HandConstellation.docc"
 
-_cache: dict[str, list[str]] = {}
+
+def find_line(lines: list[str], text: str, start: int, label: str) -> int:
+    """Index of the first line at or after ``start`` that equals ``text``."""
+    for index in range(start, len(lines)):
+        if lines[index].rstrip("\n") == text:
+            return index
+    raise SystemExit(f"{label}: no line {text!r} at or after line {start + 1}")
 
 
-def lines(name: str) -> list[str]:
-    if name not in _cache:
-        _cache[name] = (SRC / name).read_text(encoding="utf-8").splitlines(keepends=True)
-    return _cache[name]
+def find_span(lines: list[str], first: str, last, start: int, label: str) -> tuple[int, int]:
+    """Indices of a region that starts at ``first`` and ends at ``last``.
+
+    ``last`` is one line, or several lines found one after another when the
+    closing line alone (a lone ``}``) would match too early.
+    """
+    begin = end = find_line(lines, first, start, label)
+    for text in ([] if last is None else [last] if isinstance(last, str) else list(last)):
+        end = find_line(lines, text, end, label)
+    return begin, end
 
 
-def R(name: str, start: int, end: int) -> tuple:
-    """Inclusive, 1-indexed line range of a real source file."""
-    return ("src", name, start, end)
+# --- files the reader writes -------------------------------------------------
 
 
-def T(text: str) -> tuple:
-    """Temporary scaffolding that a later snapshot replaces."""
-    return ("raw", text)
+@dataclass(frozen=True)
+class Part:
+    """Lines of the final source that appear at ``step``.
+
+    ``first`` and ``last`` are whole lines including indentation (see
+    ``find_span``); without ``last`` the region is one line. ``before`` and
+    ``after`` take that many blank lines around the region with it. ``stub`` is
+    shown in the region's place from ``stub_from`` until ``step``. A part with
+    step 0 is always present and only moves the search position forward.
+    """
+
+    step: int
+    first: str
+    last: str | tuple[str, ...] | None = None
+    before: int = 0
+    after: int = 0
+    stub: str = ""
+    stub_from: int = 0
 
 
-def E(name: str) -> tuple:
-    """Preserves a previously published intermediate snapshot."""
-    return T((OUT / name).read_text(encoding="utf-8"))
+class Written:
+    """A source file that the tutorial builds up step by step."""
+
+    def __init__(self, source: str, chapter: int, parts: list[Part]):
+        self.source = source
+        self.stem = Path(source).stem
+        self.chapter = chapter
+        self.lines = (SRC / source).read_text(encoding="utf-8").splitlines(keepends=True)
+        self.steps = max(part.step for part in parts)
+        self.regions: list[tuple[int, int, Part]] = []
+        cursor = 0
+        for part in parts:
+            first, last = find_span(self.lines, part.first, part.last, cursor, source)
+            blanks = self.lines[first - part.before : first] + self.lines[last + 1 : last + 1 + part.after]
+            first -= part.before
+            last += part.after
+            if first < cursor or last >= len(self.lines) or any(line.strip() for line in blanks):
+                raise SystemExit(f"{source}: region {part.first!r} does not have the blank lines it claims")
+            self.regions.append((first, last, part))
+            cursor = last + 1
+
+    def state(self, step: int) -> str:
+        out: list[str] = []
+        cursor = 0
+        for first, last, part in self.regions:
+            out.extend(self.lines[cursor:first])
+            if part.step <= step:
+                out.extend(self.lines[first : last + 1])
+            elif part.stub and part.stub_from <= step:
+                out.append(part.stub)
+            cursor = last + 1
+        out.extend(self.lines[cursor:])
+        return "".join(out)
+
+    def snapshot_name(self, step: int) -> str:
+        return f"C{self.chapter:02d}-{self.stem}-{step:02d}.swift"
 
 
-def render(parts) -> str:
-    out = []
-    for part in parts:
-        if part[0] == "src":
-            _, name, start, end = part
-            src = lines(name)
-            if end > len(src):
-                raise SystemExit(f"{name}: range {start}-{end} exceeds {len(src)} lines")
-            out.append("".join(src[start - 1 : end]))
-        else:
-            out.append(part[1])
-    return "".join(out)
+def chapter_stub(chapter: int) -> str:
+    return f"        // Chapter {chapter}에서 작성합니다.\n"
 
 
-# --- shared scaffolding ------------------------------------------------------
-
-XCODE_SWIFT_FILE = "import Foundation\n"
-
-SNAPSHOTS: dict[str, list] = {}
-HIGHLIGHTS: dict[str, tuple] = {}
+WRITTEN: dict[str, Written] = {}
 
 
-def add(name: str, *parts):
+def written(source: str, chapter: int, *parts: Part) -> None:
+    WRITTEN[source] = Written(source, chapter, list(parts))
+
+
+# Chapter 2. The starter file holds `import Foundation` only.
+written(
+    "HandTrackingService.swift", 2,
+    # 1: the error type the coordinator later turns into a status.
+    Part(1, "import ARKit"),
+    Part(1, "import simd", "}"),
+    # 2: the class, its two ARKit objects, and the support check in start().
+    Part(2, "/// Starts ARKit hand tracking and converts right-index anchors into world positions.",
+         "        }", before=1),
+    # 3: query the authorization, ask once if undetermined, stop unless allowed.
+    Part(3, "        var authorization = await session.queryAuthorization(for: [.handTracking])[.handTracking]",
+         ("        guard authorization == .allowed else {", "        }"), before=1),
+    # 4: run the session, and stop it.
+    Part(4, "        try await session.run([provider])", before=1),
+    Part(2, "    }"),
+    Part(4, "    func stop() {", "    }", before=1),
+    # 5: which anchors and joints to ignore.
+    Part(5, "    /// Returns the world-space position of a tracked right index fingertip.",
+         "        guard indexFingerTip.isTracked else { return nil }", before=1),
+    # 6: origin <- anchor <- joint, then the translation column.
+    Part(6, "        let originFromIndexFingerTip =",
+         "        return position.hasFiniteComponents ? position : nil", before=1,
+         stub="\n        // 다음 Step에서 위치를 계산합니다.\n        return nil\n", stub_from=5),
+    Part(5, "    }"),
+    Part(2, "}"),
+)
+
+# Chapter 3. The starter has everything except update(position:at:).
+written(
+    "DwellDetector.swift", 3,
+    # 1: the input guard, the switch, and the `.idle` case.
+    Part(1, "    /// Processes a valid fingertip position at a monotonic timestamp.", "            )"),
+    # 2: `.dwelling` progress, and the commit after 0.8 s.
+    Part(2, "        case .dwelling(let center, let startedAt):", before=1),
+    # 3: `.dwelling`, leaving the 1.5 cm radius restarts the dwell.
+    Part(3, "            guard simd_distance(center, position) <= stabilityRadius else {", "            }", after=1),
+    Part(2, "            let elapsed = max(0, timestamp - startedAt)", "            )"),
+    # 4: `.coolingDown` replaces the placeholder that kept the switch exhaustive.
+    Part(4, "        case .coolingDown(let committedPosition):", "            )", before=1,
+         stub="\n        default:\n            // 나머지 상태는 다음 Step에서 채웁니다.\n            return idleSnapshot\n",
+         stub_from=1),
+    Part(1, "        }", "    }", after=1),
+)
+
+# Chapter 3. The starter has the connection guidance and four stubs that the
+# provided code calls: updateCursor, hideCursor, makeLine, connectExistingPoint.
+written(
+    "ConstellationRenderer.swift", 3,
+    # 1: the two containers and what points and lines are made of.
+    Part(1, "    private let pointContainer = Entity()",
+         "    private let lineMaterial = UnlitMaterial(color: UIColor.white.withAlphaComponent(0.92))", after=1),
+    # 2: the fingertip cursor.
+    Part(2, "    private let cursor: ModelEntity",
+         "    private let connectionCursorMaterial = UnlitMaterial(color: UIColor.white)", after=1),
+    Part(1, '        rootEntity.name = "ConstellationRoot"', "        lineRadius = configuration.lineRadius", after=1,
+         stub="        // Chapter 3에서 점, 선, 커서를 준비하는 코드를 작성합니다.\n\n"),
+    Part(2, "        let cursorMesh = MeshResource.generateSphere(radius: configuration.cursorRadius)",
+         "        rootEntity.addChild(cursor)", after=1),
+    # 3: move, scale and recolor the cursor; hide it.
+    Part(3, "        cursor.position = position", "        cursor.isEnabled = true", stub=chapter_stub(3)),
+    Part(3, "        cursor.isEnabled = false", stub=chapter_stub(3)),
+    # 4: a cylinder between two points.
+    Part(4, "        let offset = end - start", "        return line",
+         stub=chapter_stub(3) + "        return nil\n"),
+    # 5: committed lines and points.
+    Part(5, "    private func addLine(from start: SIMD3<Float>, to end: SIMD3<Float>) {",
+         ("        pointContainer.addChild(point)", "    }"), after=1),
+    Part(5, "        addLine(from: segment.start, to: segment.end)", "        showConnectionCompletion(at: segment.end)",
+         stub=chapter_stub(3)),
+    # 6: remove everything.
+    Part(6, "    /// Removes all committed entities and transient guidance while preserving the cursor.",
+         ("        hideCursor()", "    }"), before=1),
+    # 7: a sample constellation for the Xcode canvas.
+    Part(7, "#Preview {", "}", before=1),
+)
+
+# Chapter 4. The starter has the stored properties, init, the helper extension
+# and an empty process(position:at:appModel:) for the Simulator input loop.
+written(
+    "ImmersiveCoordinator.swift", 4,
+    # 1: start the service and turn each outcome into a status.
+    Part(1, "    private let handTrackingService = HandTrackingService()"),
+    Part(1, "    /// Runs until the immersive view task is cancelled or the ARKit sequence ends.",
+         "            appModel.trackingStatus = .tracking", before=1),
+    # 3: the anchor loop.
+    Part(3, "            for await update in handTrackingService.provider.anchorUpdates {",
+         ("            if !Task.isCancelled {", "            }"), before=1),
+    Part(1, "        } catch HandTrackingServiceError.unsupported {", "    }"),
+    # 4: the drawing button and the reset button.
+    Part(4, "    func drawingStateChanged(appModel: AppModel) {",
+         ("        clearPointLimitFailure(appModel: appModel)", "    }"), before=1),
+    # 5: closing the space.
+    Part(5, "    /// Ends tracking and returns everything to its initial state when the space closes.",
+         "    }", before=1),
+    # 2: one hand anchor becomes one fingertip position.
+    Part(2, "    /// Turns one right-hand anchor update into this frame's fingertip position.",
+         ("        process(position: position, at: timestamp, appModel: appModel)", "    }"), before=1),
+    # 6: held feedback, then an existing-point connection.
+    Part(6, "        if keepCompletionVisible(at: position, appModel: appModel) { return }",
+         "        hideConnectionProgress(appModel: appModel)", stub=chapter_stub(4)),
+    # 7: a new point.
+    Part(7, "        let dwell = dwellDetector.update(position: position, at: timestamp)", "        }", before=1),
+)
+
+# Chapter 4. The starter file holds `import Foundation` only.
+written(
+    "ImmersiveView.swift", 4,
+    # 1: a RealityView that shows the renderer's root entity.
+    Part(1, "import RealityKit", "        }", stub="import Foundation\n"),
+    # 2: tie the coordinator to the view's lifetime and the two buttons.
+    Part(2, "        .task {", ("        .onDisappear {", "        }")),
+    Part(1, "    }", "}"),
+)
+
+# Chapter 4. The starter has the WindowGroup only.
+written(
+    "HandConstellationApp.swift", 4,
+    Part(1, "        ImmersiveSpace(id: AppModel.immersiveSpaceID) {",
+         "        .immersionStyle(selection: .constant(.mixed), in: .mixed)", before=1),
+)
+
+# Chapter 4. The starter has the whole window except the body of toggleImmersiveSpace().
+written(
+    "ControlView.swift", 4,
+    # 1: open the space and handle the result.
+    Part(1, r"    @Environment(\.openImmersiveSpace) private var openImmersiveSpace"),
+    # 2: dismiss the space and return the window to its initial state.
+    Part(2, r"    @Environment(\.dismissImmersiveSpace) private var dismissImmersiveSpace"),
+    Part(0, "    private func toggleImmersiveSpace() async {"),
+    Part(1, "        switch appModel.immersiveSpaceState {", "        case .open:", stub=chapter_stub(4)),
+    Part(2, "            appModel.immersiveSpaceState = .transitioning", "            appModel.constellationCount = 0",
+         stub="            break\n", stub_from=1),
+    Part(1, "        case .transitioning:", "        }"),
+)
+
+# Files the starter ships complete; the tutorial only reads them.
+PROVIDED = (
+    "AppModel.swift",
+    "ConstellationConfiguration.swift",
+    "ConstellationModel.swift",
+    "ExistingPointConnectionDetector.swift",
+    "SimulatorInputPad.swift",
+)
+
+# The order in which the tutorial pages apply the steps: (page, source, first step, last step).
+STEP_ORDER = (
+    ("StartingTheHandTrackingSession", "HandTrackingService.swift", 1, 4),
+    ("ConvertingTheFingertipToWorldSpace", "HandTrackingService.swift", 5, 6),
+    ("DetectingTheDwell", "DwellDetector.swift", 1, 4),
+    ("RenderingPointsAndLines", "ConstellationRenderer.swift", 1, 7),
+    ("BuildingTheCoordinatorLifecycle", "ImmersiveCoordinator.swift", 1, 7),
+    ("ConnectingTheRealityViewAndAppScenes", "ImmersiveView.swift", 1, 2),
+    ("ConnectingTheRealityViewAndAppScenes", "HandConstellationApp.swift", 1, 1),
+    ("ConnectingTheRealityViewAndAppScenes", "ControlView.swift", 1, 2),
+)
+
+# --- test file the starter ships ---------------------------------------------
+
+# The app's tests also build as a Swift package; the starter has one target.
+PACKAGE_IMPORT = """#if SWIFT_PACKAGE
+@testable import HandConstellationCore
+#else
+@testable import HandConstellation
+#endif
+"""
+STARTER_TESTS = ("DwellDetectorTests.swift",)
+
+
+def starter_test_source(name: str) -> str:
+    text = (TESTS / name).read_text(encoding="utf-8")
+    if text.count(PACKAGE_IMPORT) != 1:
+        raise SystemExit(f"HandConstellationTests/{name}: expected one conditional @testable import")
+    return text.replace(PACKAGE_IMPORT, "@testable import HandConstellation\n")
+
+
+# --- states for the starter builder and the build check ----------------------
+
+
+def sources_at(progress: dict[str, int]) -> dict[str, str]:
+    """Every app Swift file, with each written file at the given step (default 0)."""
+    files = {name: (SRC / name).read_text(encoding="utf-8") for name in PROVIDED}
+    for name, spec in WRITTEN.items():
+        files[name] = spec.state(progress.get(name, 0))
+    return files
+
+
+def starter_sources() -> dict[str, str]:
+    return sources_at({})
+
+
+def chapter_end_progress(chapter: int) -> dict[str, int]:
+    """Written files a reader has finished by the end of ``chapter``."""
+    return {name: spec.steps for name, spec in WRITTEN.items() if spec.chapter <= chapter}
+
+
+def ordered_states() -> list[tuple[str, dict[str, int]]]:
+    """(label, progress) for the starter and then every step in page order."""
+    progress: dict[str, int] = {}
+    states = [("starter", {})]
+    for page, source, first, last in STEP_ORDER:
+        if progress.get(source, 0) != first - 1:
+            raise SystemExit(f"STEP_ORDER: {source} step {first} does not follow step {progress.get(source, 0)}")
+        for step in range(first, last + 1):
+            progress[source] = step
+            states.append((WRITTEN[source].snapshot_name(step), dict(progress)))
+    unfinished = [name for name, spec in WRITTEN.items() if progress.get(name, 0) != spec.steps]
+    if unfinished:
+        raise SystemExit("STEP_ORDER does not finish: " + ", ".join(unfinished))
+    return states
+
+
+# --- snapshots ---------------------------------------------------------------
+
+SNAPSHOTS: dict[str, str] = {}
+HIGHLIGHTS: dict[str, tuple[str, tuple]] = {}
+
+
+def add(name: str, text: str) -> None:
     if name in SNAPSHOTS or name in HIGHLIGHTS:
         raise SystemExit(f"duplicate snapshot name: {name}")
-    SNAPSHOTS[name] = list(parts)
+    SNAPSHOTS[name] = text
 
 
-def copy(name: str, original: str):
-    """Registers a byte-identical copy of ``original`` under another name.
+def reading(name: str, text: str, base: str, *spans) -> None:
+    """Registers a read-only step: its own copy of ``text`` and a highlight base.
 
-    DocC keeps one set of highlights per ``file:`` name on a page, so a page
-    that reads the same file with two different highlight bases needs a second
-    file name for the second reading step.
+    Each span is ``first`` or ``(first, last)``: whole lines, searched in order
+    like the parts of a written file.
     """
-    if original not in SNAPSHOTS:
-        raise SystemExit(f"{name}: unknown original snapshot {original}")
-    add(name, *SNAPSHOTS[original])
-
-
-def highlight(name: str, target: str, *ranges: tuple):
-    """Registers a highlight base: ``target`` without the given line ranges.
-
-    Each range is ``(first, last, expected first line)``; the expected text
-    guards against highlighting the wrong lines after a source edit.
-    """
-    if name in SNAPSHOTS or name in HIGHLIGHTS:
-        raise SystemExit(f"duplicate snapshot name: {name}")
-    if target not in SNAPSHOTS:
-        raise SystemExit(f"{name}: unknown target snapshot {target}")
-    HIGHLIGHTS[name] = (target, ranges)
+    add(name, text)
+    if base in SNAPSHOTS or base in HIGHLIGHTS:
+        raise SystemExit(f"duplicate snapshot name: {base}")
+    HIGHLIGHTS[base] = (name, spans)
 
 
 def embeddings(base: list[str], target: list[str]) -> int:
@@ -107,29 +381,67 @@ def embeddings(base: list[str], target: list[str]) -> int:
     return ways[len(base)]
 
 
-def highlight_base(name: str, target_text: str, ranges) -> tuple[str, list[int]]:
-    """Removes the highlighted lines and proves DocC's diff is unambiguous.
-
-    DocC reports the lines inserted into ``previousFile``. If the base fits
-    into the target in more than one way (for example when a removed block
-    ends with the same ``}`` and blank line that precede it), the diff may
-    highlight a shifted set of lines, so such bases are rejected.
-    """
+def highlight_base(name: str, target_text: str, spans) -> tuple[str, list[int]]:
+    """The target without the highlighted lines, and those lines' numbers."""
     target = target_text.splitlines(keepends=True)
     highlighted: set[int] = set()
-    for first, last, expected in ranges:
-        if not 1 <= first <= last <= len(target):
-            raise SystemExit(f"{name}: range {first}-{last} outside 1-{len(target)}")
-        if target[first - 1].strip() != expected:
-            raise SystemExit(f"{name}: line {first} is {target[first - 1].strip()!r}, expected {expected!r}")
-        highlighted.update(range(first, last + 1))
+    cursor = 0
+    for span in spans:
+        first, last = (span, None) if isinstance(span, str) else (span[0], span[1:])
+        begin, end = find_span(target, first, last, cursor, name)
+        highlighted.update(range(begin, end + 1))
+        cursor = end + 1
 
-    numbers = sorted(highlighted)
-    base_lines = [line for number, line in enumerate(target, 1) if number not in highlighted]
-    count = embeddings(base_lines, target)
-    if count != 1:
-        raise SystemExit(f"{name}: lines {describe(numbers)} can be highlighted {count} ways; adjust the ranges")
+    numbers = sorted(index + 1 for index in highlighted)
+    base_lines = [line for index, line in enumerate(target) if index not in highlighted]
     return "".join(base_lines), numbers
+
+
+def docc_highlights(pairs: list[tuple[str, str]]) -> list[list[int]] | None:
+    """The lines DocC highlights for each (previousFile, file) pair.
+
+    DocC highlights the insertions of the Swift standard library's diff, which
+    is not hunk-local: removing two blocks can shift the lines it reports for
+    either. docc_highlights.swift runs that same diff. Returns ``None`` when no
+    Swift compiler is available.
+    """
+    if shutil.which("xcrun") is None:
+        return None
+    with tempfile.TemporaryDirectory() as directory:
+        tool = Path(directory) / "docc_highlights"
+        script = Path(__file__).with_name("docc_highlights.swift")
+        subprocess.run(["xcrun", "swiftc", "-O", str(script), "-o", str(tool)], check=True, capture_output=True)
+        payload = json.dumps([{"old": old, "new": new} for old, new in pairs]).encode("utf-8")
+        result = subprocess.run([str(tool)], input=payload, check=True, capture_output=True)
+    return json.loads(result.stdout)
+
+
+def highlight_bases(verify: bool = True) -> dict[str, tuple[str, str, list[int]]]:
+    """Highlight base -> (text, target snapshot, highlighted lines).
+
+    With ``verify``, the lines are checked against DocC's own diff when a Swift
+    compiler is available. Without a compiler, a base is accepted only if it
+    fits into its target in exactly one way, which is stricter than DocC needs.
+    """
+    bases = {}
+    for name, (target, spans) in HIGHLIGHTS.items():
+        text, numbers = highlight_base(name, SNAPSHOTS[target], spans)
+        bases[name] = (text, target, numbers)
+    if not verify:
+        return bases
+
+    actual = docc_highlights([(text, SNAPSHOTS[target]) for text, target, _ in bases.values()])
+    for index, (name, (text, target, numbers)) in enumerate(bases.items()):
+        if actual is None:
+            count = embeddings(text.splitlines(keepends=True), SNAPSHOTS[target].splitlines(keepends=True))
+            if count != 1:
+                raise SystemExit(f"{name}: lines {describe(numbers)} can be highlighted {count} ways; adjust the spans")
+        elif actual[index] != numbers:
+            raise SystemExit(
+                f"{name}: DocC would highlight lines {describe(actual[index])}, "
+                f"not {describe(numbers)}; adjust the spans"
+            )
+    return bases
 
 
 def describe(numbers: list[int]) -> str:
@@ -145,205 +457,259 @@ def describe(numbers: list[int]) -> str:
     return ", ".join(spans)
 
 
-# --- Chapter 1: Info.plist ---------------------------------------------------
+def provided(name: str) -> str:
+    return (SRC / name).read_text(encoding="utf-8")
 
-add("C01-T04-Info-01.plist", T(
-    """<dict>
+
+# Every state of every written file: -00 is the starter, the last is the app source.
+for _spec in WRITTEN.values():
+    for _step in range(_spec.steps + 1):
+        add(_spec.snapshot_name(_step), _spec.state(_step))
+
+# Chapter 1: the usage description as it reads in a property list.
+add("C01-Info-01.plist", """<dict>
     <key>NSHandsTrackingUsageDescription</key>
     <string>검지 끝의 움직임을 감지해 공중에 별자리 점과 선을 그리기 위해 손 추적을 사용합니다.</string>
 </dict>
-"""))
-
-# --- Chapter 1: starter code that is read, not written -----------------------
-
-APP = "HandConstellationApp.swift"
-A = "AppModel.swift"
-C = "ControlView.swift"
-
-# The starter app entry point: one WindowGroup, no immersive space yet.
-add("C02-T03-HandConstellationApp-02.swift", R(APP, 1, 13), R(APP, 20, 21))
-# Read with HL-HandConstellationApp-scenes; the plain name is read with
-# HL-HandConstellationApp-environment on the same page.
-copy("C02-T03-HandConstellationApp-02-scenes.swift", "C02-T03-HandConstellationApp-02.swift")
-add("C02-T02-AppModel-12.swift", R(A, 1, 119))
-add("C02-T04-ControlView-14.swift", R(C, 1, 242))
-
-highlight(
-    "HL-HandConstellationApp-scenes.swift", "C02-T03-HandConstellationApp-02-scenes.swift",
-    (8, 14, "var body: some Scene {"),
-)
-highlight(
-    "HL-HandConstellationApp-environment.swift", "C02-T03-HandConstellationApp-02.swift",
-    (6, 6, "@State private var appModel = AppModel()"),
-    (11, 11, ".environment(appModel)"),
-)
-highlight(
-    "HL-AppModel-drawing.swift", "C02-T02-AppModel-12.swift",
-    (22, 25, "enum DrawingState: Equatable {"),
-    (61, 61, 'static let immersiveSpaceID = "ConstellationSpace"'),
-    (65, 65, "var drawingState: DrawingState = .disabled"),
-    # The blank lines between these three members stay unhighlighted; a single
-    # 96-109 block would let the diff shift onto the `}` and blank line above.
-    (96, 98, "var isDrawingEnabled: Bool {"),
-    (100, 105, "func setDrawingEnabled(_ isEnabled: Bool) {"),
-    (107, 109, "func toggleDrawing() {"),
-)
-highlight(
-    "HL-ControlView-immersive.swift", "C02-T04-ControlView-14.swift",
-    (6, 7, r"@Environment(\.openImmersiveSpace) private var openImmersiveSpace"),
-    (207, 236, "private func toggleImmersiveSpace() async {"),
-)
-
-# --- Chapter 2: HandTrackingService ------------------------------------------
-
-H = "HandTrackingService.swift"
-add("C03-T01-HandTrackingService-00.swift", E("C03-T01-HandTrackingService-00.swift"))
-for index in (1, 2, 3, 5, 6, 7):
-    name = f"C03-T02-HandTrackingService-{index:02d}.swift"
-    add(name, E(name))
-for index in (8, 9, 10):
-    name = f"C03-T03-HandTrackingService-{index:02d}.swift"
-    add(name, E(name))
-add("C04-T05-HandTrackingService-19.swift", R(H, 1, 68))
-
-# --- Chapter 3: ConstellationConfiguration (read only) -----------------------
-
-G = "ConstellationConfiguration.swift"
-add("C04-T02-Configuration-07.swift", R(G, 1, 16))
-highlight(
-    "HL-Configuration-dwell.swift", "C04-T02-Configuration-07.swift",
-    (5, 7, "var dwellDuration: TimeInterval = 0.8"),
-)
-
-# --- Chapter 3: DwellDetector ------------------------------------------------
-
-D = "DwellDetector.swift"
-# Keeps the switch exhaustive until the last branch replaces it.
-D_REST = T("""        default:
-            // 나머지 상태는 다음 단계에서 채웁니다.
-            return idleSnapshot
 """)
-D_END = R(D, 109, 140)
 
-# The starter file: everything except `update(position:at:)`.
-add("C04-T07-DwellDetector-00.swift", R(D, 1, 42), R(D, 112, 140))
-# Read with HL-DwellDetector-phase and HL-DwellDetector-state on the same page.
-copy("C04-T07-DwellDetector-00-phase.swift", "C04-T07-DwellDetector-00.swift")
-copy("C04-T07-DwellDetector-00-state.swift", "C04-T07-DwellDetector-00.swift")
-# The input guard and a switch that later steps fill state by state.
-add("C04-T07-DwellDetector-01.swift", R(D, 1, 50), D_REST, D_END)
-# `.idle`: the first valid position starts a dwell.
-add("C04-T07-DwellDetector-02.swift", R(D, 1, 59), D_REST, D_END)
-# `.dwelling`: leaving the 1.5 cm radius restarts the dwell at the new position.
-add("C04-T07-DwellDetector-03.swift", R(D, 1, 69), T("""
-            // 진행률은 다음 단계에서 계산합니다.
-            return Snapshot(phase: .dwelling, candidatePosition: center, progress: 0, committedPosition: nil)
-"""), T("\n"), D_REST, D_END)
-# `.dwelling`: progress, and after 0.8 s the point is made and cooldown begins.
-add("C04-T07-DwellDetector-04.swift", R(D, 1, 91), D_REST, D_END)
-# `.coolingDown` replaces the temporary default branch.
-add("C04-T03-DwellDetector-14.swift", R(D, 1, 140))
-
-highlight(
-    "HL-DwellDetector-phase.swift", "C04-T07-DwellDetector-00-phase.swift",
-    (6, 10, "enum Phase: Equatable, Sendable {"),
-    (12, 17, "struct Snapshot: Equatable, Sendable {"),
+# Chapter 1: starter code that is read, not written.
+_app = WRITTEN["HandConstellationApp.swift"].state(0)
+reading(
+    "C01-HandConstellationApp-scenes.swift", _app, "HL-HandConstellationApp-scenes.swift",
+    ("    var body: some Scene {", "    }"),
 )
-highlight(
-    "HL-DwellDetector-state.swift", "C04-T07-DwellDetector-00-state.swift",
-    (19, 23, "private enum State: Equatable, Sendable {"),
-    (25, 28, "let dwellDuration: TimeInterval"),
+reading(
+    "C01-HandConstellationApp-environment.swift", _app, "HL-HandConstellationApp-environment.swift",
+    "    @State private var appModel = AppModel()",
+    "                .environment(appModel)",
+)
+reading(
+    "C01-AppModel-drawing.swift", provided("AppModel.swift"), "HL-AppModel-drawing.swift",
+    ("    enum DrawingState: Equatable {", "    }"),
+    '    static let immersiveSpaceID = "ConstellationSpace"',
+    "    var drawingState: DrawingState = .disabled",
+    # The blank lines between these three members stay unhighlighted; one
+    # block would let the diff shift onto the `}` and blank line above.
+    ("    var isDrawingEnabled: Bool {", "    }"),
+    ("    func setDrawingEnabled(_ isEnabled: Bool) {", "    }"),
+    ("    func toggleDrawing() {", "    }"),
+)
+reading(
+    "C01-ControlView-toggle.swift", WRITTEN["ControlView.swift"].state(0), "HL-ControlView-toggle.swift",
+    "                    Task { await toggleImmersiveSpace() }",
+    ("    private func toggleImmersiveSpace() async {", "    }"),
 )
 
-# --- Chapter 3: ConstellationRenderer ----------------------------------------
+# Chapter 3: the types and values DwellDetector.update works with.
+_dwell = WRITTEN["DwellDetector.swift"].state(0)
+reading(
+    "C03-DwellDetector-00-phase.swift", _dwell, "HL-DwellDetector-phase.swift",
+    ("    enum Phase: Equatable, Sendable {", "    }"),
+    ("    struct Snapshot: Equatable, Sendable {", "    }"),
+)
+reading(
+    "C03-DwellDetector-00-state.swift", _dwell, "HL-DwellDetector-state.swift",
+    ("    private enum State: Equatable, Sendable {", "    }"),
+    ("    let dwellDuration: TimeInterval", "    private var state: State = .idle"),
+)
+_configuration = provided("ConstellationConfiguration.swift")
+reading(
+    "C03-Configuration-dwell.swift", _configuration, "HL-Configuration-dwell.swift",
+    ("    var dwellDuration: TimeInterval = 0.8", "    var rearmDistance: Float = 0.030"),
+)
+reading(
+    "C03-DwellDetectorTests-commit.swift", starter_test_source("DwellDetectorTests.swift"),
+    "HL-DwellDetectorTests-commit.swift",
+    # Only the lines that no other test repeats, so the diff cannot shift.
+    "    func testCommitsExactlyOnceAfterDuration() {",
+    ("        let committed = detector.update(position: origin, at: 10.8)",
+     "        XCTAssertEqual(committed.phase, .coolingDown)"),
+)
 
-N = "ConstellationRenderer.swift"
-add("C05-T01-ConstellationRenderer-00.swift", E("C05-T01-ConstellationRenderer-00.swift"))
-for index in (2, 4, 5, 6, 8, 10, 11):
-    name = f"C05-T03-ConstellationRenderer-{index:02d}.swift"
-    add(name, E(name))
-add("C05-T03-ConstellationRenderer-13.swift", R(N, 1, 198))
+# Chapter 3: what the renderer starter provides and what it leaves empty.
+_renderer = WRITTEN["ConstellationRenderer.swift"].state(0)
+reading(
+    "C03-ConstellationRenderer-00-guidance.swift", _renderer, "HL-ConstellationRenderer-guidance.swift",
+    ("    // 기존 점 연결 안내에 쓰는 엔티티와 재질입니다. 스타터 프로젝트가 제공합니다.",
+     "    private var previewSegment: ConstellationModel.Segment?"),
+    "        prepareConnectionGuidance(pointRadius: configuration.pointRadius)",
+    ("    /// Highlights one locked existing point and previews the prospective edge.",
+     "    private func removePreviewLine() {", "    }"),
+)
+reading(
+    "C03-ConstellationRenderer-00-stubs.swift", _renderer, "HL-ConstellationRenderer-stubs.swift",
+    "        // Chapter 3에서 점, 선, 커서를 준비하는 코드를 작성합니다.",
+    "        // Chapter 3에서 작성합니다.",
+    "        // Chapter 3에서 작성합니다.",
+    ("        // Chapter 3에서 작성합니다.", "        return nil"),
+    "        // Chapter 3에서 작성합니다.",
+)
+reading(
+    "C03-Configuration-rendering.swift", _configuration, "HL-Configuration-rendering.swift",
+    ("    var pointRadius: Float = 0.006", "    var cursorRadius: Float = 0.005"),
+)
 
-# --- Chapter 4: ImmersiveCoordinator -----------------------------------------
+# Chapter 4: what the coordinator starter provides.
+_coordinator = WRITTEN["ImmersiveCoordinator.swift"]
+reading(
+    "C04-ImmersiveCoordinator-00-state.swift", _coordinator.state(0), "HL-ImmersiveCoordinator-state.swift",
+    ("    let renderer: ConstellationRenderer", "    private var recentlyConnectedPosition: SIMD3<Float>?"),
+    ("    init(configuration: ConstellationConfiguration = .standard) {", "    }"),
+)
+reading(
+    "C04-ImmersiveCoordinator-00-drawing.swift", _coordinator.state(0), "HL-ImmersiveCoordinator-drawing.swift",
+    ("    /// Applies a drawing on/off change from the control window once.",
+     "    /// Cancels any dwell in progress and hides the cursor and connection guidance.", "    }"),
+)
+# Shown right after step 1 writes the call to runWithoutHandTracking(appModel:).
+reading(
+    "C04-ImmersiveCoordinator-01-simulator.swift", _coordinator.state(1), "HL-ImmersiveCoordinator-simulator.swift",
+    "            await runWithoutHandTracking(appModel: appModel)",
+    ("    /// Handles a runtime that has no hand tracking.", "        #endif", "    }"),
+)
+# Shown before step 6 writes process(position:at:appModel:).
+reading(
+    "C04-ImmersiveCoordinator-05-feedback.swift", _coordinator.state(5), "HL-ImmersiveCoordinator-feedback.swift",
+    ("    /// Keeps the completion cue until the fingertip leaves the point it just connected to.", "    }"),
+    ("    /// Keeps the rejection message until the fingertip leaves the rejected position.", "    }"),
+)
+reading(
+    "C04-ImmersiveCoordinator-05-connection.swift", _coordinator.state(5), "HL-ImmersiveCoordinator-connection.swift",
+    ("    /// Shows the highlight, the preview line, and the progress while the fingertip stays on a target.",
+     "    }"),
+    ("    /// Refuses a target that already has an edge to the active point.", "    }"),
+    ("    /// Adds the edge to the model and the scene after a connection dwell completes.",
+     "            appModel.drawingGuidance = .connected"),
+)
+reading(
+    "C04-Configuration-connection.swift", _configuration, "HL-Configuration-connection.swift",
+    ("    var connectionSnapDistance: Float = 0.030", "    var minimumPointDistance: Float = 0.030"),
+)
 
-I = "ImmersiveCoordinator.swift"
-add("C06-T01-ImmersiveCoordinator-00.swift", E("C06-T01-ImmersiveCoordinator-00.swift"))
-I_HOOKS = """
-    // Temporary hooks. The next section fills in the input pipeline.
-    private func process(anchor: HandAnchor, appModel: AppModel) {}
-"""
-add("C06-T02-ImmersiveCoordinator-01.swift", R(I, 1, 39), T("}\n"))
-add("C06-T02-ImmersiveCoordinator-02.swift", R(I, 1, 73), T(I_HOOKS + "}\n"))
-add("C06-T02-ImmersiveCoordinator-03.swift", R(I, 1, 107), T(I_HOOKS + """\
-    private func applyDrawingState(appModel: AppModel) {}
-    private func syncDrawingGuidance(appModel: AppModel) {}
-    private func trackingLost(appModel: AppModel) {}
-}
-"""))
-add("C06-T03-ImmersiveCoordinator-22.swift", R(I, 1, 343))
+# Chapter 4: the Simulator input pad.
+reading(
+    "C04-SimulatorInputPad-region.swift", provided("SimulatorInputPad.swift"), "HL-SimulatorInputPad-region.swift",
+    ("    static let center = SIMD3<Float>(-0.42, 1.55, -0.7)", "    static let size = SIMD2<Float>(0.45, 0.30)"),
+    ("    static func position(x: Float, y: Float) -> SIMD3<Float> {", "    }"),
+)
 
-# --- Chapter 4: ImmersiveView and the app scenes -----------------------------
-
-V = "ImmersiveView.swift"
-V_END = R(V, 26, 27)
-
-add("C06-T01-ImmersiveView-00.swift", T(XCODE_SWIFT_FILE))
-add("C06-T04-ImmersiveView-01.swift", R(V, 1, 7), R(V, 9, 12), V_END)
-add("C06-T04-ImmersiveView-02.swift", R(V, 1, 15), V_END)
-add("C06-T04-ImmersiveView-04.swift", R(V, 1, 27))
-
-add("C06-T04-HandConstellationApp-03.swift", R(APP, 1, 21))
-
-# The last snapshot of every tutorial-written or tutorial-read file must match
+# The last snapshot of every source the tutorial writes or reads must match
 # the shipping source exactly.
-FINALS = {
-    "AppModel.swift": "C02-T02-AppModel-12.swift",
-    "ControlView.swift": "C02-T04-ControlView-14.swift",
-    "HandConstellationApp.swift": "C06-T04-HandConstellationApp-03.swift",
-    "HandTrackingService.swift": "C04-T05-HandTrackingService-19.swift",
-    "ConstellationConfiguration.swift": "C04-T02-Configuration-07.swift",
-    "DwellDetector.swift": "C04-T03-DwellDetector-14.swift",
-    "ConstellationRenderer.swift": "C05-T03-ConstellationRenderer-13.swift",
-    "ImmersiveCoordinator.swift": "C06-T03-ImmersiveCoordinator-22.swift",
-    "ImmersiveView.swift": "C06-T04-ImmersiveView-04.swift",
-}
+FINALS = {name: spec.snapshot_name(spec.steps) for name, spec in WRITTEN.items()}
+FINALS.update({
+    "AppModel.swift": "C01-AppModel-drawing.swift",
+    "ConstellationConfiguration.swift": "C03-Configuration-dwell.swift",
+    "SimulatorInputPad.swift": "C04-SimulatorInputPad-region.swift",
+})
 
 
 def generated_names() -> set[str]:
     return set(SNAPSHOTS) | set(HIGHLIGHTS)
 
 
-def main() -> None:
-    rendered = {name: render(parts) for name, parts in SNAPSHOTS.items()}
-    for name, text in rendered.items():
-        (OUT / name).write_text(text, encoding="utf-8")
+def changed_lines(previous: str, current: str) -> tuple[int, int]:
+    """(lines added or rewritten, lines removed) going from one snapshot to the next."""
+    added = removed = 0
+    matcher = difflib.SequenceMatcher(None, previous.splitlines(), current.splitlines(), autojunk=False)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag != "equal":
+            removed += i2 - i1
+            added += j2 - j1
+    return added, removed
 
-    report: list[str] = []
-    for name, (target, ranges) in HIGHLIGHTS.items():
-        base, numbers = highlight_base(name, rendered[target], ranges)
-        (OUT / name).write_text(base, encoding="utf-8")
-        report.append(f"  {name} -> {target}: lines {describe(numbers)}")
 
-    for source, snapshot in FINALS.items():
-        if (SRC / source).read_text(encoding="utf-8") != (OUT / snapshot).read_text(encoding="utf-8"):
-            raise SystemExit(f"final snapshot mismatch: {snapshot} != {source}")
+def step_table() -> list[tuple[str, str, str, int, int, str]]:
+    """(page, snapshot, previousFile, added, removed, highlighted lines) for every step in page order."""
+    rows = []
+    for page, source, first, last in STEP_ORDER:
+        spec = WRITTEN[source]
+        for step in range(first, last + 1):
+            added, removed = changed_lines(spec.state(step - 1), spec.state(step))
+            rows.append([page, spec.snapshot_name(step), spec.snapshot_name(step - 1), added, removed, ""])
+    actual = docc_highlights([(SNAPSHOTS[row[2]], SNAPSHOTS[row[1]]) for row in rows])
+    for row, numbers in zip(rows, actual or []):
+        row[5] = describe(numbers)
+    return [tuple(row) for row in rows]
 
-    stale = sorted(
-        path.name
+
+def expected_files() -> dict[str, str]:
+    """Every generated catalog file and its text.
+
+    The highlights were verified when the files were generated; comparing the
+    committed files with these texts needs no compiler.
+    """
+    files = dict(SNAPSHOTS)
+    files.update({name: text for name, (text, _, _) in highlight_bases(verify=False).items()})
+    return files
+
+
+def stale_files() -> list[Path]:
+    return sorted(
+        path
         for path in OUT.iterdir()
         if path.suffix in {".swift", ".plist"}
         and path.name.startswith(("C0", "HL-"))
         and path.name not in generated_names()
     )
 
+
+def check() -> list[str]:
+    """Problems with the committed catalog snapshots; writes nothing."""
+    errors = []
+    for name, text in expected_files().items():
+        path = OUT / name
+        if not path.is_file():
+            errors.append(f"missing snapshot {name}; run python3 Scripts/generate_snapshots.py")
+        elif path.read_text(encoding="utf-8") != text:
+            errors.append(f"snapshot {name} is out of date; run python3 Scripts/generate_snapshots.py")
+    errors += [f"snapshot {path.name} is no longer generated; delete it" for path in stale_files()]
+    for source, snapshot in FINALS.items():
+        if (SRC / source).read_text(encoding="utf-8") != SNAPSHOTS[snapshot]:
+            errors.append(f"final snapshot mismatch: {snapshot} != {source}")
+    return errors
+
+
+def main() -> None:
+    ordered_states()
+    arguments = sys.argv[1:]
+    if "--check" in arguments:
+        errors = check()
+        for error in errors:
+            print(f"error: {error}", file=sys.stderr)
+        if errors:
+            raise SystemExit(f"snapshot check failed with {len(errors)} error(s)")
+        print(f"{len(SNAPSHOTS)} snapshots and {len(HIGHLIGHTS)} highlight bases are up to date")
+        return
+
+    bases = highlight_bases()
+    for name, text in SNAPSHOTS.items():
+        (OUT / name).write_text(text, encoding="utf-8")
+    for name, (text, _, _) in bases.items():
+        (OUT / name).write_text(text, encoding="utf-8")
+
+    for source, snapshot in FINALS.items():
+        if (SRC / source).read_text(encoding="utf-8") != (OUT / snapshot).read_text(encoding="utf-8"):
+            raise SystemExit(f"final snapshot mismatch: {snapshot} != {source}")
+
+    stale = stale_files()
+    for path in stale:
+        path.unlink()
+
     print(
-        f"wrote {len(rendered)} snapshots and {len(HIGHLIGHTS)} highlight bases; "
+        f"wrote {len(SNAPSHOTS)} snapshots and {len(HIGHLIGHTS)} highlight bases; "
         f"{len(FINALS)} final snapshots match the app source"
     )
     print("highlighted lines (previousFile -> file):")
-    print("\n".join(report))
+    for name, (_, target, numbers) in bases.items():
+        print(f"  {name} -> {target}: lines {describe(numbers)}")
     if stale:
-        print("not generated (delete or add to SNAPSHOTS): " + ", ".join(stale))
+        print("deleted snapshots that are no longer generated: " + ", ".join(path.name for path in stale))
+
+    if "--report" in arguments:
+        print("steps (page: file <- previousFile, lines added/removed, lines DocC highlights):")
+        for page, name, previous, added, removed, highlighted in step_table():
+            print(f"  {page}: {name} <- {previous}  +{added} -{removed}  [{highlighted}]")
 
 
 if __name__ == "__main__":

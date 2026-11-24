@@ -104,6 +104,26 @@ def chapter_reference(
     return identifier, reference
 
 
+TIME_KEYS = {"estimatedTime", "estimatedTimeInMinutes"}
+
+
+def strip_estimated_time(value: object) -> None:
+    """Removes time estimates so heroes and the overview do not show them.
+
+    DocC requires ``time`` on ``@Article`` and renders it with an English
+    label. The pages follow Apple's Develop in Swift tutorials, which show no
+    estimate, so the field is dropped from every render node.
+    """
+    if isinstance(value, dict):
+        for key in TIME_KEYS & value.keys():
+            del value[key]
+        for child in value.values():
+            strip_estimated_time(child)
+    elif isinstance(value, list):
+        for child in value:
+            strip_estimated_time(child)
+
+
 def normalize(archive: Path) -> int:
     overview_path = archive / "data/tutorials/handconstellationtutorials.json"
     overview = load_json(overview_path)
@@ -163,6 +183,8 @@ def normalize(archive: Path) -> int:
         hierarchy["reference"] = overview_id
         hierarchy["paths"] = [[overview_id, f"{overview_id}/$volume", own_chapter_ref]]
 
+        strip_estimated_time(node)
+
         sections = node.setdefault("sections", [])
         for section in sections:
             if section.get("kind") == "hero":
@@ -173,19 +195,21 @@ def normalize(archive: Path) -> int:
             next_ref = references.get(next_id)
             if not next_ref:
                 raise SystemExit(f"{identifier}: missing reference for next tutorial {next_id}")
+            next_is_article = nodes[next_id].get("kind") == "article"
+            action_title = "Read article" if next_is_article else "Get started"
             sections.append(
                 {
                     "abstract": next_ref.get("abstract", []),
                     "action": {
                         "identifier": next_id,
                         "isActive": True,
-                        "overridingTitle": "Get started",
+                        "overridingTitle": action_title,
                         "overridingTitleInlineContent": [
-                            {"text": "Get started", "type": "text"}
+                            {"text": action_title, "type": "text"}
                         ],
                         "type": "reference",
                     },
-                    "featuredEyebrow": "Tutorial",
+                    "featuredEyebrow": "Article" if next_is_article else "Tutorial",
                     "kind": "callToAction",
                     "title": next_ref.get("title", "Next"),
                 }
@@ -198,6 +222,7 @@ def normalize(archive: Path) -> int:
             changed += 1
 
     # Keep the overview's initial action tied to its first listed tutorial.
+    strip_estimated_time(overview)
     for section in overview.get("sections", []):
         if section.get("kind") == "hero" and isinstance(section.get("action"), dict):
             section["action"]["identifier"] = ordered[0]

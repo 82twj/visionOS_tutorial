@@ -8,8 +8,8 @@ import Observation
 final class ImmersiveCoordinator {
     let renderer: ConstellationRenderer
 
-    private let configuration: ConstellationConfiguration
     private let handTrackingService = HandTrackingService()
+    private let configuration: ConstellationConfiguration
     private var dwellDetector: DwellDetector
     private var connectionDetector: ExistingPointConnectionDetector
     private var constellationModel: ConstellationModel
@@ -56,7 +56,7 @@ final class ImmersiveCoordinator {
                 appModel.trackingStatus = .idle
             }
         } catch HandTrackingServiceError.unsupported {
-            appModel.trackingStatus = .unsupported
+            await runWithoutHandTracking(appModel: appModel)
         } catch HandTrackingServiceError.authorizationDenied {
             appModel.trackingStatus = .denied
         } catch is CancellationError {
@@ -75,36 +75,32 @@ final class ImmersiveCoordinator {
         applyDrawingState(appModel: appModel)
     }
 
+    /// Removes every point and line while tracking keeps running.
     func reset(appModel: AppModel) {
         dwellDetector.reset()
         connectionDetector.reset()
         constellationModel.reset()
         renderer.reset()
-        rejectedPosition = nil
-        recentlyConnectedPosition = nil
-        appModel.pointCount = 0
-        appModel.edgeCount = 0
-        appModel.constellationCount = 0
-        appModel.trackingStatus = .tracking
+        clearHeldFeedback()
+        syncCounts(appModel: appModel)
         syncDrawingGuidance(appModel: appModel)
+        clearPointLimitFailure(appModel: appModel)
     }
 
+    /// Ends tracking and returns everything to its initial state when the space closes.
     func stop(appModel: AppModel) {
         handTrackingService.stop()
-        trackingLost(appModel: appModel)
+        cancelDwell()
         constellationModel.reset()
         renderer.reset()
-        rejectedPosition = nil
-        recentlyConnectedPosition = nil
+        clearHeldFeedback()
         appModel.setDrawingEnabled(false)
         appliedDrawingState = .disabled
-        appModel.pointCount = 0
-        appModel.edgeCount = 0
-        appModel.constellationCount = 0
+        syncCounts(appModel: appModel)
         appModel.trackingStatus = .idle
-        appModel.drawingGuidance = .inactive
     }
 
+    /// Turns one right-hand anchor update into this frame's fingertip position.
     private func process(anchor: HandAnchor, appModel: AppModel) {
         let timestamp = ProcessInfo.processInfo.systemUptime
         applyDrawingState(appModel: appModel)
@@ -115,149 +111,102 @@ final class ImmersiveCoordinator {
         }
 
         guard let position = handTrackingService.rightIndexFingerTipPosition(from: anchor) else {
-            trackingLost(appModel: appModel)
+            cancelDwell()
             return
         }
 
         process(position: position, at: timestamp, appModel: appModel)
     }
 
-    private func process(
+    /// Handles one fingertip position: an existing-point connection first, then a new point.
+    func process(
         position: SIMD3<Float>,
         at timestamp: TimeInterval,
         appModel: AppModel
     ) {
-        if keepCompletionVisible(at: position, appModel: appModel) {
+        if keepCompletionVisible(at: position, appModel: appModel) { return }
+        if keepRejectionVisible(at: position, appModel: appModel) { return }
+
+        let connection = connectionDetector.update(
+            position: position,
+            activePoint: constellationModel.currentActivePosition,
+            targets: connectionTargets,
+            at: timestamp
+        )
+
+        if connection.phase == .dwelling, let target = connection.target {
+            dwellDetector.trackingLost()
+            renderer.updateCursor(position: position, progress: connection.progress, mode: .connection)
+
+            if target.isAlreadyConnected {
+                rejectConnection(to: target, appModel: appModel)
+            } else {
+                showConnectionProgress(connection.progress, to: target, appModel: appModel)
+                if connection.didCommit {
+                    commitConnection(to: target, appModel: appModel)
+                }
+            }
             return
         }
+        hideConnectionProgress(appModel: appModel)
 
-        if keepRejectionVisible(at: position, appModel: appModel) {
-            return
+        let dwell = dwellDetector.update(position: position, at: timestamp)
+        renderer.updateCursor(position: position, progress: dwell.progress)
+
+        guard let committedPosition = dwell.committedPosition else { return }
+
+        switch constellationModel.addPoint(committedPosition) {
+        case .added(let point, let segment):
+            renderer.addPoint(at: point, segment: segment)
+            pointAdded(appModel: appModel)
+        case let rejection:
+            pointRejected(rejection, at: committedPosition, appModel: appModel)
         }
+    }
+}
 
-        let targets = constellationModel.connectionTargets.map {
+// MARK: - 보조 메서드 (스타터 프로젝트 제공)
+
+extension ImmersiveCoordinator {
+    /// The other points of the current constellation, in the form the connection detector takes.
+    private var connectionTargets: [ExistingPointConnectionDetector.Target] {
+        constellationModel.connectionTargets.map {
             ExistingPointConnectionDetector.Target(
                 nodeID: $0.nodeID,
                 position: $0.position,
                 isAlreadyConnected: $0.isAlreadyConnected
             )
         }
-        let connectionSnapshot = connectionDetector.update(
-            position: position,
-            activePoint: constellationModel.currentActivePosition,
-            targets: targets,
-            at: timestamp
-        )
+    }
 
-        switch connectionSnapshot.phase {
-        case .idle, .available:
-            renderer.hideConnectionGuidance()
+    /// Applies a drawing on/off change from the control window once.
+    ///
+    /// Turning drawing off finishes the current constellation, so the next point starts a new one.
+    private func applyDrawingState(appModel: AppModel) {
+        guard appliedDrawingState != appModel.drawingState else { return }
+
+        appliedDrawingState = appModel.drawingState
+        cancelDwell()
+        clearHeldFeedback()
+
+        if appModel.isDrawingEnabled {
             syncDrawingGuidance(appModel: appModel)
-
-        case .dwelling:
-            guard let target = connectionSnapshot.target,
-                  let sourcePoint = constellationModel.currentActivePosition else {
-                renderer.hideConnectionGuidance()
-                break
-            }
-
-            dwellDetector.trackingLost()
-            renderer.updateCursor(
-                position: position,
-                progress: connectionSnapshot.progress,
-                mode: .connection
-            )
-
-            if target.isAlreadyConnected {
-                connectionDetector.reset()
-                rejectedPosition = target.position
-                rejectionGuidance = .alreadyConnected
-                renderer.showConnectionCompletion(at: target.position)
-                appModel.drawingGuidance = .alreadyConnected
-                return
-            }
-
-            renderer.showConnectionGuidance(
-                sourcePoint: sourcePoint,
-                targetPoint: target.position,
-                progress: connectionSnapshot.progress
-            )
-            appModel.drawingGuidance = .connecting(
-                progress: connectionSnapshot.progress
-            )
-
-            if connectionSnapshot.didCommit {
-                connectCurrentNode(to: target.nodeID, appModel: appModel)
-            }
-            return
-        }
-
-        let snapshot = dwellDetector.update(position: position, at: timestamp)
-        renderer.updateCursor(position: position, progress: snapshot.progress)
-
-        guard let committedPosition = snapshot.committedPosition else { return }
-
-        switch constellationModel.addPoint(committedPosition) {
-        case .added(let position, let segment):
-            renderer.addPoint(
-                at: position,
-                segment: segment,
-                lineRadius: configuration.lineRadius
-            )
-            connectionDetector.pointCommitted()
-            rejectedPosition = nil
-            syncCounts(appModel: appModel)
-            syncDrawingGuidance(appModel: appModel)
-
-        case .rejectedLimitReached:
-            appModel.trackingStatus = .failed(
-                "최대 점 개수에 도달했습니다. 초기화한 후 다시 시도해 주세요."
-            )
-
-        case .rejectedTooClose:
-            rejectedPosition = committedPosition
-            rejectionGuidance = .tooClose
-            appModel.drawingGuidance = .tooClose
-
-        case .rejectedInvalidPosition:
-            trackingLost(appModel: appModel)
-
-        case .connected, .rejectedAlreadyConnected, .rejectedTargetUnavailable:
-            break
+        } else {
+            constellationModel.finishCurrentConstellation()
+            connectionDetector.reset()
+            appModel.drawingGuidance = .inactive
         }
     }
 
-    private func connectCurrentNode(to targetNodeID: Int, appModel: AppModel) {
-        switch constellationModel.connectCurrentNode(to: targetNodeID) {
-        case .connected(let targetPosition, let segment):
-            renderer.connectExistingPoint(
-                with: segment,
-                lineRadius: configuration.lineRadius
-            )
-            recentlyConnectedPosition = targetPosition
-            rejectedPosition = nil
-            dwellDetector.beginCooldown(at: targetPosition)
-            connectionDetector.reset()
-            syncCounts(appModel: appModel)
-            appModel.drawingGuidance = .connected
-
-        case .rejectedAlreadyConnected:
-            rejectedPosition = constellationModel.connectionTargets
-                .first(where: { $0.nodeID == targetNodeID })?.position
-            rejectionGuidance = .alreadyConnected
-            connectionDetector.reset()
-            appModel.drawingGuidance = .alreadyConnected
-
-        case .rejectedTargetUnavailable:
-            renderer.hideConnectionGuidance()
-            connectionDetector.reset()
-            syncDrawingGuidance(appModel: appModel)
-
-        case .added, .rejectedTooClose, .rejectedLimitReached, .rejectedInvalidPosition:
-            break
-        }
+    /// Cancels any dwell in progress and hides the cursor and connection guidance.
+    private func cancelDwell() {
+        dwellDetector.trackingLost()
+        connectionDetector.trackingLost()
+        renderer.hideCursor()
+        renderer.hideConnectionGuidance()
     }
 
+    /// Keeps the completion cue until the fingertip leaves the point it just connected to.
     private func keepCompletionVisible(
         at position: SIMD3<Float>,
         appModel: AppModel
@@ -278,6 +227,7 @@ final class ImmersiveCoordinator {
         return true
     }
 
+    /// Keeps the rejection message until the fingertip leaves the rejected position.
     private func keepRejectionVisible(
         at position: SIMD3<Float>,
         appModel: AppModel
@@ -296,29 +246,118 @@ final class ImmersiveCoordinator {
         return true
     }
 
-    private func applyDrawingState(appModel: AppModel) {
-        guard appliedDrawingState != appModel.drawingState else { return }
+    /// Shows the highlight, the preview line, and the progress while the fingertip stays on a target.
+    private func showConnectionProgress(
+        _ progress: Float,
+        to target: ExistingPointConnectionDetector.Target,
+        appModel: AppModel
+    ) {
+        guard let sourcePoint = constellationModel.currentActivePosition else { return }
 
-        appliedDrawingState = appModel.drawingState
-        cancelDwell()
-        rejectedPosition = nil
-        recentlyConnectedPosition = nil
+        renderer.showConnectionGuidance(
+            sourcePoint: sourcePoint,
+            targetPoint: target.position,
+            progress: progress
+        )
+        appModel.drawingGuidance = .connecting(progress: progress)
+    }
 
-        if appModel.isDrawingEnabled {
-            syncDrawingGuidance(appModel: appModel)
-        } else {
-            constellationModel.finishCurrentConstellation()
+    /// Hides the connection guidance when the fingertip is not on an existing point.
+    private func hideConnectionProgress(appModel: AppModel) {
+        renderer.hideConnectionGuidance()
+        syncDrawingGuidance(appModel: appModel)
+    }
+
+    /// Refuses a target that already has an edge to the active point.
+    private func rejectConnection(
+        to target: ExistingPointConnectionDetector.Target,
+        appModel: AppModel
+    ) {
+        connectionDetector.reset()
+        rejectedPosition = target.position
+        rejectionGuidance = .alreadyConnected
+        renderer.showConnectionCompletion(at: target.position)
+        appModel.drawingGuidance = .alreadyConnected
+    }
+
+    /// Adds the edge to the model and the scene after a connection dwell completes.
+    private func commitConnection(
+        to target: ExistingPointConnectionDetector.Target,
+        appModel: AppModel
+    ) {
+        switch constellationModel.connectCurrentNode(to: target.nodeID) {
+        case .connected(let targetPosition, let segment):
+            renderer.connectExistingPoint(with: segment)
+            recentlyConnectedPosition = targetPosition
+            rejectedPosition = nil
+            dwellDetector.beginCooldown(at: targetPosition)
             connectionDetector.reset()
-            appModel.drawingGuidance = .inactive
+            syncCounts(appModel: appModel)
+            appModel.drawingGuidance = .connected
+
+        case .rejectedAlreadyConnected:
+            rejectedPosition = target.position
+            rejectionGuidance = .alreadyConnected
+            connectionDetector.reset()
+            appModel.drawingGuidance = .alreadyConnected
+
+        case .rejectedTargetUnavailable:
+            renderer.hideConnectionGuidance()
+            connectionDetector.reset()
+            syncDrawingGuidance(appModel: appModel)
+
+        case .added, .rejectedTooClose, .rejectedLimitReached, .rejectedInvalidPosition:
+            break
         }
     }
 
+    /// Updates the detectors and the control window after the model accepts a new point.
+    private func pointAdded(appModel: AppModel) {
+        connectionDetector.pointCommitted()
+        rejectedPosition = nil
+        syncCounts(appModel: appModel)
+        syncDrawingGuidance(appModel: appModel)
+    }
+
+    /// Explains why the model refused a new point.
+    private func pointRejected(
+        _ rejection: ConstellationModel.PointAddition,
+        at position: SIMD3<Float>,
+        appModel: AppModel
+    ) {
+        switch rejection {
+        case .rejectedTooClose:
+            rejectedPosition = position
+            rejectionGuidance = .tooClose
+            appModel.drawingGuidance = .tooClose
+
+        case .rejectedLimitReached:
+            appModel.trackingStatus = .failed(
+                "최대 점 개수에 도달했습니다. 초기화한 후 다시 시도해 주세요."
+            )
+
+        case .rejectedInvalidPosition:
+            cancelDwell()
+
+        case .added, .connected, .rejectedAlreadyConnected, .rejectedTargetUnavailable:
+            break
+        }
+    }
+
+    /// Forgets the positions that keep a completion cue or a rejection message visible.
+    private func clearHeldFeedback() {
+        rejectedPosition = nil
+        recentlyConnectedPosition = nil
+    }
+
+    /// Copies the model's counts to the control window.
     private func syncCounts(appModel: AppModel) {
         appModel.pointCount = constellationModel.pointCount
         appModel.edgeCount = constellationModel.edgeCount
         appModel.constellationCount = constellationModel.constellationCount
     }
 
+    /// Chooses the guidance sentence that matches the drawing state and the current constellation.
     private func syncDrawingGuidance(appModel: AppModel) {
         guard appModel.isDrawingEnabled else {
             appModel.drawingGuidance = .inactive
@@ -330,14 +369,46 @@ final class ImmersiveCoordinator {
             : .placeNextPoint
     }
 
-    private func cancelDwell() {
-        dwellDetector.trackingLost()
-        connectionDetector.trackingLost()
-        renderer.hideCursor()
-        renderer.hideConnectionGuidance()
+    /// Returns the status to its running value after a reset clears the point-limit message.
+    private func clearPointLimitFailure(appModel: AppModel) {
+        guard case .failed = appModel.trackingStatus else { return }
+
+        #if targetEnvironment(simulator)
+        appModel.trackingStatus = .simulated
+        #else
+        appModel.trackingStatus = .tracking
+        #endif
     }
 
-    private func trackingLost(appModel: AppModel) {
-        cancelDwell()
+    /// Handles a runtime that has no hand tracking.
+    ///
+    /// In the Simulator, the input pad in the control window stands in for the fingertip
+    /// until the task is cancelled. Everywhere else this only reports the missing support.
+    private func runWithoutHandTracking(appModel: AppModel) async {
+        #if targetEnvironment(simulator)
+        appModel.trackingStatus = .simulated
+
+        while !Task.isCancelled {
+            processSimulatedFingertip(appModel: appModel)
+            try? await Task.sleep(for: .milliseconds(16))
+        }
+        #else
+        appModel.trackingStatus = .unsupported
+        #endif
     }
+
+    #if targetEnvironment(simulator)
+    /// Feeds the input pad's position through the same steps as a hand anchor.
+    private func processSimulatedFingertip(appModel: AppModel) {
+        let timestamp = ProcessInfo.processInfo.systemUptime
+        applyDrawingState(appModel: appModel)
+
+        guard appModel.isDrawingEnabled, let position = appModel.simulatedFingertip else {
+            cancelDwell()
+            return
+        }
+
+        process(position: position, at: timestamp, appModel: appModel)
+    }
+    #endif
 }

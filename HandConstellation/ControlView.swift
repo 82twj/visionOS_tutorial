@@ -80,10 +80,7 @@ struct ControlView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(appModel.isDrawingEnabled ? .orange : .green)
-                .disabled(
-                    appModel.immersiveSpaceState != .open
-                        || appModel.trackingStatus != .tracking
-                )
+                .disabled(appModel.immersiveSpaceState != .open || !appModel.isInputAvailable)
 
                 Button(role: .destructive) {
                     appModel.requestReset()
@@ -100,6 +97,15 @@ struct ControlView: View {
         }
         .padding(28)
         .frame(width: 560)
+        #if targetEnvironment(simulator)
+        .ornament(
+            visibility: appModel.immersiveSpaceState == .open ? .visible : .hidden,
+            attachmentAnchor: .scene(.trailing),
+            contentAlignment: .leading
+        ) {
+            SimulatorInputPad()
+        }
+        #endif
     }
 
     private var primaryButtonTitle: String {
@@ -175,6 +181,10 @@ struct ControlView: View {
             return "확인 필요"
         case .idle:
             return "대기"
+        #if targetEnvironment(simulator)
+        case .simulated:
+            return "Simulator 입력"
+        #endif
         }
     }
 
@@ -188,6 +198,10 @@ struct ControlView: View {
             return "exclamationmark.triangle.fill"
         case .idle:
             return "pause.circle"
+        #if targetEnvironment(simulator)
+        case .simulated:
+            return "cursorarrow.rays"
+        #endif
         }
     }
 
@@ -201,6 +215,10 @@ struct ControlView: View {
             return .red
         case .idle:
             return .secondary
+        #if targetEnvironment(simulator)
+        case .simulated:
+            return .green
+        #endif
         }
     }
 

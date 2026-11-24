@@ -64,5 +64,4 @@ final class HandTrackingService {
 
         return position.hasFiniteComponents ? position : nil
     }
-
 }

@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
+import generate_snapshots as snapshots
 from build_starter_project import check as check_starter
 from normalize_docc_navigation import LEGACY_ROUTES, chapter_anchor
 
@@ -22,20 +23,8 @@ REFERENCE_PATTERNS = (
     r"(?<![\w:])source:\s*([A-Za-z0-9._-]+)",
     r"(?<![\w:])projectFiles:\s*([A-Za-z0-9._-]+)",
 )
-ASSET_SUFFIXES = {".swift", ".plist", ".png", ".gif", ".zip"}
-# ConstellationModel and ExistingPointConnectionDetector ship complete in the
-# starter project, so build_starter_project.py checks them instead.
-FINAL_SNAPSHOTS = {
-    "AppModel.swift": "C02-T02-AppModel-12.swift",
-    "ControlView.swift": "C02-T04-ControlView-14.swift",
-    "HandConstellationApp.swift": "C06-T04-HandConstellationApp-03.swift",
-    "HandTrackingService.swift": "C04-T05-HandTrackingService-19.swift",
-    "ConstellationConfiguration.swift": "C04-T02-Configuration-07.swift",
-    "DwellDetector.swift": "C04-T03-DwellDetector-14.swift",
-    "ConstellationRenderer.swift": "C05-T03-ConstellationRenderer-13.swift",
-    "ImmersiveCoordinator.swift": "C06-T03-ImmersiveCoordinator-22.swift",
-    "ImmersiveView.swift": "C06-T04-ImmersiveView-04.swift",
-}
+ASSET_SUFFIXES = {".swift", ".plist", ".png", ".jpg", ".gif", ".zip"}
+PAGE_KIND = re.compile(r"^@(Tutorial|Article)\b", re.MULTILINE)
 
 
 class Checks:
@@ -71,9 +60,16 @@ def verify_source(root: Path, catalog: Path, checks: Checks) -> Tuple[list[str],
             referenced.update(re.findall(pattern, text))
         if tutorial.stem != "HandConstellationTutorials":
             task_counts[tutorial.stem] = text.count("@Section(")
-            checks.require("@Tutorial(" in text, f"{tutorial.name}: missing @Tutorial")
-            checks.require("@Section(" in text, f"{tutorial.name}: has no implementation section")
-            checks.require("@Steps" in text, f"{tutorial.name}: has no user steps")
+            kind = PAGE_KIND.search(text)
+            if kind is None:
+                checks.require(False, f"{tutorial.name}: starts with neither @Tutorial nor @Article")
+            elif kind.group(1) == "Tutorial":
+                checks.require("@Section(" in text, f"{tutorial.name}: has no implementation section")
+                checks.require("@Steps" in text, f"{tutorial.name}: has no user steps")
+            else:
+                checks.require("@ContentAndMedia" in text, f"{tutorial.name}: article has no content")
+                checks.require("@Section(" not in text, f"{tutorial.name}: article has a tutorial section")
+            verify_quizzes(tutorial.name, text, checks)
 
     for name in sorted(referenced):
         checks.require((catalog / name).is_file(), f"missing catalog resource: {name}")
@@ -85,16 +81,9 @@ def verify_source(root: Path, catalog: Path, checks: Checks) -> Tuple[list[str],
     orphaned = sorted(assets - referenced)
     checks.require(not orphaned, "unreferenced catalog assets: " + ", ".join(orphaned))
 
-    app = root / "HandConstellation"
-    for source, snapshot in FINAL_SNAPSHOTS.items():
-        source_path, snapshot_path = app / source, catalog / snapshot
-        if not source_path.is_file() or not snapshot_path.is_file():
-            checks.require(False, f"missing final snapshot pair: {source} / {snapshot}")
-        else:
-            checks.require(
-                source_path.read_bytes() == snapshot_path.read_bytes(),
-                f"final snapshot differs from app source: {snapshot}",
-            )
+    # Every snapshot and highlight base is what generate_snapshots.py produces
+    # from the app sources, and the last snapshot of each file is the source.
+    checks.errors.extend(snapshots.check())
 
     live_slugs = {stem.lower() for stem in order}
     for old_slug, new_slug in LEGACY_ROUTES.items():
@@ -103,6 +92,38 @@ def verify_source(root: Path, catalog: Path, checks: Checks) -> Tuple[list[str],
 
     checks.errors.extend(check_starter())
     return order, task_counts
+
+
+def directive_blocks(text: str, directive: str) -> list[tuple[str, str]]:
+    """(arguments, body) of every ``@directive(...) { ... }`` block in ``text``."""
+    blocks = []
+    for match in re.finditer(rf"@{directive}\b(?:\(([^)]*)\))?\s*\{{", text):
+        depth, index = 1, match.end()
+        while index < len(text) and depth:
+            depth += {"{": 1, "}": -1}.get(text[index], 0)
+            index += 1
+        blocks.append((match.group(1) or "", text[match.end() : index - 1]))
+    return blocks
+
+
+def verify_quizzes(name: str, text: str, checks: Checks) -> None:
+    """Each question has two or three choices, one correct, each with a justification."""
+    for number, (_, question) in enumerate(directive_blocks(text, "MultipleChoice"), 1):
+        prefix = f"{name} question {number}"
+        choices = directive_blocks(question, "Choice")
+        correct = [arguments for arguments, _ in choices if re.search(r"isCorrect:\s*true", arguments)]
+        checks.require(2 <= len(choices) <= 3, f"{prefix}: has {len(choices)} choices, expected 2 or 3")
+        checks.require(len(correct) == 1, f"{prefix}: has {len(correct)} correct choices, expected 1")
+        for index, (arguments, body) in enumerate(choices, 1):
+            checks.require(
+                re.search(r"isCorrect:\s*(true|false)", arguments) is not None,
+                f"{prefix} choice {index}: missing isCorrect",
+            )
+            justifications = directive_blocks(body, "Justification")
+            checks.require(
+                len(justifications) == 1 and bool(justifications[0][1].strip()),
+                f"{prefix} choice {index}: needs one @Justification with text",
+            )
 
 
 def load_json(path: Path, checks: Checks) -> dict:
@@ -183,7 +204,11 @@ def verify_archive(
         checks.require(hero.get("chapter") == chapter_for[identifier], f"{label}: wrong chapter label")
         task_groups = [item for item in sections if item.get("kind") == "tasks"]
         tasks = [task for group in task_groups for task in group.get("tasks", [])]
-        checks.require(bool(tasks), f"{label}: no rendered tasks")
+        if node.get("kind") == "article":
+            body = [item for item in sections if item.get("kind") == "articleBody"]
+            checks.require(any(item.get("content") for item in body), f"{label}: article has no rendered body")
+        else:
+            checks.require(bool(tasks), f"{label}: no rendered tasks")
         stem = identifier.rsplit("/", 1)[-1]
         checks.require(
             len(tasks) == source_task_counts.get(stem),

@@ -17,6 +17,10 @@ final class AppModel {
         case unsupported
         case denied
         case failed(String)
+        #if targetEnvironment(simulator)
+        /// The Simulator input pad stands in for hand tracking.
+        case simulated
+        #endif
     }
 
     enum DrawingState: Equatable {
@@ -69,6 +73,11 @@ final class AppModel {
     var drawingGuidance: DrawingGuidance = .inactive
     private(set) var resetGeneration = 0
 
+    #if targetEnvironment(simulator)
+    /// The position the Simulator input pad reports as the fingertip; `nil` while the pad is not pressed.
+    @ObservationIgnored var simulatedFingertip: SIMD3<Float>?
+    #endif
+
     var statusMessage: String {
         switch trackingStatus {
         case .idle:
@@ -86,11 +95,24 @@ final class AppModel {
             return "손 추적 권한이 거부되었습니다. 설정에서 권한을 허용해 주세요."
         case .failed(let message):
             return "확인이 필요합니다: \(message)"
+        #if targetEnvironment(simulator)
+        case .simulated:
+            return "Simulator에서는 입력 패드를 누른 채 멈추면 검지를 멈춘 것처럼 동작합니다."
+        #endif
         }
     }
 
     var isTransitioning: Bool {
         immersiveSpaceState == .transitioning
+    }
+
+    /// Whether fingertip positions are arriving, from hand tracking or the Simulator input pad.
+    var isInputAvailable: Bool {
+        #if targetEnvironment(simulator)
+        return trackingStatus == .tracking || trackingStatus == .simulated
+        #else
+        return trackingStatus == .tracking
+        #endif
     }
 
     var isDrawingEnabled: Bool {

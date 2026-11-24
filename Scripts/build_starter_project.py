@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Builds the tutorial starter project and its downloadable zip.
 
-The starter's Swift files come from the app sources (files the tutorial
-provides complete) and from the catalog's first snapshots (files the reader
-writes), so the starter always matches the code the tutorial starts from.
+The starter's Swift files come from generate_snapshots.py: the app sources for
+files the tutorial provides complete, and step 0 of every file the reader
+writes, so the starter always matches the code the tutorial starts from. Its
+test target holds the dwell tests a reader runs at the end of Chapter 3.
 The Xcode project, asset catalog and README are committed as they are.
 
     python3 Scripts/build_starter_project.py             # rewrite files and zip
@@ -26,6 +27,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+import generate_snapshots as snapshots
+
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "HandConstellation"
 CATALOG = APP / "HandConstellation.docc"
@@ -37,39 +40,7 @@ ZIP_DATE = (2026, 1, 1, 0, 0, 0)
 EXCLUDED_NAMES = {".DS_Store", "xcuserdata", "build", "DerivedData", ".swiftpm"}
 EXCLUDED_SUFFIXES = {".xcuserstate"}
 
-# Starter Swift file -> the file it is copied from.
-STARTER_SWIFT = {
-    # Provided complete.
-    "AppModel.swift": APP / "AppModel.swift",
-    "ControlView.swift": APP / "ControlView.swift",
-    "ConstellationConfiguration.swift": APP / "ConstellationConfiguration.swift",
-    "ConstellationModel.swift": APP / "ConstellationModel.swift",
-    "ExistingPointConnectionDetector.swift": APP / "ExistingPointConnectionDetector.swift",
-    # Partly provided: WindowGroup only (Chapter 4 adds the ImmersiveSpace).
-    "HandConstellationApp.swift": CATALOG / "C02-T03-HandConstellationApp-02.swift",
-    # Partly provided: everything except update(position:at:) (Chapter 3).
-    "DwellDetector.swift": CATALOG / "C04-T07-DwellDetector-00.swift",
-    # `import Foundation` only.
-    "HandTrackingService.swift": CATALOG / "C03-T01-HandTrackingService-00.swift",  # Chapter 2
-    "ConstellationRenderer.swift": CATALOG / "C05-T01-ConstellationRenderer-00.swift",  # Chapter 3
-    "ImmersiveCoordinator.swift": CATALOG / "C06-T01-ImmersiveCoordinator-00.swift",  # Chapter 4
-    "ImmersiveView.swift": CATALOG / "C06-T01-ImmersiveView-00.swift",  # Chapter 4
-}
-
-# Files the reader has finished at the end of each chapter (cumulative).
-CHAPTER_FILES = {
-    1: {},  # Chapter 1 adds the hand-tracking usage description to Info.plist.
-    2: {"HandTrackingService.swift": CATALOG / "C04-T05-HandTrackingService-19.swift"},
-    3: {
-        "DwellDetector.swift": CATALOG / "C04-T03-DwellDetector-14.swift",
-        "ConstellationRenderer.swift": CATALOG / "C05-T03-ConstellationRenderer-13.swift",
-    },
-    4: {
-        "ImmersiveCoordinator.swift": CATALOG / "C06-T03-ImmersiveCoordinator-22.swift",
-        "ImmersiveView.swift": CATALOG / "C06-T04-ImmersiveView-04.swift",
-        "HandConstellationApp.swift": CATALOG / "C06-T04-HandConstellationApp-03.swift",
-    },
-}
+TEST_SOURCES = STARTER / "HandConstellationTests"
 
 # Committed files the starter must contain besides the generated ones.
 STATIC_FILES = (
@@ -79,13 +50,20 @@ STATIC_FILES = (
     "HandConstellation.xcodeproj/xcshareddata/xcschemes/HandConstellation.xcscheme",
     "HandConstellation/Assets.xcassets/Contents.json",
 )
+# The test target is listed under the scheme's Test action only, so building
+# and running the app never compiles tests that need code a reader has not
+# written yet.
+TEST_TARGET = "HandConstellationTests.xctest"
 
 HAND_TRACKING_KEY = re.compile(
     r"[ \t]*<key>NSHandsTrackingUsageDescription</key>\n[ \t]*<string>[^<]*</string>\n"
 )
 PERSONAL_DATA = (
     (re.compile(r"DEVELOPMENT_TEAM\s*="), "a development team"),
+    (re.compile(r"PROVISIONING_PROFILE"), "a provisioning profile"),
     (re.compile(r"Created by "), "a 'Created by' header"),
+    (re.compile(r"/Users/|/home/"), "a local path"),
+    (re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}"), "an e-mail address"),
 )
 
 
@@ -118,10 +96,15 @@ def starter_info_plist() -> bytes:
 
 def generated_files() -> dict[Path, tuple[bytes, str]]:
     """Starter file -> (expected bytes, where they come from)."""
-    files = {
-        SOURCES / name: (read_bytes(source), relative(source))
-        for name, source in STARTER_SWIFT.items()
-    }
+    files = {}
+    for name, text in snapshots.starter_sources().items():
+        origin = f"HandConstellation/{name}" if name in snapshots.PROVIDED else f"step 0 of HandConstellation/{name}"
+        files[SOURCES / name] = (text.encode("utf-8"), origin)
+    for name in snapshots.STARTER_TESTS:
+        files[TEST_SOURCES / name] = (
+            snapshots.starter_test_source(name).encode("utf-8"),
+            f"HandConstellationTests/{name} with a single @testable import",
+        )
     files[SOURCES / "Info.plist"] = (starter_info_plist(), "HandConstellation/Info.plist without NSHandsTrackingUsageDescription")
     return files
 
@@ -175,6 +158,22 @@ def zip_manifest(data: bytes) -> dict[str, tuple]:
         }
 
 
+def scheme_errors() -> list[str]:
+    """The tests must run with Product > Test without joining the app build."""
+    scheme = STARTER / "HandConstellation.xcodeproj/xcshareddata/xcschemes/HandConstellation.xcscheme"
+    if not scheme.is_file():
+        return []
+    text = scheme.read_text(encoding="utf-8")
+    build_action = text[text.find("<BuildAction") : text.find("</BuildAction>")]
+    test_action = text[text.find("<TestAction") : text.find("</TestAction>")]
+    errors = []
+    if TEST_TARGET in build_action:
+        errors.append(f"{relative(scheme)}: {TEST_TARGET} is part of the Build action, so the starter app would not build")
+    if TEST_TARGET not in test_action:
+        errors.append(f"{relative(scheme)}: {TEST_TARGET} is missing from the Test action")
+    return errors
+
+
 def check() -> list[str]:
     """Returns problems with the committed starter project and zip."""
     errors: list[str] = []
@@ -189,15 +188,14 @@ def check() -> list[str]:
         elif path.read_bytes() != data:
             errors.append(f"starter file {relative(path)} differs from {origin}")
 
-    unexpected = sorted(
-        path for path in SOURCES.glob("*.swift") if path not in expected
-    ) if SOURCES.is_dir() else []
-    for path in unexpected:
-        errors.append(f"unexpected Swift file in the starter project: {relative(path)}")
+    for path in sorted(STARTER.rglob("*.swift")):
+        if path not in expected and not is_excluded(path.relative_to(STARTER)):
+            errors.append(f"unexpected Swift file in the starter project: {relative(path)}")
 
     for name in STATIC_FILES:
         if not (STARTER / name).is_file():
             errors.append(f"missing starter file {relative(STARTER / name)}")
+    errors.extend(scheme_errors())
 
     for path in starter_files():
         try:
@@ -228,14 +226,16 @@ def check() -> list[str]:
 
 
 def write() -> None:
-    for path, (data, _) in generated_files().items():
+    files = generated_files()
+    for path, (data, _) in files.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         if not path.is_file() or path.read_bytes() != data:
             path.write_bytes(data)
     data = build_zip()
     if not ZIP_PATH.is_file() or zip_manifest(ZIP_PATH.read_bytes()) != zip_manifest(data):
         ZIP_PATH.write_bytes(data)
-    print(f"wrote {relative(SOURCES)} ({len(STARTER_SWIFT)} Swift files) and {relative(ZIP_PATH)}")
+    swift_count = sum(path.suffix == ".swift" for path in files)
+    print(f"wrote {relative(STARTER)} ({swift_count} Swift files) and {relative(ZIP_PATH)}")
 
 
 def export(destination: Path, chapter: int) -> None:
@@ -244,10 +244,11 @@ def export(destination: Path, chapter: int) -> None:
         raise SystemExit(f"export destination already exists: {destination}")
     shutil.copytree(STARTER, destination, ignore=shutil.ignore_patterns(*EXCLUDED_NAMES, "*.xcuserstate"))
     if chapter >= 1:
+        # Readers add the usage description in the target's Info tab; the app's
+        # Info.plist carries the same key.
         shutil.copyfile(APP / "Info.plist", destination / "HandConstellation/Info.plist")
-    for number in range(2, chapter + 1):
-        for name, source in CHAPTER_FILES[number].items():
-            shutil.copyfile(source, destination / "HandConstellation" / name)
+    for name, text in snapshots.sources_at(snapshots.chapter_end_progress(chapter)).items():
+        (destination / "HandConstellation" / name).write_text(text, encoding="utf-8")
     print(f"exported the end of Chapter {chapter} to {destination}" if chapter else f"exported the starter to {destination}")
 
 
@@ -257,7 +258,7 @@ def main() -> None:
     mode.add_argument("--check", action="store_true", help="verify the starter and zip without writing")
     mode.add_argument("--export", type=Path, metavar="DIR", help="copy the starter to DIR")
     parser.add_argument(
-        "--chapter", type=int, choices=sorted(CHAPTER_FILES) + [0], default=0,
+        "--chapter", type=int, choices=range(0, 5), default=0,
         help="with --export: apply the files finished by the end of this chapter",
     )
     args = parser.parse_args()

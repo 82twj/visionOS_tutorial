@@ -1,0 +1,52 @@
+@Article(time: 5) {
+    @Intro(title: "마무리: 점과 선 만들기") {
+        Chapter 3에서는 검지가 머무른 자리를 판정하는 감지기와, 그 자리에 점과 선을 그리는 렌더러를 만들었습니다. 둘은 아직 서로를 모릅니다. 감지기는 위치를 받아 결과만 돌려주고, 렌더러는 받은 위치에 그리기만 합니다.
+    }
+
+    @ContentAndMedia {
+        ## 배운 내용 돌아보기
+
+        `DwellDetector`는 상태 세 개로 검지가 잠시 멈췄는지를 판정합니다. 머무르는 동안 1.5cm 안의 떨림은 같은 자리로 보고, 0.8초가 되는 순간 점을 한 번만 찍으며, 3cm 이상 떨어지기 전에는 다음 점을 재지 않습니다. 화면에 보이지 않는 이 판정은 테스트 6개를 실행해 확인했습니다.
+
+        `ConstellationRenderer`는 RealityKit 엔티티로 점, 선, 커서를 그립니다. `rootEntity` 아래에 컨테이너를 두어 점과 선을 한꺼번에 비울 수 있게 했고, 선은 y축으로 선 원기둥을 두 점 사이로 옮기고 돌려서 만들었습니다. 결과는 `#Preview`로 Xcode 캔버스에서 확인했습니다.
+
+        ### 다룬 주제
+
+        - 연관 값이 있는 `enum`으로 상태와 그 상태에 필요한 값을 함께 기억하기
+        - 시간 기준 하나(0.8초)와 거리 기준 둘(1.5cm, 3cm)로 머무르기 판정하기
+        - 화면에 보이지 않는 로직을 XCTest로 확인하기
+        - `Entity`를 컨테이너로 써서 엔티티 트리 만들기
+        - `MeshResource`와 `UnlitMaterial`로 `ModelEntity` 만들기
+        - 원기둥의 높이, 위치, 회전을 계산해 두 점 잇기
+    }
+
+    @ContentAndMedia {
+        ## 더 해 보기
+
+        ### 앱 바꿔 보기
+
+        값을 바꿔 결과를 확인한 뒤에는 원래대로 되돌려 두세요. 이후 Chapter의 그림과 설명은 처음 값을 기준으로 합니다.
+
+        - `ConstellationConfiguration.swift`에서 `pointRadius`를 0.010으로, `lineRadius`를 0.003으로 바꾸고 캔버스의 별자리가 어떻게 달라지는지 보세요.
+        - `ConstellationRenderer.swift`에서 `lineMaterial`의 색을 `UIColor.cyan`으로, 불투명도를 0.92에서 0.4로 바꿔 보세요. 점과 선의 재질을 따로 두었기 때문에 선만 달라지고 점은 그대로입니다.
+        - `#Preview`의 `content.add` 앞에 `renderer.updateCursor(position: SIMD3<Float>(0, 0.05, 0), progress: 0.5)`를 넣어 커서를 띄워 보세요. `progress`를 0과 1로 바꾸거나 `mode: .connection`을 더하면 커서의 크기와 불투명도가 달라집니다.
+        - `dwellDuration`을 0.5로 줄이면 점이 더 빨리 찍힙니다. 지금은 확인할 화면이 없고, 테스트도 0.8초를 직접 넘겨 감지기를 만들기 때문에 결과가 달라지지 않습니다. Chapter 4에서 Simulator로 그릴 수 있게 되면 바꿔 보세요.
+
+        ### 도전 과제
+
+        `DwellDetectorTests.swift`에 테스트를 하나 더해 보세요. 원점에서 머무르기를 시작한 뒤 0.4초와 0.8초에 1cm 떨어진 위치를 넣습니다. 1cm는 1.5cm 안이므로 0.8초에 점이 찍혀야 하고, 찍힌 위치는 방금 넣은 위치가 아니라 머무르기를 시작한 원점이어야 합니다. `XCTAssertEqual`로 `committedPosition`이 원점과 같은지 검사하고 Command+U로 통과하는지 확인하세요.
+
+        ### 더 알아보기
+
+        - [`Entity`](https://developer.apple.com/documentation/realitykit/entity)
+        - [`ModelEntity`](https://developer.apple.com/documentation/realitykit/modelentity)
+        - [`MeshResource`](https://developer.apple.com/documentation/realitykit/meshresource)
+        - [`UnlitMaterial`](https://developer.apple.com/documentation/realitykit/unlitmaterial)
+    }
+
+    @ContentAndMedia {
+        ## 다음 단계
+
+        Chapter 4에서는 지금까지 만든 부품을 하나로 잇습니다. 코디네이터가 손 추적에서 받은 검지 위치를 감지기에 넣고, 감지기가 점을 찍으라고 하면 별자리 모델과 렌더러에 전달합니다. 그런 다음 렌더러의 `rootEntity`를 `RealityView`에 넣고 몰입형 공간을 열어, Simulator에서 처음으로 점과 선을 직접 그려 봅니다.
+    }
+}
