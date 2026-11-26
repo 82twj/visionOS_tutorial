@@ -6,7 +6,7 @@
 
         Chapter 1–4는 Mac과 visionOS Simulator만으로 따라갈 수 있습니다. Simulator에는 손 추적이 없지만, 스타터에 든 입력 패드가 검지를 대신하므로 점과 선을 직접 그려 볼 수 있습니다. 실제 손으로 그리는 것은 Chapter 5에서 Apple Vision Pro로 합니다.
 
-        @Image(source: constellation-hero.png, alt: "오른손 검지 끝의 커서로 별자리 두 개를 그리는 모습과 그리기 켜짐 상태를 나타낸 그림")
+        @Image(source: constellation-hero.png, alt: "오른손 검지 끝의 커서로 별자리 두 개를 그리는 모습과 그리는 중 상태를 나타낸 그림")
     }
 
     @Chapter(name: "프로젝트 시작하기") {

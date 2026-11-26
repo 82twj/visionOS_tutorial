@@ -36,7 +36,7 @@ final class AppModel {
         var message: String {
             switch self {
             case .inactive:
-                return "그리기를 켜면 검지로 점을 만들 수 있어요."
+                return "그리기 시작을 누르면 검지로 점을 만들 수 있어요."
             case .placeFirstPoint:
                 return "원하는 위치에서 검지를 0.8초 머물러 첫 점을 만드세요."
             case .placeNextPoint:
@@ -80,9 +80,9 @@ final class AppModel {
             return "손 추적 권한을 확인하고 있습니다."
         case .tracking:
             if isDrawingEnabled {
-                return "그리기 켜짐: 오른손 검지를 한곳에 잠시 머물러 보세요."
+                return "그리는 중: 오른손 검지를 한곳에 잠시 머물러 보세요."
             }
-            return "그리기 꺼짐: 다시 시작하려면 그리기 켜기 버튼을 누르세요."
+            return "멈춤: 다시 그리려면 그리기 시작 버튼을 누르세요."
         case .unsupported:
             return "이 실행 환경에서는 ARKit 손 추적을 사용할 수 없습니다."
         case .denied:

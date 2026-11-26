@@ -301,7 +301,7 @@ body.append(constellation(hero_second, TRIANGLE_EDGES, glow=True))
 body.append(cover_hand(760, 700))
 body.append(glass(690, 84, 420, 200))
 body.append('<circle cx="740" cy="134" r="17" fill="#69dc8e"/>')
-body.append(t(772, 144, "그리기 켜짐", 27, "#f6fbff", 700))
+body.append(t(772, 144, "그리는 중", 27, "#f6fbff", 700))
 body.append(f'<rect x="724" y="180" width="352" height="1" fill="#ffffff" opacity=".18"/>')
 icon = [(734, 238), (746, 222), (760, 234)]
 body.append(f'<path d="M{icon[0][0]} {icon[0][1]} L{icon[1][0]} {icon[1][1]} L{icon[2][0]} {icon[2][1]}" '
@@ -310,7 +310,7 @@ body.append(f'<path d="M{icon[0][0]} {icon[0][1]} L{icon[1][0]} {icon[1][1]} L{i
 body.append(t(774, 238, counts(2, 7, 8), 22, "#dbe9f4"))
 figure("constellation-hero", "Hand Constellation",
        "오른손 검지 끝의 반투명 흰 커서로 흰 점과 흰 선의 별자리 두 개를 그린 모습과, "
-       "그리기 켜짐 · 별자리 2개 · 점 7개 · 선 8개를 표시한 유리 패널",
+       "그리는 중 · 별자리 2개 · 점 7개 · 선 8개를 표시한 유리 패널",
        "".join(body), 1200, 900, radial=True)
 
 done_first = {"A": (110, 470), "B": (240, 250), "C": (420, 320), "D": (450, 470)}
@@ -323,28 +323,28 @@ body.append(t(548, 502, "사이에 선 없음", 17, "#9fb2c1", anchor="middle"))
 body.append(rect(345, 555, 410, 105, 28, "#ffffff", None, opacity=0.16))
 body.append(rect(345, 555, 410, 105, 28, "none", "#ffffff", 1.5, opacity=0.23))
 body.append('<circle cx="393" cy="594" r="14" fill="#8c95a3"/>')
-body.append(t(420, 603, "그리기 꺼짐", 23, "#e5edf3", 700))
+body.append(t(420, 603, "멈춤", 23, "#e5edf3", 700))
 body.append(t(389, 637, counts(2, 7, 8), 18, "#aabac6"))
 figure("complete-experience", "완성된 Hand Constellation",
-       "그리기를 껐다 켜서 따로 그린 두 별자리(점 4개 · 선 5개, 점 3개 · 선 3개) 사이에 선이 없고, "
-       "그리기 꺼짐 · 별자리 2개 · 점 7개 · 선 8개를 표시한 개념도",
+       "그리기를 멈췄다가 다시 시작해서 따로 그린 두 별자리(점 4개 · 선 5개, 점 3개 · 선 3개) 사이에 선이 없고, "
+       "멈춤 · 별자리 2개 · 점 7개 · 선 8개를 표시한 개념도",
        "".join(body), radial=True)
 
 # --- 1. 시작하기 전에 ---------------------------------------------------------
 
 body = [heading("버튼으로 공유 상태 바꾸기", "개념도 · 제어창과 몰입형 공간이 같은 AppModel을 읽습니다")]
-body.append(card(56, 170, 450, 280, "그리기 꺼짐", [
+body.append(card(56, 170, 450, 280, "멈춤", [
     "drawingState = .disabled", "손을 움직여도 새 점을 만들지 않습니다.", "기존 별자리는 화면에 남습니다.",
 ], MUTED))
-body.append(card(594, 170, 450, 280, "그리기 켜짐", [
+body.append(card(594, 170, 450, 280, "그리는 중", [
     "drawingState = .enabled", "검지를 0.8초 머물러 점을 만듭니다.", "기존 점에 머물러 선을 연결합니다.",
 ], GREEN))
 body.append(arrow(300, 500, 800, 500, GREEN))
-body.append(t(550, 484, "제어창에서 ‘그리기 켜기’ 버튼", 23, INK, 600, "middle"))
+body.append(t(550, 484, "제어창에서 ‘그리기 시작’ 버튼", 23, INK, 600, "middle"))
 body.append(arrow(800, 570, 300, 570, MUTED))
-body.append(t(550, 609, "제어창에서 ‘그리기 끄기’ 버튼", 23, INK, 600, "middle"))
-body.append(t(550, 671, "꺼진 뒤 다시 켜면 다음 첫 점은 새 별자리를 시작합니다.", 21, BODY, 400, "middle"))
-figure("drawing-toggle", "버튼으로 그리기 상태 전환", "그리기 켜기와 끄기 버튼이 공유 AppModel의 상태를 변경하는 개념도", "".join(body))
+body.append(t(550, 609, "제어창에서 ‘그리기 멈춤’ 버튼", 23, INK, 600, "middle"))
+body.append(t(550, 671, "멈췄다가 다시 시작하면 다음 첫 점은 새 별자리를 시작합니다.", 21, BODY, 400, "middle"))
+figure("drawing-toggle", "버튼으로 그리기 상태 전환", "그리기 시작과 그리기 멈춤 버튼이 공유 AppModel의 상태를 변경하는 개념도", "".join(body))
 
 body = [heading("이 과정을 시작하기 전에", "필요한 사전 지식과 확인 환경")]
 body.append(card(56, 160, 320, 300, "이미 알고 있어야 함", [
@@ -623,7 +623,7 @@ body.append(t(92, 220, "체험을 시작할 준비가 되었습니다.", 19, "#b
 body.append(rect(90, 253, 302, 62, 18, FOCUS))
 body.append(t(241, 293, "별자리 그리기 시작", 21, "#ffffff", 650, "middle"))
 body.append(rect(90, 335, 145, 58, 17, GREEN, None, opacity=0.4))
-body.append(t(162.5, 372, "그리기 켜기", 19, "#ffffff", 650, "middle", opacity=0.6))
+body.append(t(162.5, 372, "그리기 시작", 19, "#ffffff", 650, "middle", opacity=0.6))
 body.append(rect(251, 335, 141, 58, 17, "#ffffff", None, opacity=0.08))
 body.append(t(321.5, 372, "초기화", 19, BODY, 400, "middle", opacity=0.6))
 body.append(t(92, 520, "WindowGroup · 제어창", 18, MUTED))
@@ -801,9 +801,9 @@ def pipeline_gap(y):
 body = [heading("한 프레임의 입력 처리 순서", "ImmersiveCoordinator · 오른손 앵커가 들어올 때마다")]
 groups = [
     (160, "process(anchor:appModel:)", 172, [
-        ("그리기 상태 반영", "그리기를 끄는 순간 지금 그리던 별자리를 마칩니다",
+        ("그리기 상태 반영", "그리기를 멈추는 순간 지금 그리던 별자리를 마칩니다",
          "applyDrawingState(appModel:)", ORANGE),
-        ("그리기가 꺼져 있으면 머무르기를 취소하고 끝", "커서와 기존 점 연결 안내도 함께 숨깁니다",
+        ("그리기가 멈춰 있으면 머무르기를 취소하고 끝", "커서와 기존 점 연결 안내도 함께 숨깁니다",
          "cancelDwell()", MUTED),
         ("검지 끝의 월드 좌표 구하기", "위치를 구할 수 없으면 머무르기를 취소하고 끝",
          "rightIndexFingerTipPosition(from:)", ACCENT),
@@ -839,7 +839,7 @@ for i, line in enumerate(["손 앵커 대신 입력 패드에서", "누른 위�
 body.append(f'<path d="M836 385 H 470" stroke="{GREEN}" stroke-width="2.5" stroke-dasharray="7 6"/>'
             + head(462, 385, 180, GREEN, 11))
 figure("input-pipeline", "한 프레임의 입력 처리 순서",
-       "process(anchor:appModel:)에서 그리기 상태 반영, 꺼져 있으면 멈춤, 검지 끝 월드 좌표를 거쳐 "
+       "process(anchor:appModel:)에서 그리기 상태 반영, 멈춰 있으면 끝, 검지 끝 월드 좌표를 거쳐 "
        "process(position:at:appModel:)에서 유지 중인 안내, 기존 점 연결, 새 점 머무르기와 커서, 모델에 더하기와 "
        "렌더링으로 이어지는 순서도. Simulator 빌드에서는 입력 패드의 위치가 같은 process(position:)로 들어온다는 표시",
        "".join(body))
@@ -984,7 +984,7 @@ for bx, label, weight in buttons:
 allow_x = dx + 302
 body.append(rect(allow_x - 6, 440, 262, 68, 34, "none", ACCENT, 3))
 results = [(dx + 28 + 125, "확인 필요", ORANGE, "설정에서 다시 허용해야 그릴 수 있습니다"),
-           (allow_x + 125, "추적 중", GREEN, "그리기 켜기 버튼을 누를 수 있습니다")]
+           (allow_x + 125, "추적 중", GREEN, "그리기 시작 버튼을 누를 수 있습니다")]
 for cx, chip, color, note in results:
     body.append(arrow(cx, 540, cx, 566, MUTED, 3))
     w = text_width(chip, 18) + 40
@@ -1088,7 +1088,7 @@ figure("device-closed-triangle", "기존 점을 다시 이은 첫 별자리",
 
 # --- 23. 두 번째 별자리 ------------------------------------------------------
 
-body = [heading("분리된 두 번째 별자리", "개념도 · 그리기를 끄고 다시 켠 뒤 새로 그린 별자리")]
+body = [heading("분리된 두 번째 별자리", "개념도 · 그리기를 멈췄다가 다시 시작한 뒤 새로 그린 별자리")]
 body.append(rect(56, 160, 988, 420, 26, "#070b15", ACCENT, 2, opacity=0.65))
 separate_first = {"A": (110, 452), "B": (245, 260), "C": (425, 316), "D": (462, 476)}
 separate_second = {"E": (720, 470), "F": (840, 290), "G": (980, 440)}
@@ -1596,7 +1596,7 @@ def file_group(x, y, w, h, color, title, note, items, title_size=24):
 body = [heading("스타터 프로젝트 파일 지도",
                 "개념도 · 들어 있는 파일과 직접 작성하는 Chapter (동그라미 숫자)")]
 body.append(file_group(56, 140, 320, 420, GREEN, "완성본 제공", "읽어 보고 그대로 씁니다", [
-    ("AppModel", "앱 상태 · 그리기 켜기/끄기", None),
+    ("AppModel", "앱 상태 · 그리기 시작/멈춤", None),
     ("ConstellationConfiguration", "0.8초 · 3cm 같은 조절값", None),
     ("ConstellationModel", "점과 선을 저장하는 그래프", None),
     ("ExistingPointConnectionDetector", "기존 점에 다시 연결", None),

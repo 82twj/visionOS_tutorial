@@ -69,7 +69,7 @@ struct SimulatorInputPad: View {
     private var hint: String {
         appModel.isDrawingEnabled
             ? "누른 채 0.8초 멈추면 그 자리에 점이 찍혀요."
-            : "그리기를 켜면 입력 패드를 쓸 수 있어요."
+            : "그리기 시작을 누르면 입력 패드를 쓸 수 있어요."
     }
 
     private func press(at location: CGPoint, in size: CGSize) {

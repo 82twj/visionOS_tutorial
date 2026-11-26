@@ -124,7 +124,7 @@ struct ControlView: View {
     }
 
     private var drawingButtonTitle: String {
-        appModel.isDrawingEnabled ? "그리기 끄기" : "그리기 켜기"
+        appModel.isDrawingEnabled ? "그리기 멈춤" : "그리기 시작"
     }
 
     private var drawingButtonSymbol: String {
@@ -132,7 +132,7 @@ struct ControlView: View {
     }
 
     private var drawingStatusLabel: String {
-        appModel.isDrawingEnabled ? "그리기 켜짐" : "그리기 꺼짐"
+        appModel.isDrawingEnabled ? "그리는 중" : "멈춤"
     }
 
     private var drawingStatusSymbol: String {

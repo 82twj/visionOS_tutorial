@@ -48,11 +48,11 @@
             }
 
             @Step {
-                `AppModel.swift`를 열어 강조된 부분을 보세요. `immersiveSpaceID`는 몰입형 공간의 이름이고, `drawingState`는 그리기가 켜져 있는지를 저장합니다.
+                `AppModel.swift`를 열어 강조된 부분을 보세요. `immersiveSpaceID`는 몰입형 공간의 이름이고, `drawingState`는 지금 그리는 중인지 멈춘 상태인지를 저장합니다.
 
                 @Code(name: "AppModel.swift", file: C01-AppModel-drawing.swift, previousFile: HL-AppModel-drawing.swift)
 
-                **그리기 켜기** 버튼은 `toggleDrawing()`으로 이 값만 바꿉니다. 클래스에 [`@Observable`](https://developer.apple.com/documentation/observation/observable())이 붙어 있어 값이 바뀌면 화면이 다시 그려지고, Chapter 4의 코디네이터도 이 값을 읽습니다.
+                **그리기 시작** 버튼은 `toggleDrawing()`으로 이 값만 바꿉니다. 클래스에 [`@Observable`](https://developer.apple.com/documentation/observation/observable())이 붙어 있어 값이 바뀌면 화면이 다시 그려지고, Chapter 4의 코디네이터도 이 값을 읽습니다.
             }
 
             @Step {
@@ -80,9 +80,9 @@
             }
 
             @Step {
-                **Command+R**로 실행하세요. Simulator에 제어창이 뜨고 **대기**, **그리기 꺼짐**, **별자리 0개 · 점 0개 · 선 0개**가 보입니다. **별자리 그리기 시작**은 아직 눌러도 반응하지 않습니다.
+                **Command+R**로 실행하세요. Simulator에 제어창이 뜨고 **대기**, **멈춤**, **별자리 0개 · 점 0개 · 선 0개**가 보입니다. **별자리 그리기 시작**은 아직 눌러도 반응하지 않습니다.
 
-                @Image(source: capture-starter-03-control-window.jpg, alt: "Simulator에 뜬 스타터의 제어창. 대기와 그리기 꺼짐 상태이고 별자리 0개 · 점 0개 · 선 0개가 표시되며 그리기 켜기와 초기화 버튼은 흐리게 꺼져 있습니다.")
+                @Image(source: capture-starter-03-control-window.jpg, alt: "Simulator에 뜬 스타터의 제어창. 대기와 멈춤 상태이고 별자리 0개 · 점 0개 · 선 0개가 표시되며 그리기 시작과 초기화 버튼은 흐리게 표시되어 누를 수 없습니다.")
 
                 **문제가 생겼다면**: visionOS Simulator가 없다는 오류가 나면 **Xcode › Settings › Components**에서 visionOS를 내려받은 뒤 다시 실행하세요.
             }
@@ -122,7 +122,7 @@
             스타터를 Simulator에서 실행하고 **별자리 그리기 시작**을 누르면 어떻게 되나요?
 
             @Choice(isCorrect: true) {
-                아무 일도 일어나지 않고 제어창은 대기, 그리기 꺼짐 상태 그대로입니다.
+                아무 일도 일어나지 않고 제어창은 대기, 멈춤 상태 그대로입니다.
 
                 @Justification(reaction: "맞습니다!") {
                     버튼이 부르는 `toggleImmersiveSpace()`의 본문이 비어 있습니다. Chapter 4에서 채웁니다.
@@ -138,7 +138,7 @@
             }
 
             @Choice(isCorrect: false) {
-                빈 몰입형 공간이 열리고 **그리기 켜기** 버튼이 활성화됩니다.
+                빈 몰입형 공간이 열리고 **그리기 시작** 버튼을 누를 수 있게 됩니다.
 
                 @Justification(reaction: "다시 생각해 보세요.") {
                     `body`에 `WindowGroup`만 있어서 열 수 있는 몰입형 공간이 등록되어 있지 않습니다.
@@ -147,7 +147,7 @@
         }
 
         @MultipleChoice {
-            제어창의 **그리기 켜기** 버튼을 누르면 실행되는 코드는 무엇인가요?
+            제어창의 **그리기 시작** 버튼을 누르면 실행되는 코드는 무엇인가요?
 
             @Choice(isCorrect: false) {
                 ```swift
@@ -155,7 +155,7 @@
                 ```
 
                 @Justification(reaction: "다시 생각해 보세요.") {
-                    이 버튼은 켜기와 끄기를 모두 맡으므로 항상 `true`를 넣지 않습니다. `setDrawingEnabled`는 다른 메서드 안에서 불립니다.
+                    이 버튼은 시작과 멈춤을 모두 맡으므로 항상 `true`를 넣지 않습니다. `setDrawingEnabled`는 다른 메서드 안에서 불립니다.
                 }
             }
 
@@ -165,7 +165,7 @@
                 ```
 
                 @Justification(reaction: "맞습니다!") {
-                    `toggleDrawing()`은 지금 값을 뒤집어 `setDrawingEnabled`에 넘깁니다. 그래서 같은 버튼이 켜기와 끄기를 오갑니다.
+                    `toggleDrawing()`은 지금 값을 뒤집어 `setDrawingEnabled`에 넘깁니다. 그래서 같은 버튼이 **그리기 시작**과 **그리기 멈춤**을 오갑니다.
                 }
             }
 

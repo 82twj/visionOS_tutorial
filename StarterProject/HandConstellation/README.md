@@ -1,6 +1,6 @@
 # Hand Constellation 스타터 프로젝트
 
-Hand Constellation 튜토리얼을 따라 하기 위한 시작 프로젝트입니다. `HandConstellation.xcodeproj`를 Xcode 16 이상에서 열면 바로 빌드됩니다. Simulator에서 실행하면 제어창이 대기 상태(그리기 꺼짐, 별자리·점·선 0개)로 뜹니다. **별자리 그리기 시작** 버튼은 Chapter 4에서 연결하기 전까지 눌러도 반응하지 않습니다.
+Hand Constellation 튜토리얼을 따라 하기 위한 시작 프로젝트입니다. `HandConstellation.xcodeproj`를 Xcode 16 이상에서 열면 바로 빌드됩니다. Simulator에서 실행하면 제어창이 대기 상태(멈춤, 별자리·점·선 0개)로 뜹니다. **별자리 그리기 시작** 버튼은 Chapter 4에서 연결하기 전까지 눌러도 반응하지 않습니다.
 
 ## 파일 구성
 
@@ -24,7 +24,7 @@ Hand Constellation 튜토리얼을 따라 하기 위한 시작 프로젝트입�
 
 ## Simulator에서 그려 보기
 
-Simulator에는 손 추적이 없습니다. Chapter 4를 마친 뒤 Simulator에서 몰입형 공간을 열면 제어창 오른쪽에 **Simulator 입력 패드**가 나타납니다. 그리기를 켜고 패드를 누른 채 0.8초 멈추면 검지를 멈춘 것처럼 점이 찍힙니다. 이 입력은 `SimulatorInputPad.swift`와 `ImmersiveCoordinator.swift`의 `#if targetEnvironment(simulator)` 안에만 있고, 실제 기기용 빌드에는 들어가지 않습니다.
+Simulator에는 손 추적이 없습니다. Chapter 4를 마친 뒤 Simulator에서 몰입형 공간을 열면 제어창 오른쪽에 **Simulator 입력 패드**가 나타납니다. **그리기 시작**을 누르고 패드를 누른 채 0.8초 멈추면 검지를 멈춘 것처럼 점이 찍힙니다. 이 입력은 `SimulatorInputPad.swift`와 `ImmersiveCoordinator.swift`의 `#if targetEnvironment(simulator)` 안에만 있고, 실제 기기용 빌드에는 들어가지 않습니다.
 
 ## 기기에서 실행할 때
 
