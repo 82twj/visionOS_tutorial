@@ -190,6 +190,32 @@ def verify_archive(
     missing = [identifier for identifier in ordered if identifier not in nodes]
     checks.require(not missing, "missing built tutorial nodes: " + ", ".join(missing))
 
+    # Section menu links must name an anchor that exists on the page, in a form
+    # the renderer can look up as is (ASCII, so no percent-encoding).
+    page_anchors: dict[str, set[str]] = {}
+    for _, node in nodes.values():
+        anchors = {"introduction", "Check-Your-Understanding"}
+        for section in node.get("sections", []):
+            for task in section.get("tasks", []) if section.get("kind") == "tasks" else []:
+                anchor = task.get("anchor", "")
+                checks.require(
+                    re.fullmatch(r"section-\d+", anchor) is not None,
+                    f"{node.get('identifier', {}).get('url')}: section anchor {anchor!r} is not ASCII",
+                )
+                anchors.add(anchor)
+        for variant in node.get("variants", []):
+            for path in variant.get("paths", []):
+                page_anchors[path] = anchors
+    for path, node in nodes.values():
+        for reference in node.get("references", {}).values():
+            url = reference.get("url", "")
+            page, _, fragment = url.partition("#")
+            if fragment and page in page_anchors:
+                checks.require(
+                    fragment in page_anchors[page],
+                    f"{path.name}: section link {url} has no matching anchor on its page",
+                )
+
     image_root = archive / "images"
     for position, identifier in enumerate(ordered):
         if identifier not in nodes:
@@ -291,7 +317,22 @@ def verify_archive(
                 f"archive download {copy.relative_to(archive)} differs from the catalog",
             )
 
-    checks.require((archive / "index.html").is_file(), "archive has no index.html")
+    # Only the tutorials are published; the module page and the site root
+    # forward to the tutorial overview.
+    overview_route = overview_url.strip("/") + "/"
+    checks.require(not (archive / "data/documentation").exists(), "archive still has module documentation data")
+    for page in sorted((archive / "documentation").rglob("index.html")):
+        text = page.read_text(encoding="utf-8")
+        checks.require(
+            f"{overview_route}'+location.search" in text,
+            f"{page.relative_to(archive)} does not redirect to the tutorial overview",
+        )
+    root_page = archive / "index.html"
+    root_text = root_page.read_text(encoding="utf-8") if root_page.is_file() else ""
+    checks.require(
+        f"location.replace('{overview_route}'" in root_text,
+        "site root does not redirect to the tutorial overview",
+    )
     checks.require((archive / "index/index.json").is_file(), "archive has no search index")
     live_slugs = {identifier.rsplit("/", 1)[-1].lower() for identifier in ordered}
     routes_root = archive / "tutorials/handconstellation"

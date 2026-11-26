@@ -76,14 +76,14 @@ HandConstellation/
 ├── ConstellationModel.swift          별자리별 점과 선, 연결 규칙
 ├── ConstellationRenderer.swift       흰색 점·선·커서·연결 안내
 ├── ImmersiveCoordinator.swift        손 추적·판정·모델·렌더러를 한 프레임 순서로 연결
-└── HandConstellation.docc/           DocC 튜토리얼과 참조 문서
+└── HandConstellation.docc/           DocC 튜토리얼
 HandConstellationTests/               머무르기·기존 점 연결·모델 테스트와 코디네이터 통합 테스트
 StarterProject/HandConstellation/     튜토리얼을 시작하는 스타터 Xcode 프로젝트(머무르기 테스트 포함)
 DocumentationTheme/                   확대된 단계·코드 패널용 DocC 렌더 테마
 Scripts/                              코드 스냅샷·스타터·튜토리얼 이미지 생성과 검증
 ```
 
-설계 근거와 조사 결과는 [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md), 완성 튜토리얼은 [DocC 카탈로그](HandConstellation/HandConstellation.docc/HandConstellation.md)에서 확인할 수 있습니다.
+설계 근거와 조사 결과는 [PROJECT_REQUIREMENTS.md](PROJECT_REQUIREMENTS.md), 완성 튜토리얼은 [배포된 사이트](https://82twj.github.io/visionOS_tutorial/tutorials/handconstellationtutorials/)에서, 원본은 [DocC 카탈로그](HandConstellation/HandConstellation.docc)에서 확인할 수 있습니다.
 
 ## 검증하기
 
@@ -145,9 +145,14 @@ xcodebuild \
   docbuild
 ```
 
-튜토리얼은 5개 Chapter에 튜토리얼 11개와 글 5개(시작 글, Chapter 2–5의 마무리 글)가 있습니다. Chapter 1은 스타터 프로젝트를 Simulator에서 실행해 읽고 손 추적 권한 설명을 추가합니다. Chapter 2는 손 추적 서비스를 작성하고, Chapter 3은 머무르기 판정과 RealityKit 렌더러를 작성해 테스트와 `#Preview`로 확인합니다. Chapter 4는 코디네이터와 몰입형 공간을 연결해 Simulator 입력 패드로 점과 선을 그려 봅니다. Chapter 5는 Apple Vision Pro에서 권한을 허용한 뒤 기존 점 연결, 그리기 전환과 두 번째 별자리, 초기화를 확인하며, 그리기 실습은 Simulator 입력 패드로도 따라 할 수 있습니다. 코드를 쓰는 단계는 이전 코드와 달라진 줄을, 코드를 읽는 단계는 설명하는 줄을 강조합니다. 문제 해결 안내는 결과를 확인하는 단계의 캡션에 있습니다. 아키텍처, 머무르기 판정, 문제 해결, GitHub Pages 배포 문서도 함께 포함되어 있습니다.
+튜토리얼은 5개 Chapter에 튜토리얼 11개와 글 5개(시작 글, Chapter 2–5의 마무리 글)가 있습니다. Chapter 1은 스타터 프로젝트를 Simulator에서 실행해 읽고 손 추적 권한 설명을 추가합니다. Chapter 2는 손 추적 서비스를 작성하고, Chapter 3은 머무르기 판정과 RealityKit 렌더러를 작성해 테스트와 `#Preview`로 확인합니다. Chapter 4는 코디네이터와 몰입형 공간을 연결해 Simulator 입력 패드로 점과 선을 그려 봅니다. Chapter 5는 Apple Vision Pro에서 권한을 허용한 뒤 기존 점 연결, 그리기 전환과 두 번째 별자리, 초기화를 확인하며, 그리기 실습은 Simulator 입력 패드로도 따라 할 수 있습니다. 코드를 쓰는 단계는 이전 코드와 달라진 줄을, 코드를 읽는 단계는 설명하는 줄을 강조합니다. 문제 해결 안내는 결과를 확인하는 단계의 캡션에 있습니다.
 
-빌드한 아카이브에는 아래 후처리를 실행해야 합니다. 한국어 Chapter 이름의 DocC 경로 충돌로 생기는 다음 링크와 소속 Chapter 오류를 목차 기준으로 바로잡고, 삭제되거나 합쳐진 페이지 13개의 이전 주소를 새 페이지로 연결합니다. GitHub Actions는 이 절차를 자동 실행합니다.
+빌드한 아카이브에는 아래 후처리를 실행해야 합니다. GitHub Actions는 이 절차를 자동 실행합니다.
+
+- 한국어 Chapter 이름의 DocC 경로 충돌로 생기는 다음 링크와 소속 Chapter 오류를 목차 기준으로 바로잡습니다.
+- 각 튜토리얼의 섹션 주소를 `section-1`, `section-2`처럼 영문으로 바꿉니다. DocC는 한글 섹션 주소를 페이지에는 한글로, 섹션 메뉴의 링크에는 퍼센트 인코딩으로 써서 메뉴에서 골라도 이동하지 않기 때문입니다.
+- 삭제되거나 합쳐진 페이지 13개의 이전 주소를 새 페이지로 연결합니다.
+- 튜토리얼만 배포합니다. 앱 타깃을 docbuild하면 앱의 타입 목록을 담은 모듈 문서(`documentation/handconstellation`)가 함께 생기는데, 이 데이터를 지우고 그 주소와 사이트 첫 주소를 튜토리얼 개요로 연결합니다.
 
 ```shell
 python3 Scripts/normalize_docc_navigation.py /path/to/HandConstellation.doccarchive
@@ -167,6 +172,16 @@ python3 Scripts/verify_tutorial.py --archive /path/to/HandConstellation.doccarch
 
 workflow는 저장소 이름을 `DOCC_HOSTING_BASE_PATH`로 자동 설정합니다. 사용자/조직 Pages처럼 도메인 루트에 배포할 때는 이 값을 빈 문자열로 바꾸세요.
 
+workflow는 본문·스냅샷·스타터 검사(`verify-snapshots.sh`), 스타터 빌드, 경고를 오류로 처리하는 `docbuild`, 위의 후처리와 아카이브 검사를 거친 뒤 배포합니다. 같은 브랜치에서 배포가 겹치면 앞의 실행을 취소합니다. Simulator 테스트와 Step별 타입 검사(`--builds`)는 실행하지 않으므로 로컬에서 실행하세요.
+
+배포가 실패하면 다음을 확인합니다.
+
+- visionOS destination 오류: runner의 Xcode 버전과 설치된 플랫폼
+- 스타터 검사 실패: 앱 소스를 바꾼 뒤 `./Scripts/verify-snapshots.sh --generate`를 실행했는지
+- "unreferenced catalog assets" 또는 "missing catalog resource": 본문에서 쓰지 않는 파일이 카탈로그에 남았거나, 본문이 참조하는 파일이 없음
+- 배포 후 스타일이 깨짐: `DOCC_HOSTING_BASE_PATH`가 저장소 이름과 같은지
+- 404 오류: Pages Source가 GitHub Actions인지, deploy job이 성공했는지
+
 ## 튜토리얼 자료 다시 만들기
 
 튜토리얼의 코드 스냅샷과 개념 그림은 스크립트로 생성합니다. `capture-*` 파일은 실제 Xcode·Simulator 화면 캡처이며 그림 생성기가 덮어쓰지 않습니다. Xcode 캡처는 `Scripts/process_capture.swift`로 창 모서리 밖을 투명하게 하고 설명하는 영역만 밝게 남깁니다. Simulator 캡처는 `xcrun simctl io booted screenshot`으로 장면만 찍습니다. 앱 소스를 고친 뒤에는 다음을 실행해 스냅샷을 다시 만들고 참조를 검사하세요.
@@ -176,6 +191,12 @@ workflow는 저장소 이름을 `DOCC_HOSTING_BASE_PATH`로 자동 설정합니�
 ```
 
 `./Scripts/verify-snapshots.sh`를 옵션 없이 실행하면 파일을 수정하지 않고 검사만 합니다. `--builds`를 붙이면 스타터 상태와 코드 Step 하나하나를 적용한 상태를 기기용·Simulator용으로 타입 검사해, 어느 Step에서 멈춰도 경고 없이 빌드되는지 확인합니다.
+
+특정 Chapter를 마친 상태의 프로젝트가 필요하면 다음처럼 내보냅니다. `--chapter`에는 0–4를 쓸 수 있고, 0은 스타터 그대로입니다.
+
+```shell
+python3 Scripts/build_starter_project.py --export ../HandConstellation-Chapter3 --chapter 3
+```
 
 튜토리얼에서 작성하는 파일의 마지막 스냅샷은 실제 앱 소스와 바이트 단위로 같아야 하고, 스타터 프로젝트의 파일과 zip은 앱 소스·첫 스냅샷과 일치해야 합니다. 스크립트가 둘 다 검사합니다. 코드를 읽는 단계의 강조 기준 파일(`HL-*.swift`)도 같은 스크립트가 만들고, DocC가 실제로 강조할 줄을 Swift 표준 라이브러리의 diff로 확인합니다. 그림을 다시 만들려면 다음을 실행합니다. `--only`로 고친 그림만 다시 쓸 수 있습니다.
 
@@ -191,7 +212,7 @@ python3 Scripts/generate_images.py --only interaction-dwell,fingertip-world-exam
 - DocC 아카이브가 경고 없이 빌드됨(경고를 오류로 처리)
 - 화면에 나오는 모든 코드 스냅샷이 Swift 문법 검사를 통과하고, 작성 파일의 마지막 스냅샷이 실제 앱 소스와 일치
 - 스타터 프로젝트 파일과 zip이 앱 소스·첫 스냅샷과 일치하고, Xcode 27.1에서 경고 없이 열림
-- 생성된 16개 페이지(튜토리얼 11개, 글 5개)의 본문·자료 참조·다음 링크·5개 Chapter·퀴즈 구조와 이전 주소 13개를 검사
+- 생성된 16개 페이지(튜토리얼 11개, 글 5개)의 본문·자료 참조·다음 링크·5개 Chapter·퀴즈 구조, 섹션 메뉴 링크와 섹션 주소의 일치, 이전 주소 13개를 검사
 - Simulator에서 입력 패드로 점과 선을 그리는 것, Xcode 캔버스의 `#Preview`를 직접 확인
 - 캡처는 모두 스타터 프로젝트와 완성 앱으로 Xcode 27.1, visionOS 27.0 Simulator에서 새로 찍음
 - Chapter 5의 화면은 Simulator 입력 패드로 그린 Simulator 캡처이며, 실제 기기의 손 추적 동작과 권한 창은 Apple Vision Pro에서 최종 확인 필요

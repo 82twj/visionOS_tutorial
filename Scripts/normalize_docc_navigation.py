@@ -5,6 +5,10 @@ DocC can merge chapters whose non-ASCII names sanitize to the same path. That
 changes the per-page hierarchy order and therefore the generated Next link. The
 overview JSON still contains the correct chapter and tutorial order, so this
 script copies that order back into each tutorial render node.
+
+It also gives tutorial sections ASCII anchors so the section menu can scroll
+to them, and publishes only the tutorials: the generated module and symbol
+pages redirect to the tutorial overview, as does the site root.
 """
 
 from __future__ import annotations
@@ -12,8 +16,10 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 from pathlib import Path
 from typing import Tuple
+from urllib.parse import unquote
 
 # Removed tutorial pages -> the live page that now covers their content. The
 # starter project replaced the project-setup, app-model, control-window and
@@ -104,6 +110,102 @@ def chapter_reference(
     return identifier, reference
 
 
+def section_anchor_map(nodes: dict[str, dict]) -> dict[str, dict[str, str]]:
+    """Maps each tutorial page path to {DocC section anchor: ASCII anchor}.
+
+    DocC writes a section's ``anchor`` as the raw title slug (Korean here) but
+    percent-encodes the same fragment in reference URLs. The renderer's section
+    menu looks the encoded fragment up with ``getElementById`` and silently
+    finds nothing, so selecting a Korean-titled section never scrolls. ASCII
+    anchors read the same in both places, in the address bar and on reload.
+    """
+    anchors: dict[str, dict[str, str]] = {}
+    for node in nodes.values():
+        paths = [
+            path
+            for variant in node.get("variants", [])
+            for path in variant.get("paths", [])
+            if isinstance(path, str)
+        ]
+        tasks = [
+            task
+            for section in node.get("sections", [])
+            if section.get("kind") == "tasks"
+            for task in section.get("tasks", [])
+        ]
+        if not paths or not tasks:
+            continue
+        mapping = {
+            task["anchor"]: f"section-{number}"
+            for number, task in enumerate(tasks, 1)
+            if isinstance(task.get("anchor"), str)
+        }
+        for path in paths:
+            anchors[path] = mapping
+    return anchors
+
+
+def apply_section_anchors(value: object, anchors: dict[str, dict[str, str]], page: str) -> None:
+    """Rewrites task anchors and every section URL to the ASCII anchors."""
+    if isinstance(value, dict):
+        if value.get("kind") == "tasks" and isinstance(value.get("tasks"), list):
+            mapping = anchors.get(page, {})
+            for task in value["tasks"]:
+                anchor = task.get("anchor")
+                if anchor in mapping:
+                    task["anchor"] = mapping[anchor]
+        url = value.get("url")
+        if isinstance(url, str) and "#" in url:
+            path, fragment = url.split("#", 1)
+            new_anchor = anchors.get(path, {}).get(unquote(fragment))
+            if new_anchor:
+                value["url"] = f"{path}#{new_anchor}"
+        for child in value.values():
+            apply_section_anchors(child, anchors, page)
+    elif isinstance(value, list):
+        for child in value:
+            apply_section_anchors(child, anchors, page)
+
+
+def redirect_html(target: str, label: str) -> str:
+    return (
+        "<!doctype html><html><head><meta charset=\"utf-8\">"
+        f"<meta http-equiv=\"refresh\" content=\"0;url={target}\">"
+        f"<link rel=\"canonical\" href=\"{target}\"></head>"
+        f"<body><a href=\"{target}\">{label}</a>"
+        f"<script>location.replace('{target}'+location.search+location.hash)</script>"
+        "</body></html>\n"
+    )
+
+
+def remove_reference_documentation(archive: Path, overview_route: str) -> int:
+    """Publishes only the tutorials; old documentation URLs go to the overview.
+
+    An app target's docbuild always adds a module page with the app's symbols.
+    It is linked from no tutorial page and would show the finished code's API
+    to learners, so its render data is dropped and each of its routes, and the
+    site root, redirects to the tutorial overview.
+    """
+    changed = 0
+    data_root = archive / "data/documentation"
+    if data_root.exists():
+        shutil.rmtree(data_root)
+        changed += 1
+    routes_root = archive / "documentation"
+    for page in sorted(routes_root.rglob("index.html")) if routes_root.exists() else []:
+        depth = len(page.parent.relative_to(archive).parts)
+        html = redirect_html("../" * depth + overview_route, "Continue to the tutorials")
+        if page.read_text(encoding="utf-8") != html:
+            page.write_text(html, encoding="utf-8")
+            changed += 1
+    root_page = archive / "index.html"
+    html = redirect_html(overview_route, "Continue to the tutorials")
+    if not root_page.is_file() or root_page.read_text(encoding="utf-8") != html:
+        root_page.write_text(html, encoding="utf-8")
+        changed += 1
+    return changed
+
+
 TIME_KEYS = {"estimatedTime", "estimatedTimeInMinutes"}
 
 
@@ -159,6 +261,7 @@ def normalize(archive: Path) -> int:
         if isinstance(path, str)
     ]
     overview_url = overview_paths[0] if overview_paths else "/tutorials/handconstellationtutorials"
+    anchors = section_anchor_map(nodes)
 
     changed = 0
     for position, identifier in enumerate(ordered):
@@ -184,6 +287,13 @@ def normalize(archive: Path) -> int:
         hierarchy["paths"] = [[overview_id, f"{overview_id}/$volume", own_chapter_ref]]
 
         strip_estimated_time(node)
+        page_paths = [
+            path
+            for variant in node.get("variants", [])
+            for path in variant.get("paths", [])
+            if isinstance(path, str)
+        ]
+        apply_section_anchors(node, anchors, page_paths[0] if page_paths else "")
 
         sections = node.setdefault("sections", [])
         for section in sections:
@@ -223,6 +333,7 @@ def normalize(archive: Path) -> int:
 
     # Keep the overview's initial action tied to its first listed tutorial.
     strip_estimated_time(overview)
+    apply_section_anchors(overview, anchors, overview_url)
     for section in overview.get("sections", []):
         if section.get("kind") == "hero" and isinstance(section.get("action"), dict):
             section["action"]["identifier"] = ordered[0]
@@ -242,17 +353,13 @@ def normalize(archive: Path) -> int:
             raise SystemExit(f"legacy redirect target is not in overview: {new_slug}")
         redirect = routes_root / old_slug / "index.html"
         redirect.parent.mkdir(parents=True, exist_ok=True)
-        html = (
-            "<!doctype html><html><head><meta charset=\"utf-8\">"
-            f"<meta http-equiv=\"refresh\" content=\"0;url=../{new_slug}/\">"
-            f"<link rel=\"canonical\" href=\"../{new_slug}/\"></head>"
-            f"<body><a href=\"../{new_slug}/\">Continue to the tutorial</a>"
-            f"<script>location.replace('../{new_slug}/'+location.search+location.hash)</script>"
-            "</body></html>\n"
-        )
+        html = redirect_html(f"../{new_slug}/", "Continue to the tutorial")
         if not redirect.is_file() or redirect.read_text(encoding="utf-8") != html:
             redirect.write_text(html, encoding="utf-8")
             changed += 1
+
+    overview_route = overview_url.strip("/") + "/"
+    changed += remove_reference_documentation(archive, overview_route)
 
     print(f"normalized navigation for {len(ordered)} tutorials ({changed} files changed)")
     return changed
