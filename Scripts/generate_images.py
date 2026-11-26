@@ -509,7 +509,7 @@ body.append(f'<path d="M848 258 C 770 104, 262 104, 184 258" fill="none" stroke=
             f'stroke-width="4" stroke-linecap="round"/>' + head(184, 258, 117, MUTED, 13))
 body.append(t(516, 132, "검지 위치를 잃으면", 18, MUTED, anchor="middle"))
 body.append(rect(56, 580, 988, 86, 18, "#131b2b", LINE, 2))
-body.append(t(88, 614, "점은 dwelling에서 coolingDown으로 넘어가는 그 한 프레임에만 찍힙니다.",
+body.append(t(88, 614, "점은 dwelling에서 coolingDown으로 넘어가는 그 순간에만 찍힙니다.",
               19, BODY))
 body.append(t(88, 646, "coolingDown 덕분에 같은 자리에서 점이 여러 번 찍히지 않습니다.", 19, MUTED))
 figure("dwell-states", "머무르기 판정 상태 머신",
@@ -798,7 +798,7 @@ def pipeline_gap(y):
     return (f'<path d="M436 {y} v 3" stroke="{LINE}" stroke-width="3"/>' + head(436, y + 11, 90, LINE, 9))
 
 
-body = [heading("한 프레임의 입력 처리 순서", "ImmersiveCoordinator · 오른손 앵커가 들어올 때마다")]
+body = [heading("검지 위치 하나의 처리 순서", "ImmersiveCoordinator · 오른손 앵커가 들어올 때마다")]
 groups = [
     (160, "process(anchor:appModel:)", 172, [
         ("그리기 상태 반영", "그리기를 멈추는 순간 지금 그리던 별자리를 마칩니다",
@@ -838,7 +838,7 @@ for i, line in enumerate(["손 앵커 대신 입력 패드에서", "누른 위�
     body.append(t(856, 364 + i * 24, line, 15, BODY, font=MONO if "process" in line else FONT))
 body.append(f'<path d="M836 385 H 470" stroke="{GREEN}" stroke-width="2.5" stroke-dasharray="7 6"/>'
             + head(462, 385, 180, GREEN, 11))
-figure("input-pipeline", "한 프레임의 입력 처리 순서",
+figure("input-pipeline", "검지 위치 하나의 처리 순서",
        "process(anchor:appModel:)에서 그리기 상태 반영, 멈춰 있으면 끝, 검지 끝 월드 좌표를 거쳐 "
        "process(position:at:appModel:)에서 유지 중인 안내, 기존 점 연결, 새 점 머무르기와 커서, 모델에 더하기와 "
        "렌더링으로 이어지는 순서도. Simulator 빌드에서는 입력 패드의 위치가 같은 process(position:)로 들어온다는 표시",

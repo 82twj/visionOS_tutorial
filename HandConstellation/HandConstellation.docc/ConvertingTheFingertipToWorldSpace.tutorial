@@ -18,7 +18,7 @@
 
                 @Image(source: hand-skeleton-joints.png, alt: "오른손 골격에서 검지 끝 관절이 강조된 그림. 관절마다 추적 여부와 손 앵커 기준 변환이 들어 있다는 설명이 붙어 있습니다.")
 
-                관절마다 지금 추적 중인지(`isTracked`)와, 손 앵커를 기준으로 한 4×4 변환(`anchorFromJointTransform`)이 들어 있습니다.
+                관절마다 지금 추적 중인지(`isTracked`)와, 손 앵커를 기준으로 한 변환(`anchorFromJointTransform`)이 들어 있습니다. 변환은 위치와 회전을 한 번에 담은 4×4 행렬입니다.
             }
 
             @Step {
@@ -44,7 +44,7 @@
 
                 @Code(name: "HandTrackingService.swift", file: C02-HandTrackingService-06.swift, previousFile: C02-HandTrackingService-05.swift)
 
-                두 변환의 이름을 오른쪽에서 왼쪽으로 읽으면 관절→손 앵커→월드로 이어집니다. Command+B로 빌드해 오류가 없는지 확인하세요.
+                `anchorFromJointTransform`은 관절에서 손 앵커로, `originFromAnchorTransform`은 손 앵커에서 원점으로 옮기는 변환입니다. 둘을 곱하면 관절에서 원점까지 한 번에 옮겨집니다. Command+B로 빌드해 오류가 없는지 확인하세요.
             }
 
             @Step {

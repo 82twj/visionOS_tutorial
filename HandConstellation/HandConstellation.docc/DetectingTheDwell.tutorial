@@ -22,7 +22,7 @@
 
                 @Code(name: "DwellDetector.swift", file: C03-DwellDetector-00-phase.swift, previousFile: HL-DwellDetector-phase.swift)
 
-                `progress`는 커서 크기를 정하는 0–1 사이의 값입니다. `committedPosition`은 점을 찍어야 하는 한 번에만 값이 있고, 나머지 때는 `nil`입니다.
+                `progress`는 커서 크기를 정하는 0–1 사이의 값입니다. `committedPosition`은 점을 찍는 순간에만 값이 들어 있고, 나머지 때는 `nil`입니다.
             }
 
             @Step {
@@ -66,7 +66,7 @@
 
                 @Code(name: "DwellDetector.swift", file: C03-DwellDetector-02.swift, previousFile: C03-DwellDetector-01.swift)
 
-                점을 찍는 위치는 지금 위치가 아니라 머무르기를 시작한 `center`입니다. `1e-9`는 0.1초씩 더한 시간이 0.8에 살짝 못 미치는 부동소수점 오차를 넘기려고 더합니다.
+                점을 찍는 위치는 지금 위치가 아니라 머무르기를 시작한 `center`입니다. 컴퓨터는 0.1을 여덟 번 더해도 0.8보다 아주 조금 작게 계산할 수 있습니다. 아주 작은 수 `1e-9`를 더해, 이 오차가 있어도 0.8초에 점이 찍히게 합니다.
             }
         }
     }

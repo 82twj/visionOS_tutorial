@@ -2,7 +2,7 @@
     @Intro(title: "검지로 점을 찍고 선을 연결하세요") {
         오른손 검지 끝을 커서처럼 써서 공중에 별자리를 그리는 visionOS 앱을 만듭니다. 검지를 한곳에 잠시 멈추면 그 자리에 점이 찍히고, 다음 점을 찍으면 앞의 점과 선으로 이어집니다. 이미 찍은 점에서 다시 멈추면 새 점 없이 선만 하나 더 생깁니다.
 
-        앱 상태, 제어창 화면, 설정값, 별자리 데이터 모델은 스타터 프로젝트에 들어 있습니다. 직접 작성하는 것은 ARKit 손 추적, 검지 끝의 월드 좌표, 머무르기 판정, RealityKit 렌더링, 몰입형 공간 연결처럼 공간 컴퓨팅에 꼭 필요한 코드입니다. Swift와 SwiftUI는 이미 알고 있다고 가정합니다.
+        앱 상태, 제어창 화면, 설정값, 별자리 데이터 모델은 스타터 프로젝트에 들어 있습니다. 직접 작성하는 것은 ARKit 손 추적, 검지 끝의 공간 속 위치(월드 좌표), 머무르기 판정, RealityKit 렌더링, 몰입형 공간 연결처럼 공간 컴퓨팅에 꼭 필요한 코드입니다. Swift와 SwiftUI는 이미 알고 있다고 가정합니다.
 
         Chapter 1–4는 Mac과 visionOS Simulator만으로 따라갈 수 있습니다. Simulator에는 손 추적이 없지만, 스타터에 든 입력 패드가 검지를 대신하므로 점과 선을 직접 그려 볼 수 있습니다. 실제 손으로 그리는 것은 Chapter 5에서 Apple Vision Pro로 합니다.
 
@@ -40,9 +40,9 @@
     }
 
     @Chapter(name: "전체 기능 연결하기") {
-        손 추적, 머무르기 판정, 별자리 모델, 렌더러를 코디네이터 하나로 묶고, 몰입형 공간을 앱에 등록해 제어창 버튼으로 엽니다. 마지막에 Simulator의 입력 패드로 점과 선을 그려 봅니다.
+        손 추적, 머무르기 판정, 별자리 모델, 렌더러를 여러 기능을 정해진 순서로 부르는 코디네이터 하나로 묶고, 몰입형 공간을 앱에 등록해 제어창 버튼으로 엽니다. 마지막에 Simulator의 입력 패드로 점과 선을 그려 봅니다.
 
-        @Image(source: input-pipeline.png, alt: "한 프레임의 입력을 그리기 상태 반영, 검지 끝 월드 좌표 계산, 기존 점 연결 확인, 새 점 머무르기, 모델과 렌더러 반영 순서로 처리하는 순서도")
+        @Image(source: input-pipeline.png, alt: "검지 위치 하나를 그리기 상태 반영, 검지 끝 월드 좌표 계산, 기존 점 연결 확인, 새 점 머무르기, 모델과 렌더러 반영 순서로 처리하는 순서도")
 
         @TutorialReference(tutorial: "doc:BuildingTheCoordinatorLifecycle")
         @TutorialReference(tutorial: "doc:ConnectingTheRealityViewAndAppScenes")

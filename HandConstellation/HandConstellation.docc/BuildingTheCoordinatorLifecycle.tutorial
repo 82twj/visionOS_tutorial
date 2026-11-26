@@ -1,10 +1,10 @@
 @Tutorial {
     @Intro(title: "코디네이터로 손 추적과 장면 연결하기") {
-        Chapter 2의 손 추적 서비스와 Chapter 3의 머무르기 감지기, 렌더러는 아직 서로를 모릅니다. `ImmersiveCoordinator`가 이들을 한데 묶어, 손 앵커가 들어올 때마다 그림의 순서대로 한 프레임을 처리합니다.
+        Chapter 2의 손 추적 서비스와 Chapter 3의 머무르기 감지기, 렌더러는 아직 서로 연결되어 있지 않습니다. `ImmersiveCoordinator`가 이들을 한데 묶어, 손 앵커가 하나 들어올 때마다 그림의 순서대로 처리합니다.
 
-        스타터에는 코디네이터의 속성과 `init`, 그리고 안내 문구와 개수를 맞추는 보조 메서드가 들어 있습니다. 손 추적을 시작하고 끝내는 메서드와 한 프레임의 처리 순서는 직접 씁니다.
+        스타터에는 코디네이터의 속성과 `init`, 그리고 안내 문구와 개수를 맞추는 보조 메서드가 들어 있습니다. 손 추적을 시작하고 끝내는 메서드와, 손 앵커 하나를 처리하는 순서는 직접 씁니다.
 
-        @Image(source: input-pipeline.png, alt: "한 프레임의 입력 처리 순서도. process(anchor:)에서 그리기 상태 반영, 그리기 멈춤 검사, 검지 끝 월드 좌표 계산을 하고, process(position:)에서 완료·거절 안내 유지, 기존 점 연결 확인, 새 점 머무르기, 모델에 더하고 렌더러로 그리기를 합니다. Simulator에서는 입력 패드의 위치가 process(position:)으로 들어옵니다.")
+        @Image(source: input-pipeline.png, alt: "검지 위치 하나의 입력 처리 순서도. process(anchor:)에서 그리기 상태 반영, 그리기 멈춤 검사, 검지 끝 월드 좌표 계산을 하고, process(position:)에서 완료·거절 안내 유지, 기존 점 연결 확인, 새 점 머무르기, 모델에 더하고 렌더러로 그리기를 합니다. Simulator에서는 입력 패드의 위치가 process(position:)으로 들어옵니다.")
     }
 
     @Section(title: "스타터의 코디네이터 읽기") {
@@ -22,7 +22,7 @@
             }
 
             @Step {
-                파일 아래쪽의 확장(extension)에서 `applyDrawingState`와 `cancelDwell`을 읽으세요. 앞의 메서드는 제어창의 그리기 전환을 한 번만 반영하고, 뒤의 메서드는 하던 머무르기를 취소하고 커서를 숨깁니다.
+                파일 아래쪽의 확장(extension)에서 `applyDrawingState`와 `cancelDwell`을 읽으세요. 앞의 메서드는 제어창의 그리기 상태가 바뀌었을 때 그 변화를 한 번만 반영하고, 뒤의 메서드는 하던 머무르기를 취소하고 커서를 숨깁니다.
 
                 @Code(name: "ImmersiveCoordinator.swift", file: C04-ImmersiveCoordinator-00-drawing.swift, previousFile: HL-ImmersiveCoordinator-drawing.swift)
 
@@ -57,7 +57,7 @@
 
     @Section(title: "손 앵커에서 검지 위치 구하기") {
         @ContentAndMedia {
-            ARKit은 손의 상태가 바뀔 때마다 손 앵커를 보냅니다. 코디네이터는 앵커 하나를 한 프레임으로 보고, 그리기 상태를 확인한 다음 오른손 검지 끝의 위치를 구합니다.
+            ARKit은 손의 상태가 바뀔 때마다 손 앵커를 보냅니다. 코디네이터는 앵커가 하나 들어올 때마다 그리기 상태를 확인한 다음 오른손 검지 끝의 위치를 구합니다.
 
             앵커 하나를 처리하는 메서드를 먼저 쓰고, 그 메서드를 부르는 반복문을 `run`에 넣습니다.
         }
@@ -134,7 +134,7 @@
 
                 @Code(name: "ImmersiveCoordinator.swift", file: C04-ImmersiveCoordinator-05-feedback.swift, previousFile: HL-ImmersiveCoordinator-feedback.swift)
 
-                두 메서드는 안내를 유지하는 동안 `true`를 돌려줍니다. 다음 부분에서 이 값이 `true`이면 그 프레임의 나머지 처리를 건너뜁니다.
+                두 메서드는 안내를 유지하는 동안 `true`를 돌려줍니다. 다음 부분에서 이 값이 `true`이면 그 위치의 나머지 처리를 건너뜁니다.
             }
 
             @Step {
@@ -149,18 +149,18 @@
 
     @Section(title: "검지 위치 하나를 순서대로 처리하기") {
         @ContentAndMedia {
-            `process(position:at:appModel:)`는 검지 위치 하나를 받아 이번 프레임에 할 일을 정합니다. 기존 점에 연결하려는 동작인지 먼저 보고, 아니면 새 점을 찍는 머무르기로 넘깁니다.
+            `process(position:at:appModel:)`는 검지 위치 하나를 받아 그 위치로 할 일을 정합니다. 기존 점에 연결하려는 동작인지 먼저 보고, 아니면 새 점을 찍는 머무르기로 넘깁니다.
 
             기존 점의 3cm 안에서는 새 점을 찍을 수 없습니다. 그러니 그 안에서 멈춘 검지는 연결하려는 것으로 보는 편이 맞습니다.
         }
 
         @Steps {
             @Step {
-                `process(position:at:appModel:)`의 주석을 지우고 앞부분을 작성하세요. 유지 중인 안내가 있으면 돌아가고, 없으면 연결 감지기에 검지 위치와 목표가 될 점들을 넘깁니다. 목표에 머무르는 중이면 연결을 처리하고 돌아갑니다.
+                `process(position:at:appModel:)`의 주석을 지우고 앞부분을 작성하세요. 안내를 유지하는 중이면 이번 위치는 더 처리하지 않고 끝내고(`return`), 없으면 연결 감지기에 검지 위치와 목표가 될 점들을 넘깁니다. 목표에 머무르는 중이면 연결을 처리하고 돌아갑니다.
 
                 @Code(name: "ImmersiveCoordinator.swift", file: C04-ImmersiveCoordinator-06.swift, previousFile: C04-ImmersiveCoordinator-05.swift)
 
-                기존 점의 3cm 안에서 새 점 머무르기까지 내려가면 0.8초 뒤에 '기존 점과 너무 가까워요.'로 거절됩니다. 그래서 연결을 먼저 확인하고, 목표에 머무르는 동안에는 `dwellDetector.trackingLost()`로 새 점 머무르기를 취소합니다.
+                기존 점의 3cm 안에서 새 점 머무르기를 그대로 진행하면 0.8초 뒤에 '기존 점과 너무 가까워요.'로 거절됩니다. 그래서 연결을 먼저 확인하고, 목표에 머무르는 동안에는 `dwellDetector.trackingLost()`로 새 점 머무르기를 취소합니다.
             }
 
             @Step {

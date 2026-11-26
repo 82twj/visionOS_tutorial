@@ -81,7 +81,7 @@
 
             그래서 높이를 두 점 사이의 거리로 정하고, 두 점의 중점으로 옮긴 뒤, y축이 두 점을 잇는 방향을 향하도록 돌립니다. 회전은 [`simd_quatf(from:to:)`](https://developer.apple.com/documentation/simd/simd_quatf/init(from:to:))로 구합니다.
 
-            @Image(source: line-between-points.png, alt: "y축으로 선 원기둥을 A(0, 1, −0.5)와 B(0.06, 1.08, −0.5) 사이로 옮기고 약 37도 기울이는 과정을 길이 0.10, 중점, 방향과 함께 나타낸 그림")
+            @Image(source: line-between-points.png, alt: "y축 방향으로 서 있는 원기둥을 A(0, 1, −0.5)와 B(0.06, 1.08, −0.5) 사이로 옮기고 약 37도 기울이는 과정을 길이 0.10, 중점, 방향과 함께 나타낸 그림")
         }
 
         @Steps {
@@ -124,7 +124,7 @@
 
                 @Code(name: "ConstellationRenderer.swift", file: C03-ConstellationRenderer-07.swift, previousFile: C03-ConstellationRenderer-06.swift)
 
-                `connectExistingPoint`가 연결 완료 표시를 켜므로 마지막에 `hideConnectionGuidance()`로 끕니다. `RealityView`는 Chapter 4에서 다룹니다.
+                `connectExistingPoint`가 연결이 끝난 점을 감싸는 완료 표시를 켜므로 마지막에 `hideConnectionGuidance()`로 끕니다. `RealityView`는 Chapter 4에서 다룹니다.
             }
 
             @Step {

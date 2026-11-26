@@ -9,7 +9,7 @@
 
     @Section(title: "손 추적 서비스 만들기") {
         @ContentAndMedia {
-            [`ARKitSession`](https://developer.apple.com/documentation/arkit/arkitsession)은 권한을 묻고 데이터 제공자를 실행합니다. [`HandTrackingProvider`](https://developer.apple.com/documentation/arkit/handtrackingprovider)는 그 세션 위에서 돌면서 손 앵커를 계속 보내 줍니다.
+            [`ARKitSession`](https://developer.apple.com/documentation/arkit/arkitsession)은 권한을 묻고 데이터 제공자를 실행합니다. [`HandTrackingProvider`](https://developer.apple.com/documentation/arkit/handtrackingprovider)는 세션이 실행되는 동안 손 앵커를 계속 보내 줍니다. 손 앵커는 손 하나의 위치·방향과 관절 정보를 담은 값입니다.
 
             ARKit 데이터는 앱이 [몰입형 공간을 열었을 때만](https://developer.apple.com/documentation/visionos/setting-up-access-to-arkit-data) 들어옵니다. 그래서 이 서비스는 Chapter 4에서 공간이 열릴 때 시작합니다.
         }
